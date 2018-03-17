@@ -25,7 +25,6 @@
 #include "../../CCallback.h"
 
 #include "../../lib/CArtHandler.h"
-#include "../../lib/spells/CSpellHandler.h"
 #include "../../lib/CGeneralTextHandler.h"
 
 #include "../../lib/mapObjects/CGHeroInstance.h"
@@ -172,7 +171,7 @@ void CHeroArtPlace::clickLeft(tribool down, bool previousState)
 					else if(cur->isBig())
 					{
 						//war machines cannot go to backpack
-						LOCPLINT->showInfoDialog(boost::str(boost::format(CGI->generaltexth->allTexts[153]) % cur->Name()));
+						LOCPLINT->showInfoDialog(boost::str(boost::format(CGI->generaltexth->allTexts[153]) % cur->getName()));
 					}
 					else
 					{
@@ -226,14 +225,12 @@ bool CHeroArtPlace::askToAssemble(const CArtifactInstance *art, ArtifactPosition
 	for(const CArtifact *combination : assemblyPossibilities)
 	{
 		LOCPLINT->showArtifactAssemblyDialog(
-			art->artType->id,
-			combination->id,
-			true,
-			std::bind(&CCallback::assembleArtifacts, LOCPLINT->cb.get(), hero, slot, true, combination->id),
-			0);
+			art->artType,
+			combination,
+			std::bind(&CCallback::assembleArtifacts, LOCPLINT->cb.get(), hero, slot, true, combination->id));
 
 		if(assemblyPossibilities.size() > 2)
-			logGlobal->warn("More than one possibility of assembling on %s... taking only first", art->artType->Name());
+			logGlobal->warn("More than one possibility of assembling on %s... taking only first", art->artType->getName());
 		return true;
 	}
 	return false;
@@ -243,14 +240,14 @@ void CHeroArtPlace::clickRight(tribool down, bool previousState)
 {
 	if(ourArt && down && !locked && text.size() && !picked)  //if there is no description or it's a lock, do nothing ;]
 	{
-		if (slotID < GameConstants::BACKPACK_START)
+		if(slotID < GameConstants::BACKPACK_START)
 		{
 			if(ourOwner->allowedAssembling)
 			{
 				std::vector<const CArtifact *> assemblyPossibilities = ourArt->assemblyPossibilities(ourOwner->curHero);
 
 				// If the artifact can be assembled, display dialog.
-				if (askToAssemble(ourArt, slotID, ourOwner->curHero))
+				if(askToAssemble(ourArt, slotID, ourOwner->curHero))
 				{
 					return;
 				}
@@ -259,11 +256,9 @@ void CHeroArtPlace::clickRight(tribool down, bool previousState)
 				if(ourArt->canBeDisassembled())
 				{
 					LOCPLINT->showArtifactAssemblyDialog(
-						ourArt->artType->id,
-						0,
-						false,
-						std::bind(&CCallback::assembleArtifacts, LOCPLINT->cb.get(), ourOwner->curHero, slotID, false, ArtifactID()),
-						0);
+						ourArt->artType,
+						nullptr,
+						std::bind(&CCallback::assembleArtifacts, LOCPLINT->cb.get(), ourOwner->curHero, slotID, false, ArtifactID()));
 					return;
 				}
 			}
@@ -414,7 +409,7 @@ void CHeroArtPlace::setArtifact(const CArtifactInstance *art)
 	if (locked) // Locks should appear as empty.
 		hoverText = CGI->generaltexth->allTexts[507];
 	else
-		hoverText = boost::str(boost::format(CGI->generaltexth->heroscrn[1]) % ourArt->artType->Name());
+		hoverText = boost::str(boost::format(CGI->generaltexth->heroscrn[1]) % ourArt->artType->getName());
 }
 
 void CArtifactsOfHero::SCommonPart::reset()

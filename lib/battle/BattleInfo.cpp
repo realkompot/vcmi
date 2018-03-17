@@ -16,6 +16,9 @@
 #include "../mapObjects/CGTownInstance.h"
 #include "../CGeneralTextHandler.h"
 
+//TODO: remove
+#include "../IGameCallback.h"
+
 ///BattleInfo
 std::pair< std::vector<BattleHex>, int > BattleInfo::getPath(BattleHex start, BattleHex dest, const CStack * stack)
 {
@@ -734,7 +737,6 @@ const IBonusBearer * BattleInfo::asBearer() const
 
 int64_t BattleInfo::getActualDamage(const TDmgRange & damage, int32_t attackerCount, vstd::RNG & rng) const
 {
-
 	if(damage.first != damage.second)
 	{
 		int64_t sum = 0;
@@ -920,6 +922,11 @@ void BattleInfo::removeUnit(uint32_t id)
 	}
 }
 
+void BattleInfo::updateUnit(uint32_t id, const JsonNode & data)
+{
+	//TODO
+}
+
 void BattleInfo::addUnitBonus(uint32_t id, const std::vector<Bonus> & bonus)
 {
 	CStack * sta = getStack(id, false);
@@ -1060,6 +1067,13 @@ CGHeroInstance * BattleInfo::battleGetFightingHero(ui8 side) const
 	return const_cast<CGHeroInstance*>(CBattleInfoEssentials::battleGetFightingHero(side));
 }
 
+scripting::Pool * BattleInfo::getContextPool() const
+{
+	//this is real battle, use global scripting context pool
+	//TODO: make this line not ugly
+	return IObjectInterface::cb->getGlobalContextPool();
+}
+
 bool CMP_stack::operator()(const battle::Unit * a, const battle::Unit * b)
 {
 	switch(phase)
@@ -1079,7 +1093,7 @@ bool CMP_stack::operator()(const battle::Unit * a, const battle::Unit * b)
 					return a->unitSide() == side ? false : true;
 			}
 			//FIXME: what about summoned stacks
-		}	
+		}
 	case 2: //fastest last, upper slot first
 	case 3: //fastest last, upper slot first
 		{

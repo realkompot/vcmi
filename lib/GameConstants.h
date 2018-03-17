@@ -11,6 +11,26 @@
 
 #include "ConstTransitivePtr.h"
 
+class Artifact;
+class ArtifactService;
+class Creature;
+class CreatureService;
+
+namespace spells
+{
+	class Spell;
+	class Service;
+}
+
+class CArtifact;
+class CArtifactInstance;
+class CCreature;
+class CHero;
+class CSpell;
+class CSkill;
+class CGameInfoCallback;
+class CNonConstInfoCallback;
+
 namespace GameConstants
 {
 	DLL_LINKAGE extern const std::string VCMI_VERSION;
@@ -54,15 +74,6 @@ namespace GameConstants
 
 	const std::array<int, 11> POSSIBLE_TURNTIME = {1, 2, 4, 6, 8, 10, 15, 20, 25, 30, 0};
 }
-
-class CArtifact;
-class CArtifactInstance;
-class CCreature;
-class CHero;
-class CSpell;
-class CSkill;
-class CGameInfoCallback;
-class CNonConstInfoCallback;
 
 #define ID_LIKE_CLASS_COMMON(CLASS_NAME, ENUM_NAME)	\
 CLASS_NAME(const CLASS_NAME & other)				\
@@ -223,9 +234,18 @@ class ObjectInstanceID : public BaseForID<ObjectInstanceID, si32>
 	friend class CNonConstInfoCallback;
 };
 
+class HeroClassID : public BaseForID<HeroClassID, si32>
+{
+	INSTID_LIKE_CLASS_COMMON(HeroClassID, si32)
+};
+
 class HeroTypeID : public BaseForID<HeroTypeID, si32>
 {
 	INSTID_LIKE_CLASS_COMMON(HeroTypeID, si32)
+
+	///json serialization helpers
+	static si32 decode(const std::string & identifier);
+	static std::string encode(const si32 index);
 };
 
 class SlotID : public BaseForID<SlotID, si32>
@@ -319,8 +339,6 @@ public:
 	SecondarySkill(ESecondarySkill _num = WRONG) : num(_num)
 	{}
 
-	DLL_LINKAGE const CSkill * toSkill() const;
-
 	ID_LIKE_CLASS_COMMON(SecondarySkill, ESecondarySkill)
 
 	ESecondarySkill num;
@@ -333,7 +351,7 @@ namespace EAlignment
 	enum EAlignment { GOOD, EVIL, NEUTRAL };
 }
 
-namespace ETownType
+namespace ETownType//deprecated
 {
 	enum ETownType
 	{
@@ -341,6 +359,28 @@ namespace ETownType
 		CASTLE, RAMPART, TOWER, INFERNO, NECROPOLIS, DUNGEON, STRONGHOLD, FORTRESS, CONFLUX, NEUTRAL
 	};
 }
+
+class FactionID : public BaseForID<FactionID, si32>
+{
+	INSTID_LIKE_CLASS_COMMON(FactionID, si32)
+
+	DLL_LINKAGE static const FactionID ANY;
+	DLL_LINKAGE static const FactionID CASTLE;
+	DLL_LINKAGE static const FactionID RAMPART;
+	DLL_LINKAGE static const FactionID TOWER;
+	DLL_LINKAGE static const FactionID INFERNO;
+	DLL_LINKAGE static const FactionID NECROPOLIS;
+	DLL_LINKAGE static const FactionID DUNGEON;
+	DLL_LINKAGE static const FactionID STRONGHOLD;
+	DLL_LINKAGE static const FactionID FORTRESS;
+	DLL_LINKAGE static const FactionID CONFLUX;
+	DLL_LINKAGE static const FactionID NEUTRAL;
+
+	///json serialization helpers
+	static si32 decode(const std::string & identifier);
+	static std::string encode(const si32 index);
+};
+
 
 class BuildingID
 {
@@ -929,6 +969,7 @@ public:
 	{}
 
 	DLL_LINKAGE const CArtifact * toArtifact() const;
+	DLL_LINKAGE const Artifact * toArtifact(const ArtifactService * service) const;
 
 	///json serialization helpers
 	static si32 decode(const std::string & identifier);
@@ -978,6 +1019,7 @@ public:
 	{}
 
 	DLL_LINKAGE const CCreature * toCreature() const;
+	DLL_LINKAGE const Creature * toCreature(const CreatureService * creatures) const;
 
 	ID_LIKE_CLASS_COMMON(CreatureID, ECreatureID)
 
@@ -1024,7 +1066,8 @@ public:
 	SpellID(ESpellID _num = NONE) : num(_num)
 	{}
 
-	DLL_LINKAGE const CSpell * toSpell() const;
+	DLL_LINKAGE const CSpell * toSpell() const; //deprecated
+	DLL_LINKAGE const spells::Spell * toSpell(const spells::Service * service) const;
 
 	ID_LIKE_CLASS_COMMON(SpellID, ESpellID)
 

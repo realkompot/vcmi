@@ -70,11 +70,43 @@ void MetaString::getLocalString(const std::pair<ui8,ui32> &txt, std::string &dst
 
 	if(type == ART_NAMES)
 	{
-		dst = VLC->arth->artifacts[ser]->Name();
+		auto art = ArtifactID(ser).toArtifact(VLC->artifacts());
+		if(art)
+			dst = art->getName();
+		else
+			dst = "#!#";
+	}
+	else if(type == ART_DESCR)
+	{
+		auto art = ArtifactID(ser).toArtifact(VLC->artifacts());
+		if(art)
+			dst = art->getDescription();
+		else
+			dst = "#!#";
+	}
+	else if (type == ART_EVNTS)
+	{
+		auto art = ArtifactID(ser).toArtifact(VLC->artifacts());
+		if(art)
+			dst = art->getEventText();
+		else
+			dst = "#!#";
 	}
 	else if(type == CRE_PL_NAMES)
 	{
-		dst = VLC->creh->creatures[ser]->namePl;
+		auto cre = CreatureID(ser).toCreature(VLC->creatures());
+		if(cre)
+			dst = cre->getPluralName();
+		else
+			dst = "#!#";
+	}
+	else if(type == CRE_SING_NAMES)
+	{
+		auto cre = CreatureID(ser).toCreature(VLC->creatures());
+		if(cre)
+			dst = cre->getSingularName();
+		else
+			dst = "#!#";
 	}
 	else if(type == MINE_NAMES)
 	{
@@ -86,21 +118,13 @@ void MetaString::getLocalString(const std::pair<ui8,ui32> &txt, std::string &dst
 	}
 	else if(type == SPELL_NAME)
 	{
-		dst = SpellID(ser).toSpell()->name;
+		auto spell = SpellID(ser).toSpell(VLC->spells());
+		if(spell)
+			dst = spell->getName();
+		else
+			dst = "#!#";
 	}
-	else if(type == CRE_SING_NAMES)
-	{
-		dst = VLC->creh->creatures[ser]->nameSing;
-	}
-	else if(type == ART_DESCR)
-	{
-		dst = VLC->arth->artifacts[ser]->Description();
-	}
-	else if (type == ART_EVNTS)
-	{
-		dst = VLC->arth->artifacts[ser]->EventText();
-	}
-	else if (type == OBJ_NAMES)
+	else if(type == OBJ_NAMES)
 	{
 		dst = VLC->objtypeh->getObjectName(ser);
 	}
@@ -258,8 +282,7 @@ DLL_LINKAGE std::string MetaString::buildList () const
 	return lista;
 }
 
-
-void  MetaString::addCreReplacement(CreatureID id, TQuantity count) //adds sing or plural name;
+void MetaString::addCreReplacement(CreatureID id, TQuantity count) //adds sing or plural name;
 {
 	if (!count)
 		addReplacement (CRE_PL_NAMES, id); //no creatures - just empty name (eg. defeat Angels)
@@ -269,7 +292,7 @@ void  MetaString::addCreReplacement(CreatureID id, TQuantity count) //adds sing 
 		addReplacement (CRE_PL_NAMES, id);
 }
 
-void MetaString::addReplacement(const CStackBasicDescriptor &stack)
+void MetaString::addReplacement(const CStackBasicDescriptor & stack)
 {
 	assert(stack.type); //valid type
 	addCreReplacement(stack.type->idNumber, stack.count);
@@ -282,7 +305,7 @@ static CGObjectInstance * createObject(Obj id, int subid, int3 pos, PlayerColor 
 	{
 	case Obj::HERO:
 		{
-			auto handler = VLC->objtypeh->getHandlerFor(id, VLC->heroh->heroes[subid]->heroClass->id);
+			auto handler = VLC->objtypeh->getHandlerFor(id, VLC->heroh->heroes[subid]->heroClass->getIndex());
 			nobj = handler->create(handler->getTemplates().front());
 			break;
 		}
@@ -1483,7 +1506,7 @@ void CGameState::giveCampaignBonusToHero(CGHeroInstance * hero)
 			break;
 		case CScenarioTravel::STravelBonus::SPELL_SCROLL:
 			{
-				CArtifactInstance * scroll = CArtifactInstance::createScroll(SpellID(curBonus->info2).toSpell());
+				CArtifactInstance * scroll = CArtifactInstance::createScroll(SpellID(curBonus->info2));
 				scroll->putAt(ArtifactLocation(hero, scroll->firstAvailableSlot(hero)));
 			}
 			break;
@@ -1581,11 +1604,10 @@ void CGameState::initStartingBonus()
 					logGlobal->error("Cannot give starting artifact - no heroes!");
 					break;
 				}
-				CArtifact *toGive;
-				toGive = VLC->arth->artifacts[VLC->arth->pickRandomArtifact(getRandomGenerator(), CArtifact::ART_TREASURE)];
+				const Artifact * toGive = VLC->arth->pickRandomArtifact(getRandomGenerator(), CArtifact::ART_TREASURE).toArtifact(VLC->artifacts());
 
 				CGHeroInstance *hero = elem.second.heroes[0];
-				giveHeroArtifact(hero, toGive->id);
+				giveHeroArtifact(hero, toGive->getId());
 			}
 			break;
 		}
@@ -2711,7 +2733,7 @@ std::set<HeroTypeID> CGameState::getUnusedAllowedHeroes(bool alsoIncludeNotAllow
 	for(int i = 0; i < map->allowedHeroes.size(); i++)
 		if(map->allowedHeroes[i] || alsoIncludeNotAllowed)
 			ret.insert(HeroTypeID(i));
-	
+
 	for(auto & playerSettingPair : scenarioOps->playerInfos) //remove uninitialized yet heroes picked for start by other players
 	{
 		if(playerSettingPair.second.hero != PlayerSettings::RANDOM)

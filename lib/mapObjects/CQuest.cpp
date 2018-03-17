@@ -477,7 +477,7 @@ void CQuest::serializeJson(JsonSerializeFormat & handler, const std::string & fi
         }
 		break;
 	case MISSION_HERO:
-		handler.serializeId<ui32>("hero", m13489val, 0, &CHeroHandler::decodeHero, &CHeroHandler::encodeHero);
+		handler.serializeId<ui32, ui32, HeroTypeID>("hero", m13489val, 0);
 		break;
 	case MISSION_PLAYER:
 		handler.serializeEnum("player",  m13489val, PlayerColor::CANNOT_DETERMINE.getNum(), GameConstants::PLAYER_COLOR_NAMES);
@@ -931,15 +931,15 @@ void CGSeerHut::serializeJsonOptions(JsonSerializeFormat & handler)
 			identifier = CSkillHandler::encodeSkill(rID);
 			break;
 		case ARTIFACT:
-			identifier = ArtifactID(rID).toArtifact()->identifier;
+			identifier = ArtifactID(rID).toArtifact(VLC->artifacts())->getJsonKey();
 			amount = 1;
 			break;
 		case SPELL:
-			identifier = SpellID(rID).toSpell()->identifier;
+			identifier = SpellID(rID).toSpell(VLC->spells())->getJsonKey();
 			amount = 1;
 			break;
 		case CREATURE:
-			identifier = CreatureID(rID).toCreature()->identifier;
+			identifier = CreatureID(rID).toCreature(VLC->creatures())->getJsonKey();
 			break;
 		default:
 			assert(false);

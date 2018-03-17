@@ -20,6 +20,47 @@
 
 #include "mapObjects/CObjectClassesHandler.h"
 
+int32_t CCreature::getIndex() const
+{
+	return idNumber.toEnum();
+}
+
+const std::string & CCreature::getName() const
+{
+	return nameSing;//???
+}
+
+const std::string & CCreature::getJsonKey() const
+{
+	return identifier;
+}
+
+void CCreature::registerIcons(const IconRegistar & cb) const
+{
+	cb(iconIndex, "CPRSMALL", smallIconName);
+	cb(iconIndex, "TWCRPORT", largeIconName);
+}
+
+CreatureID CCreature::getId() const
+{
+	return idNumber;
+}
+
+uint32_t CCreature::getMaxHealth() const
+{
+	return CBonusSystemNode::MaxHealth();
+}
+
+const std::string & CCreature::getPluralName() const
+{
+	return namePl;
+}
+
+const std::string & CCreature::getSingularName() const
+{
+	return nameSing;
+}
+
 int CCreature::getQuantityID(const int & quantity)
 {
 	if (quantity<5)
@@ -1146,6 +1187,53 @@ CCreatureHandler::~CCreatureHandler()
 
 	for(auto & p : skillRequirements)
 		p.first = nullptr;
+}
+
+const Entity * CCreatureHandler::getBaseByIndex(const int32_t index) const
+{
+	return getByIndex(index);
+}
+
+const Creature * CCreatureHandler::getById(const CreatureID & id) const
+{
+	return getByIndex(id);
+}
+
+const Creature * CCreatureHandler::getByIndex(const int32_t index) const
+{
+	if(index < 0 || index >= creatures.size())
+	{
+		logGlobal->error("Unable to get creature with ID %d", index);
+		return nullptr;
+	}
+	else
+	{
+		return creatures.at(index).get();
+	}
+}
+
+void CCreatureHandler::forEachBase(const std::function<void(const Entity * entity, bool & stop)>& cb) const
+{
+	bool stop = false;
+
+	for(auto & object : creatures)
+	{
+		cb(object.get(), stop);
+		if(stop)
+			break;
+	}
+}
+
+void CCreatureHandler::forEach(const std::function<void(const Creature * entity, bool & stop)>& cb) const
+{
+	bool stop = false;
+
+	for(auto & object : creatures)
+	{
+		cb(object.get(), stop);
+		if(stop)
+			break;
+	}
 }
 
 CreatureID CCreatureHandler::pickRandomMonster(CRandomGenerator & rand, int tier) const

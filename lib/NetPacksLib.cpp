@@ -663,7 +663,7 @@ DLL_LINKAGE void GiveHero::applyGs(CGameState *gs)
 	//bonus system
 	h->detachFrom(&gs->globalEffects);
 	h->attachTo(gs->getPlayer(player));
-	h->appearance = VLC->objtypeh->getHandlerFor(Obj::HERO, h->type->heroClass->id)->getTemplates().front();
+	h->appearance = VLC->objtypeh->getHandlerFor(Obj::HERO, h->type->heroClass->getIndex())->getTemplates().front();
 
 	gs->map->removeBlockVisTiles(h,true);
 	h->setOwner(player);
@@ -685,7 +685,7 @@ DLL_LINKAGE void NewObject::applyGs(CGameState *gs)
 		testObject.appearance = VLC->objtypeh->getHandlerFor(ID, subID)->getTemplates(ETerrainType::WATER).front();
 
 		const int3 previousXAxisTile = int3(pos.x - 1, pos.y, pos.z);
-		assert(gs->isInTheMap(previousXAxisTile) && (testObject.visitablePos() == previousXAxisTile)); 
+		assert(gs->isInTheMap(previousXAxisTile) && (testObject.visitablePos() == previousXAxisTile));
 	}
 	else
 	{
@@ -1009,7 +1009,7 @@ DLL_LINKAGE void EraseArtifact::applyGs(CGameState *gs)
 	auto slot = al.getSlot();
 	if(slot->locked)
 	{
-		logGlobal->debug("Erasing locked artifact: %s", slot->artifact->artType->Name());
+		logGlobal->debug("Erasing locked artifact: %s", slot->artifact->artType->getName());
 		DisassembledArtifact dis;
 		dis.al.artHolder = al.artHolder;
 		auto aset = al.getHolderArtSet();
@@ -1029,12 +1029,12 @@ DLL_LINKAGE void EraseArtifact::applyGs(CGameState *gs)
 			}
 		}
 		assert(found && "Failed to determine the assembly this locked artifact belongs to");
-		logGlobal->debug("Found the corresponding assembly: %s", dis.al.getSlot()->artifact->artType->Name());
+		logGlobal->debug("Found the corresponding assembly: %s", dis.al.getSlot()->artifact->artType->getName());
 		dis.applyGs(gs);
 	}
 	else
 	{
-		logGlobal->debug("Erasing artifact %s", slot->artifact->artType->Name());
+		logGlobal->debug("Erasing artifact %s", slot->artifact->artType->getName());
 	}
 	al.removeArtifact();
 }
@@ -1367,6 +1367,16 @@ void BattleResult::applyGs(CGameState *gs)
 	gs->curB.dellNull();
 }
 
+DLL_LINKAGE void BattleLogMessage::applyGs(CGameState *gs)
+{
+	//nothing
+}
+
+DLL_LINKAGE void BattleLogMessage::applyBattle(IBattleState * battleState)
+{
+	//nothing
+}
+
 DLL_LINKAGE void BattleStackMoved::applyGs(CGameState *gs)
 {
 	applyBattle(gs->curB);
@@ -1423,7 +1433,7 @@ DLL_LINKAGE void StartAction::applyGs(CGameState *gs)
 	}
 	else
 	{
-		gs->curB->sides[ba.side].usedSpellsHistory.push_back(SpellID(ba.actionSubtype).toSpell());
+		gs->curB->sides[ba.side].usedSpellsHistory.push_back(SpellID(ba.actionSubtype));
 	}
 
 	switch(ba.actionType)
@@ -1509,6 +1519,9 @@ DLL_LINKAGE void BattleUnitsChanged::applyBattle(IBattleState * battleState)
 			break;
 		case BattleChanges::EOperation::ADD:
 			battleState->addUnit(elem.id, elem.data);
+			break;
+		case BattleChanges::EOperation::UPDATE:
+			battleState->updateUnit(elem.id, elem.data);
 			break;
 		default:
 			logNetwork->error("Unknown unit operation %d", (int)elem.operation);
