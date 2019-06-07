@@ -2238,7 +2238,7 @@ void CPlayerInterface::advmapSpellCast(const CGHeroInstance * caster, int spellI
 	if(spellID == SpellID::FLY || spellID == SpellID::WATER_WALK)
 		eraseCurrentPathOf(caster, false);
 
-	const CSpell * spell = CGI->spellh->objects.at(spellID);
+	const spells::Spell * spell = CGI->spells()->getByIndex(spellID);
 
 	if(spellID == SpellID::VIEW_EARTH)
 	{
