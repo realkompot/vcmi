@@ -13,9 +13,7 @@
 #include "Goals/AbstractGoal.h"
 #include "../../lib/AI_Base.h"
 #include "../../CCallback.h"
-
 #include "../../lib/CThreadHelper.h"
-
 #include "../../lib/GameConstants.h"
 #include "../../lib/VCMI_Lib.h"
 #include "../../lib/CBuildingHandler.h"
@@ -89,12 +87,6 @@ public:
 	std::vector<ObjectInstanceID> teleportChannelProbingList; //list of teleport channel exits that not visible and need to be (re-)explored
 	//std::vector<const CGObjectInstance *> visitedThisWeek; //only OPWs
 	std::map<HeroPtr, std::set<const CGTownInstance *>> townVisitsThisWeek;
-
-	//part of mainLoop, but accessible from outisde
-	std::vector<Goals::TSubgoal> basicGoals;
-	Goals::TGoalVec goalsToRemove;
-	Goals::TGoalVec goalsToAdd;
-	std::map<Goals::TSubgoal, Goals::TGoalVec> ultimateGoalsFromBasic; //theoreticlaly same goal can fulfill multiple basic goals
 
 	std::set<HeroPtr> invalidPathHeroes; //FIXME, just a workaround
 	std::map<HeroPtr, Goals::TSubgoal> lockedHeroes; //TODO: allow non-elementar objectives
@@ -202,17 +194,9 @@ public:
 	void battleEnd(const BattleResult * br) override;
 
 	void makeTurn();
-	void mainLoop();
-	void performTypicalActions();
 
 	void buildArmyIn(const CGTownInstance * t);
-	void striveToGoal(Goals::TSubgoal ultimateGoal);
-	Goals::TSubgoal decomposeGoal(Goals::TSubgoal ultimateGoal);
 	void endTurn();
-	void wander(HeroPtr h);
-	void setGoal(HeroPtr h, Goals::TSubgoal goal);
-	void evaluateGoal(HeroPtr h); //evaluates goal assigned to hero, if any
-	void completeGoal(Goals::TSubgoal goal); //safely removes goal from reserved hero
 
 	void recruitHero(const CGTownInstance * t, bool throwing = false);
 	bool isGoodForVisit(const CGObjectInstance * obj, HeroPtr h, boost::optional<float> movementCostLimit = boost::none);
@@ -233,8 +217,6 @@ public:
 
 	void addVisitableObj(const CGObjectInstance * obj);
 	void markObjectVisited(const CGObjectInstance * obj);
-	void reserveObject(HeroPtr h, const CGObjectInstance * obj); //TODO: reserve all objects that heroes attempt to visit
-	void unreserveObject(HeroPtr h, const CGObjectInstance * obj);
 
 	void markHeroUnableToExplore(HeroPtr h);
 	void markHeroAbleToExplore(HeroPtr h);
@@ -264,7 +246,6 @@ public:
 	std::vector<HeroPtr> getUnblockedHeroes() const;
 	std::vector<HeroPtr> getMyHeroes() const;
 	HeroPtr primaryHero() const;
-	void checkHeroArmy(HeroPtr h);
 
 	void requestSent(const CPackForServer * pack, int requestID) override;
 	void answerQuery(QueryID queryID, int selection);
