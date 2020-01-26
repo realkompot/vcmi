@@ -47,8 +47,8 @@ InputVariable: heroRole
   enabled: true
   range: -0.100 1.100
   lock-range: false
-  term: MAIN Rectangle -0.500 0.500
-  term: SCOUT Rectangle 0.500 1.500
+  term: SCOUT Rectangle -0.500 0.500
+  term: MAIN Rectangle 0.500 1.500
 InputVariable: danger
   enabled: true
   range: 0.000 10000.000
