@@ -27,12 +27,6 @@ public:
 	using Wrapper = OpaqueWrapper<::events::EventBus, EventBusProxy>;
 	static const std::vector<typename Wrapper::RegType> REGISTER;
 	static const std::vector<typename Wrapper::CustomRegType> REGISTER_CUSTOM;
-
-	static int subscribeBefore(lua_State * L);
-	static int subscribeAfter(lua_State * L);
-
-private:
-	static int subscribe(lua_State * L, const std::string & method);
 };
 
 }
