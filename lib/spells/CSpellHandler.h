@@ -26,6 +26,7 @@ class IAdventureSpellMechanics;
 class CBattleInfoCallback;
 class AdventureSpellCastParameters;
 class SpellCastEnvironment;
+class JsonSerializeFormat;
 
 namespace test
 {
@@ -295,6 +296,9 @@ public:
 
 	const std::string & getCastSound() const override;
 
+	void updateFrom(const JsonNode & data);
+	void serializeJson(JsonSerializeFormat & handler);
+
 	template <typename Handler> void serialize(Handler & h, const int version)
 	{
 		h & identifier;
@@ -418,19 +422,11 @@ private:
 
 bool DLL_LINKAGE isInScreenRange(const int3 &center, const int3 &pos); //for spells like Dimension Door
 
-class DLL_LINKAGE CSpellHandler: public CHandlerBase<SpellID, CSpell>, public spells::Service
+class DLL_LINKAGE CSpellHandler: public CHandlerBase<SpellID, spells::Spell, CSpell, spells::Service>
 {
 public:
 	CSpellHandler();
 	virtual ~CSpellHandler();
-
-	const Entity * getBaseByIndex(const int32_t index) const override;
-
-	const spells::Spell * getById(const SpellID & id) const override;
-	const spells::Spell * getByIndex(const int32_t index) const override;
-
-	void forEachBase(const std::function<void(const Entity * entity, bool & stop)> & cb) const override;
-	void forEach(const std::function<void(const spells::Spell * entity, bool & stop)> & cb) const override;
 
 	///IHandler base
 	std::vector<JsonNode> loadLegacyData(size_t dataSize) override;
@@ -442,8 +438,6 @@ public:
 	 *
 	 */
 	std::vector<bool> getDefaultAllowed() const override;
-
-	const std::vector<std::string> & getTypeNames() const override;
 
 	template <typename Handler> void serialize(Handler & h, const int version)
 	{
@@ -460,7 +454,8 @@ public:
 	}
 
 protected:
-	CSpell * loadFromJson(const JsonNode & json, const std::string & identifier, size_t index) override;
+	const std::vector<std::string> & getTypeNames() const override;
+	CSpell * loadFromJson(const std::string & scope, const JsonNode & json, const std::string & identifier, size_t index) override;
 private:
 	void update780();
 };

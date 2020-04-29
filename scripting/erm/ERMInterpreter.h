@@ -154,38 +154,30 @@ namespace VERMInterpreter
 
 	};
 
-	struct FileInfo
-	{
-		std::string filename;
-		int length;
-	};
-
 	struct LinePointer
 	{
-		const FileInfo * file; //non-owning
 		int lineNum;
-
 		int realLineNum;
+		int fileLength;
 
-		LinePointer() : file(nullptr)
+		LinePointer()
+			: fileLength(-1)
 		{}
 
-		LinePointer(const FileInfo * finfo, int line, int _realLineNum) : file(finfo), lineNum(line),
+		LinePointer(int _fileLength, int line, int _realLineNum)
+			: fileLength(_fileLength),
+			lineNum(line),
 			realLineNum(_realLineNum)
 		{}
 
-		//lexicographical order
 		bool operator<(const LinePointer & rhs) const
 		{
-			if(file->filename != rhs.file->filename)
-				return file->filename < rhs.file->filename;
-
 			return lineNum < rhs.lineNum;
 		}
 
 		bool operator!=(const LinePointer & rhs) const
 		{
-			return file->filename != rhs.file->filename || lineNum != rhs.lineNum;
+			return lineNum != rhs.lineNum;
 		}
 		LinePointer & operator++()
 		{
@@ -194,7 +186,7 @@ namespace VERMInterpreter
 		}
 		bool isValid() const
 		{
-			return file && lineNum < file->length;
+			return fileLength > 0 && lineNum < fileLength;
 		}
 	};
 
@@ -314,46 +306,32 @@ namespace VERMInterpreter
 	};
 }
 
-
 class ERMInterpreter
 {
 /*not so*/ public:
 
-	std::vector<VERMInterpreter::FileInfo*> files;
-
 	std::map<VERMInterpreter::LinePointer, ERM::TLine> scripts;
-
-	ERM::TLine & retrieveLine(const VERMInterpreter::LinePointer & linePtr);
-	static ERM::TTriggerBase & retrieveTrigger(ERM::TLine &line);
-
 
 	typedef std::map<VERMInterpreter::TriggerType, std::vector<VERMInterpreter::Trigger> > TtriggerListType;
 	TtriggerListType triggers;
 	TtriggerListType postTriggers;
-
 	std::vector<VERMInterpreter::LinePointer> instructions;
+
 
 	static const std::string triggerSymbol, postTriggerSymbol, defunSymbol;
 
 	static bool isCMDATrigger(const ERM::Tcommand & cmd);
 	static bool isATrigger(const ERM::TLine & line);
 	static ERM::EVOtions getExpType(const ERM::TVOption & opt);
-
-
+	ERM::TLine & retrieveLine(const VERMInterpreter::LinePointer & linePtr);
+	static ERM::TTriggerBase & retrieveTrigger(ERM::TLine & line);
 public:
 	vstd::CLoggerBase * logger;
-
 
 	ERMInterpreter(vstd::CLoggerBase * logger_);
 	virtual ~ERMInterpreter();
 
-	void scanScripts(); //scans for functions, triggers etc.
-
-	int getRealLine(const VERMInterpreter::LinePointer &lp);
-
 	void loadScript(const std::string & name, const std::string & source);
 
 	std::string convert();
-
-
 };

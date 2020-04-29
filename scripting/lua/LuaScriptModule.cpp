@@ -35,7 +35,7 @@ namespace scripting
 LuaScriptModule::LuaScriptModule() = default;
 LuaScriptModule::~LuaScriptModule() = default;
 
-std::string LuaScriptModule::compile(const std::string & name, const std::string & source) const
+std::string LuaScriptModule::compile(const std::string & name, const std::string & source, vstd::CLoggerBase * logger) const
 {
 	//TODO: pre-compile to byte code
 	//LuaJit bytecode in architecture agnostic, but is not backward compatible and completely incompatible with Lua

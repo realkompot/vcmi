@@ -53,7 +53,7 @@ TEST_F(ERM_MF, ChangesDamage)
 
 	loadScript(VLC->scriptHandler->erm, source.str());
 	SCOPED_TRACE("\n" + subject->code);
-	run();
+	runClientServer();
 
 	EXPECT_CALL(event, getInitalDamage()).WillOnce(Return(23450));
 	EXPECT_CALL(event, setDamage(Eq(23460))).Times(1);
@@ -72,7 +72,7 @@ TEST_F(ERM_MF, GetsUnitId)
 
 	loadScript(VLC->scriptHandler->erm, source.str());
 	SCOPED_TRACE("\n" + subject->code);
-	run();
+	runClientServer();
 
 	EXPECT_CALL(event, getTarget()).WillRepeatedly(Return(&targetMock));
 	EXPECT_CALL(targetMock, unitId()).WillRepeatedly(Return(42));

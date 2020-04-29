@@ -305,7 +305,7 @@ static CGObjectInstance * createObject(Obj id, int subid, int3 pos, PlayerColor 
 	{
 	case Obj::HERO:
 		{
-			auto handler = VLC->objtypeh->getHandlerFor(id, VLC->heroh->heroes[subid]->heroClass->getIndex());
+			auto handler = VLC->objtypeh->getHandlerFor(id, VLC->heroh->objects[subid]->heroClass->getIndex());
 			nobj = handler->create(handler->getTemplates().front());
 			break;
 		}
@@ -432,7 +432,7 @@ int CGameState::pickUnusedHeroTypeRandomly(PlayerColor owner)
 	const PlayerSettings &ps = scenarioOps->getIthPlayersSettings(owner);
 	for(HeroTypeID hid : getUnusedAllowedHeroes())
 	{
-		if(VLC->heroh->heroes[hid.getNum()]->heroClass->faction == ps.castle)
+		if(VLC->heroh->objects[hid.getNum()]->heroClass->faction == ps.castle)
 			factionHeroes.push_back(hid);
 		else
 			otherHeroes.push_back(hid);
@@ -507,9 +507,9 @@ std::pair<Obj,int> CGameState::pickObject (CGObjectInstance *obj)
 			{
 				do
 				{
-					f = getRandomGenerator().nextInt(VLC->townh->factions.size() - 1);
+					f = getRandomGenerator().nextInt(VLC->townh->size() - 1);
 				}
-				while (VLC->townh->factions[f]->town == nullptr); // find playable faction
+				while ((*VLC->townh)[f]->town == nullptr); // find playable faction
 			}
 			return std::make_pair(Obj::TOWN,f);
 		}
@@ -529,7 +529,7 @@ std::pair<Obj,int> CGameState::pickObject (CGObjectInstance *obj)
 			//if castle alignment available
 			if (auto info = dynamic_cast<CCreGenAsCastleInfo*>(dwl->info))
 			{
-				faction = getRandomGenerator().nextInt(VLC->townh->factions.size() - 1);
+				faction = getRandomGenerator().nextInt(VLC->townh->size() - 1);
 				if(info->asCastle && info->instanceId != "")
 				{
 					auto iter = map->instanceNames.find(info->instanceId);
@@ -606,7 +606,7 @@ std::pair<Obj,int> CGameState::pickObject (CGObjectInstance *obj)
 			dwl->info = nullptr;
 
 			std::pair<Obj, int> result(Obj::NO_OBJ, -1);
-			CreatureID cid = VLC->townh->factions[faction]->town->creatures[level][0];
+			CreatureID cid = (*VLC->townh)[faction]->town->creatures[level][0];
 
 			//NOTE: this will pick last dwelling with this creature (Mantis #900)
 			//check for block map equality is better but more complex solution
@@ -617,7 +617,7 @@ std::pair<Obj,int> CGameState::pickObject (CGObjectInstance *obj)
 				{
 					auto handler = dynamic_cast<const CDwellingInstanceConstructor*>(VLC->objtypeh->getHandlerFor(primaryID, entry).get());
 
-					if (handler->producesCreature(VLC->creh->creatures[cid]))
+					if (handler->producesCreature(VLC->creh->objects[cid]))
 						result = std::make_pair(primaryID, entry);
 				}
 			};
@@ -628,7 +628,7 @@ std::pair<Obj,int> CGameState::pickObject (CGObjectInstance *obj)
 
 			if (result.first == Obj::NO_OBJ)
 			{
-				logGlobal->error("Error: failed to find dwelling for %s of level %d", VLC->townh->factions[faction]->name, int(level));
+				logGlobal->error("Error: failed to find dwelling for %s of level %d", (*VLC->townh)[faction]->name, int(level));
 				result = std::make_pair(Obj::CREATURE_GENERATOR1, *RandomGeneratorUtil::nextItem(VLC->objtypeh->knownSubObjects(Obj::CREATURE_GENERATOR1), getRandomGenerator()));
 			}
 
@@ -701,6 +701,7 @@ CGameState::CGameState()
 	globalEffects.setDescription("Global effects");
 	globalEffects.setNodeType(CBonusSystemNode::GLOBAL_EFFECTS);
 	day = 0;
+	services = nullptr;
 }
 
 CGameState::~CGameState()
@@ -712,8 +713,14 @@ CGameState::~CGameState()
 		ptr.second.dellNull();
 }
 
+void CGameState::preInit(Services * services)
+{
+	this->services = services;
+}
+
 void CGameState::init(const IMapService * mapService, StartInfo * si, bool allowSavingRandomMap)
 {
+	preInitAuto();
 	logGlobal->info("\tUsing random seed: %d", si->seedToBeUsed);
 	getRandomGenerator().setSeed(si->seedToBeUsed);
 	scenarioOps = CMemorySerializer::deepCopy(*si).release();
@@ -782,11 +789,26 @@ void CGameState::init(const IMapService * mapService, StartInfo * si, bool allow
 	}
 }
 
+void CGameState::updateEntity(Metatype metatype, int32_t index, const JsonNode & data)
+{
+	services->updateEntity(metatype, index, data);
+}
+
 void CGameState::updateOnLoad(StartInfo * si)
 {
+	preInitAuto();
 	scenarioOps->playerInfos = si->playerInfos;
 	for(auto & i : si->playerInfos)
 		gs->players[i.first].human = i.second.isControlledByHuman();
+}
+
+void CGameState::preInitAuto()
+{
+	if(services == nullptr)
+	{
+		logGlobal->error("Game state preinit missing");
+		preInit(VLC);
+	}
 }
 
 void CGameState::initNewGame(const IMapService * mapService, bool allowSavingRandomMap)
@@ -1584,7 +1606,7 @@ void CGameState::initStartingBonus()
 			break;
 		case PlayerSettings::RESOURCE:
 			{
-				int res = VLC->townh->factions[scenarioOps->playerInfos[elem.first].castle]->town->primaryRes;
+				int res = (*VLC->townh)[scenarioOps->playerInfos[elem.first].castle]->town->primaryRes;
 				if(res == Res::WOOD_AND_ORE)
 				{
 					int amount = getRandomGenerator().nextInt(5, 10);
@@ -1653,7 +1675,7 @@ void CGameState::initTowns()
 		CGTownInstance * vti =(elem);
 		if(!vti->town)
 		{
-			vti->town = VLC->townh->factions[vti->subID]->town;
+			vti->town = (*VLC->townh)[vti->subID]->town;
 		}
 		if(vti->name.empty())
 		{
@@ -1926,7 +1948,7 @@ UpgradeInfo CGameState::getUpgradeInfo(const CStackInstance &stack)
 			if (nid != base->idNumber) //in very specific case the upgrade is available by default (?)
 			{
 				ret.newID.push_back(nid);
-				ret.cost.push_back(VLC->creh->creatures[nid]->cost - base->cost);
+				ret.cost.push_back(VLC->creh->objects[nid]->cost - base->cost);
 			}
 		}
 		t = h->visitedTown;
@@ -1942,7 +1964,7 @@ UpgradeInfo CGameState::getUpgradeInfo(const CStackInstance &stack)
 					if(vstd::contains(base->upgrades, upgrID)) //possible upgrade
 					{
 						ret.newID.push_back(upgrID);
-						ret.cost.push_back(VLC->creh->creatures[upgrID]->cost - base->cost);
+						ret.cost.push_back(VLC->creh->objects[upgrID]->cost - base->cost);
 					}
 				}
 			}
@@ -1958,7 +1980,7 @@ UpgradeInfo CGameState::getUpgradeInfo(const CStackInstance &stack)
 		for(auto nid : base->upgrades)
 		{
 			ret.newID.push_back(nid);
-			ret.cost.push_back((VLC->creh->creatures[nid]->cost - base->cost) * costModifier / 100);
+			ret.cost.push_back((VLC->creh->objects[nid]->cost - base->cost) * costModifier / 100);
 		}
 	}
 
@@ -2651,7 +2673,7 @@ void CGameState::obtainPlayersStats(SThievesGuildInfo & tgi, int level)
 				for(auto it = elem->Slots().begin(); it != elem->Slots().end(); ++it)
 				{
 					int toCmp = it->second->type->idNumber; //ID of creature we should compare with the best one
-					if(bestCre == -1 || VLC->creh->creatures[bestCre]->AIValue < VLC->creh->creatures[toCmp]->AIValue)
+					if(bestCre == -1 || VLC->creh->objects[bestCre]->AIValue < VLC->creh->objects[toCmp]->AIValue)
 					{
 						bestCre = toCmp;
 					}
@@ -2721,7 +2743,7 @@ void CGameState::attachArmedObjects()
 
 void CGameState::giveHeroArtifact(CGHeroInstance *h, ArtifactID aid)
 {
-	 CArtifact * const artifact = VLC->arth->artifacts[aid]; //pointer to constant object
+	 CArtifact * const artifact = VLC->arth->objects[aid]; //pointer to constant object
 	 CArtifactInstance *ai = CArtifactInstance::createNewArtifactInstance(artifact);
 	 map->addNewArtifactInstance(ai);
 	 ai->putAt(ArtifactLocation(h, ai->firstAvailableSlot(h)));
@@ -2829,14 +2851,14 @@ void CGameState::replaceHeroesPlaceholders(const std::vector<CGameState::Campaig
 		heroToPlace->id = campaignHeroReplacement.heroPlaceholderId;
 		heroToPlace->tempOwner = heroPlaceholder->tempOwner;
 		heroToPlace->pos = heroPlaceholder->pos;
-		heroToPlace->type = VLC->heroh->heroes[heroToPlace->subID];
+		heroToPlace->type = VLC->heroh->objects[heroToPlace->subID];
 
 		for(auto &&i : heroToPlace->stacks)
-			i.second->type = VLC->creh->creatures[i.second->getCreatureID()];
+			i.second->type = VLC->creh->objects[i.second->getCreatureID()];
 
 		auto fixArtifact = [&](CArtifactInstance * art)
 		{
-			art->artType = VLC->arth->artifacts[art->artType->id];
+			art->artType = VLC->arth->objects[art->artType->id];
 			gs->map->artInstances.push_back(art);
 			art->id = ArtifactInstanceID(gs->map->artInstances.size() - 1);
 		};

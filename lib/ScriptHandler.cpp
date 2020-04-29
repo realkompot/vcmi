@@ -40,15 +40,15 @@ ScriptImpl::ScriptImpl(const ScriptHandler * owner_)
 
 ScriptImpl::~ScriptImpl() = default;
 
-void ScriptImpl::compile()
+void ScriptImpl::compile(vstd::CLoggerBase * logger)
 {
-	code = host->compile(sourcePath, sourceText);
+	code = host->compile(sourcePath, sourceText, logger);
 
 	if(host == owner->erm)
 	{
 		host = owner->lua;
 		sourceText = code;
-		code = host->compile(getName(), getSource());
+		code = host->compile(getName(), getSource(), logger);
 	}
 }
 
@@ -94,7 +94,7 @@ void ScriptImpl::serializeJson(JsonSerializeFormat & handler)
 
 		sourceText = std::string((char *)rawData.first.get(), rawData.second);
 
-		compile();
+		compile(logMod);
 	}
 }
 
@@ -107,7 +107,7 @@ void ScriptImpl::serializeJsonState(JsonSerializeFormat & handler)
 
 	if(!handler.saving)
 	{
-		resolveHost();
+		host = owner->lua;
 	}
 }
 
@@ -206,7 +206,7 @@ std::vector<JsonNode> ScriptHandler::loadLegacyData(size_t dataSize)
 	return std::vector<JsonNode>();
 }
 
-ScriptPtr ScriptHandler::loadFromJson(const JsonNode & json, const std::string & identifier) const
+ScriptPtr ScriptHandler::loadFromJson(const std::string & scope, const JsonNode & json, const std::string & identifier) const
 {
 	ScriptPtr ret = std::make_shared<ScriptImpl>(this);
 
@@ -218,7 +218,7 @@ ScriptPtr ScriptHandler::loadFromJson(const JsonNode & json, const std::string &
 
 void ScriptHandler::loadObject(std::string scope, std::string name, const JsonNode & data)
 {
-	auto object = loadFromJson(data, normalizeIdentifier(scope, "core", name));
+	auto object = loadFromJson(scope, data, normalizeIdentifier(scope, "core", name));
 	objects[object->identifier] = object;
 }
 

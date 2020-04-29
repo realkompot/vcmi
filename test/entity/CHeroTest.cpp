@@ -27,17 +27,18 @@ protected:
 	void SetUp() override
 	{
 		subject = std::make_shared<CHero>();
-		subject->imageIndex = 4242;
-
-		subject->iconSpecSmall = "Test1";
-		subject->iconSpecLarge = "Test2";
-		subject->portraitSmall = "Test3";
-		subject->portraitLarge = "Test4";
 	}
 };
 
 TEST_F(CHeroTest, RegistersIcons)
 {
+	subject->imageIndex = 4242;
+
+	subject->iconSpecSmall = "Test1";
+	subject->iconSpecLarge = "Test2";
+	subject->portraitSmall = "Test3";
+	subject->portraitLarge = "Test4";
+
 	auto cb = std::bind(&CHeroTest::registarCb, this, _1, _2, _3);
 
 	EXPECT_CALL(*this, registarCb(Eq(4242), "UN32", "Test1"));

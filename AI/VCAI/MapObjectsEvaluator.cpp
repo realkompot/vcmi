@@ -77,7 +77,7 @@ boost::optional<int> MapObjectsEvaluator::getObjectValue(const CGObjectInstance 
 		{
 			for(auto & creatureID : creLevel.second)
 			{
-				auto creature = VLC->creh->creatures[creatureID];
+				auto creature = VLC->creh->objects[creatureID];
 				aiValue += (creature->AIValue * creature->growth);
 			}
 		}

@@ -28,6 +28,7 @@ public:
 	virtual ~LuaContext();
 
 	void run(const JsonNode & initialState) override;
+	void run(ServerCallback * server, const JsonNode & initialState) override;
 
 	//log error and return nil from LuaCFunction
 	int errorRetVoid(const std::string & message);
@@ -47,7 +48,6 @@ public:
 
 	JsonNode saveState() override;
 
-	void push(const JsonNode & value);
 	void pop(JsonNode & value);
 
 	void popAll();
@@ -56,8 +56,6 @@ public:
 	void push(lua_CFunction f, void * opaque);
 
 	std::string toStringRaw(int index);
-
-protected:
 
 private:
 	lua_State * L;
@@ -79,13 +77,14 @@ private:
 	//print global function
 	static int print(lua_State * L);
 
+	static int logError(lua_State * L);
+
 	//require function implementation
 	int loadModule();
 
 	int printImpl();
 
+	int logErrorImpl();
 };
-
-
 
 }

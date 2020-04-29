@@ -20,14 +20,11 @@ class CSpellTest : public Test
 {
 public:
 	MOCK_METHOD3(registarCb, void(int32_t, const std::string &, const std::string &));
-
-protected:
 	std::shared_ptr<CSpell> subject;
-
+protected:
 	void SetUp() override
 	{
 		subject = std::make_shared<CSpell>();
-		subject->id = SpellID(42);
 		subject->iconBook = "Test1";
 		subject->iconEffect = "Test2";
 		subject->iconScenarioBonus = "Test3";
@@ -37,6 +34,8 @@ protected:
 
 TEST_F(CSpellTest, RegistersIcons)
 {
+	subject->id = SpellID(42);
+
 	auto cb = std::bind(&CSpellTest::registarCb, this, _1, _2, _3);
 
 	EXPECT_CALL(*this, registarCb(Eq(42), "SPELLS", "Test1"));

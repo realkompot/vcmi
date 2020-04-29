@@ -228,7 +228,7 @@ std::string CBuildingRect::getSubtitle()//hover text for building
 		if(availableCreatures.size())
 		{
 			int creaID = availableCreatures.back();//taking last of available creatures
-			return CGI->generaltexth->allTexts[16] + " " + CGI->creh->creatures.at(creaID)->namePl;
+			return CGI->generaltexth->allTexts[16] + " " + CGI->creh->objects.at(creaID)->namePl;
 		}
 		else
 		{
@@ -268,7 +268,7 @@ CDwellingInfoBox::CDwellingInfoBox(int centerX, int centerY, const CGTownInstanc
 	OBJECT_CONSTRUCTION_CAPTURING(255-DISPOSE);
 	background->colorize(Town->tempOwner);
 
-	const CCreature * creature = CGI->creh->creatures.at(Town->creatures.at(level).second.back());
+	const CCreature * creature = CGI->creh->objects.at(Town->creatures.at(level).second.back());
 
 	title = std::make_shared<CLabel>(80, 30, FONT_SMALL, CENTER, Colors::WHITE, creature->namePl);
 	animation = std::make_shared<CCreaturePic>(30, 44, creature, true, true);
@@ -959,7 +959,7 @@ CCreaInfo::CCreaInfo(Point position, const CGTownInstance * Town, int Level, boo
 	addUsedEvents(LCLICK | RCLICK | HOVER);
 
 	ui32 creatureID = town->creatures[level].second.back();
-	creature = CGI->creh->creatures[creatureID];
+	creature = CGI->creh->objects[creatureID];
 
 	picture = std::make_shared<CAnimImage>("CPRSMALL", creature->getIconIndex(), 0, 8, 0);
 
@@ -1613,7 +1613,7 @@ CFortScreen::RecruitArea::RecruitArea(int posX, int posY, const CGTownInstance *
 		Rect sizes(287, 4, 96, 18);
 		values.push_back(std::make_shared<LabeledValue>(sizes, CGI->generaltexth->allTexts[190], CGI->generaltexth->fcommands[0], getMyCreature()->getAttack(false)));
 		sizes.y+=20;
-		values.push_back(std::make_shared<LabeledValue>(sizes, CGI->generaltexth->allTexts[191], CGI->generaltexth->fcommands[1], getMyCreature()->getDefence(false)));
+		values.push_back(std::make_shared<LabeledValue>(sizes, CGI->generaltexth->allTexts[191], CGI->generaltexth->fcommands[1], getMyCreature()->getDefense(false)));
 		sizes.y+=21;
 		values.push_back(std::make_shared<LabeledValue>(sizes, CGI->generaltexth->allTexts[199], CGI->generaltexth->fcommands[2], getMyCreature()->getMinDamage(false), getMyCreature()->getMaxDamage(false)));
 		sizes.y+=20;
@@ -1628,9 +1628,9 @@ CFortScreen::RecruitArea::RecruitArea(int posX, int posY, const CGTownInstance *
 const CCreature * CFortScreen::RecruitArea::getMyCreature()
 {
 	if(!town->creatures.at(level).second.empty()) // built
-		return VLC->creh->creatures[town->creatures.at(level).second.back()];
+		return VLC->creh->objects[town->creatures.at(level).second.back()];
 	if(!town->town->creatures.at(level).empty()) // there are creatures on this level
-		return VLC->creh->creatures[town->town->creatures.at(level).front()];
+		return VLC->creh->objects[town->town->creatures.at(level).front()];
 	return nullptr;
 }
 
@@ -1767,7 +1767,7 @@ CBlacksmithDialog::CBlacksmithDialog(bool possible, CreatureID creMachineID, Art
 	animBG = std::make_shared<CPicture>("TPSMITBK", 64, 50);
 	animBG->needRefresh = true;
 
-	const CCreature * creature = CGI->creh->creatures[creMachineID];
+	const CCreature * creature = CGI->creh->objects[creMachineID];
 	anim = std::make_shared<CCreatureAnim>(64, 50, creature->animDefName);
 	anim->clipRect(113,125,200,150);
 

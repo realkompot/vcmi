@@ -9,6 +9,7 @@
  */
 #include "StdInc.h"
 
+#include "mock/mock_Services.h"
 #include "mock/mock_MapService.h"
 #include "mock/mock_IGameCallback.h"
 #include "mock/mock_spells_Problem.h"
@@ -37,11 +38,21 @@ public:
 		mapService("test/MiniTest/", this),
 		map(nullptr)
 	{
-		IObjectInterface::cb = gameCallback.get();
+
 	}
 
-	virtual ~CGameStateTest()
+	void SetUp() override
 	{
+		IObjectInterface::cb = gameCallback.get();
+
+		gameState = std::make_shared<CGameState>();
+		gameCallback->setGameState(gameState.get());
+		gameState->preInit(&services);
+	}
+
+	void TearDown() override
+	{
+		gameState.reset();
 		IObjectInterface::cb = nullptr;
 	}
 
@@ -92,7 +103,7 @@ public:
 
 	void complain(const std::string & problem) override
 	{
-		FAIL() << "Server-side assertion:" << problem;
+		FAIL() << "Server-side assertion: " << problem;
 	};
 
 	vstd::RNG * getRNG() override
@@ -165,8 +176,7 @@ public:
 			pset.handicap = PlayerSettings::NO_HANDICAP;
 		}
 
-		gameState = std::make_shared<CGameState>();
-		gameCallback->setGameState(gameState.get());
+
 		gameState->init(&mapService, &si, false);
 
 		ASSERT_NE(map, nullptr);
@@ -202,6 +212,7 @@ public:
 	std::shared_ptr<GameCallbackMock> gameCallback;
 
 	MapServiceMock mapService;
+	ServicesMock services;
 
 	CMap * map;
 };
@@ -397,4 +408,16 @@ TEST_F(CGameStateTest, battleResurrection)
 
 	EXPECT_EQ(unit->health.getCount(), 10);
 	EXPECT_EQ(unit->health.getResurrected(), 0);
+}
+
+TEST_F(CGameStateTest, updateEntity)
+{
+	using ::testing::SaveArg;
+	using ::testing::Eq;
+	using ::testing::_;
+
+	JsonNode actual;
+	EXPECT_CALL(services, updateEntity(Eq(Metatype::CREATURE), Eq(424242), _)).WillOnce(SaveArg<2>(&actual));
+	gameState->updateEntity(Metatype::CREATURE, 424242, JsonUtils::stringNode("TEST"));
+	EXPECT_EQ(actual.String(), "TEST");
 }

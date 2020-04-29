@@ -100,10 +100,12 @@ static bool willSecondHexBlockMoreEnemyShooters(const BattleHex &h1, const Battl
 	int shooters[2] = {0}; //count of shooters on hexes
 
 	for(int i = 0; i < 2; i++)
+	{
 		for (auto & neighbour : (i ? h2 : h1).neighbouringTiles())
-			if(const CStack *s = cbc->battleGetStackByPos(neighbour))
-				if(s->getCreature()->isShooting())
-						shooters[i]++;
+			if(const CStack * s = cbc->battleGetStackByPos(neighbour))
+				if(s->isShooter())
+					shooters[i]++;
+	}
 
 	return shooters[0] < shooters[1];
 }

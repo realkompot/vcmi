@@ -48,6 +48,11 @@ const std::vector<BattleUnitsChangedProxy::RegType> BattleUnitsChangedProxy::REG
 	}
 };
 
+const std::vector<BattleUnitsChangedProxy::CustomRegType> BattleUnitsChangedProxy::REGISTER_CUSTOM =
+{
+	{"new", &Wrapper::constructor, true}
+};
+
 int BattleUnitsChangedProxy::add(lua_State * L, std::shared_ptr<BattleUnitsChanged> object)
 {
 	LuaStack S(L);

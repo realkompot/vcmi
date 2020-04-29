@@ -430,7 +430,12 @@ void CBattleAI::attemptCastingSpell()
 		}
 	}
 
-	auto evaluateSpellcast = [&] (PossibleSpellcast * ps, std::shared_ptr<void>)
+	struct ScriptsCache
+	{
+		//todo: re-implement scripts context cache
+	};
+
+	auto evaluateSpellcast = [&] (PossibleSpellcast * ps, std::shared_ptr<ScriptsCache>)
 	{
 		HypotheticBattle state(env.get(), cb);
 
@@ -494,7 +499,7 @@ void CBattleAI::attemptCastingSpell()
 		}
 	};
 
-	using EvalRunner = ThreadPool<void>;
+	using EvalRunner = ThreadPool<ScriptsCache>;
 
 	EvalRunner::Tasks tasks;
 
@@ -511,7 +516,7 @@ void CBattleAI::attemptCastingSpell()
 
 	CStopWatch timer;
 
-	std::vector<std::shared_ptr<void>> scriptsPool; //todo: re-implement scripts context cache
+	std::vector<std::shared_ptr<ScriptsCache>> scriptsPool;
 
 	for(uint32_t idx = 0; idx < threadCount; idx++)
 	{
@@ -595,7 +600,7 @@ void CBattleAI::evaluateCreatureSpellcast(const CStack * stack, PossibleSpellcas
 	}
 
 	ps.value = totalGain;
-};
+}
 
 int CBattleAI::distToNearestNeighbour(BattleHex hex, const ReachabilityInfo::TDistances &dists, BattleHex *chosenHex)
 {

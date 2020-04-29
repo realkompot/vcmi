@@ -27,14 +27,15 @@ protected:
 	void SetUp() override
 	{
 		subject = std::make_shared<CArtifact>();
-		subject->iconIndex = 4242;
-		subject->image = "Test1";
-		subject->large = "Test2";
 	}
 };
 
 TEST_F(CArtifactTest, RegistersIcons)
 {
+	subject->iconIndex = 4242;
+	subject->image = "Test1";
+	subject->large = "Test2";
+
 	auto cb = std::bind(&CArtifactTest::registarCb, this, _1, _2, _3);
 
 	EXPECT_CALL(*this, registarCb(Eq(4242), "ARTIFACT", "Test1"));

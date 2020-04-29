@@ -21,7 +21,7 @@
 class HypotheticBattle;
 class CStack;
 
-
+///Fake random generator, used by AI to evaluate random server behavior
 class RNGStub : public vstd::RNG
 {
 public:
@@ -41,7 +41,6 @@ public:
 		};
 	}
 };
-
 
 class StackWithBonuses : public battle::CUnitState, public virtual IBonusBearer
 {

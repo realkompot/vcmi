@@ -43,8 +43,6 @@ StackWithBonuses::StackWithBonuses(const HypotheticBattle * Owner, const CStack 
 	localInit(Owner);
 
 	battle::CUnitState::operator=(*Stack);
-
-
 }
 
 StackWithBonuses::StackWithBonuses(const HypotheticBattle * Owner, const battle::UnitInfo & info)

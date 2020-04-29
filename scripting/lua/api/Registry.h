@@ -16,14 +16,14 @@
 #define VCMI_REGISTER_SCRIPT_API(Type, Name) \
 namespace\
 {\
-RegisterAPI<Type> _register(Name);\
+RegisterAPI<Type> _register ## Type (Name);\
 }\
 \
 
-#define VCMI_REGISTER_CORE_SCRIPT_API(Type) \
+#define VCMI_REGISTER_CORE_SCRIPT_API(Type, Name) \
 namespace\
 {\
-RegisterCoreAPI<Type> _register;\
+RegisterCoreAPI<Type> _register ## Type (Name);\
 }\
 \
 
@@ -38,37 +38,28 @@ class Registar
 public:
 	virtual ~Registar() = default;
 
-	virtual void perform(lua_State * L, TypeRegistry * typeRegistry) const = 0;
+	virtual void pushMetatable(lua_State * L) const = 0;
 };
 
 class Registry : public boost::noncopyable
 {
 public:
+	using RegistryData = std::map<std::string, std::shared_ptr<Registar>>;
 	static Registry * get();
 
 	const Registar * find(const std::string & name) const;
 	void add(const std::string & name, std::shared_ptr<Registar> item);
-	void addCore(std::shared_ptr<Registar> item);
+	void addCore(const std::string & name, std::shared_ptr<Registar> item);
 
-	const std::vector<std::shared_ptr<Registar>> & getCoreData() const
+	const RegistryData & getCoreData() const
 	{
 		return coreData;
 	}
 private:
-	std::map<std::string, std::shared_ptr<Registar>> data;
-	std::vector<std::shared_ptr<Registar>> coreData;
+	RegistryData data;
+	RegistryData coreData;
 
 	Registry();
-};
-
-template<typename T>
-class RegistarT : public Registar
-{
-public:
-	void perform(lua_State * L, TypeRegistry * typeRegistry) const override
-	{
-		T::registrator(L, typeRegistry);
-	}
 };
 
 template<typename T>
@@ -77,7 +68,7 @@ class RegisterAPI
 public:
 	RegisterAPI(const std::string & name)
 	{
-		auto r = std::make_shared<RegistarT<T>>();
+		auto r = std::make_shared<T>();
 		Registry::get()->add(name, r);
 	}
 };
@@ -86,9 +77,10 @@ template<typename T>
 class RegisterCoreAPI
 {
 public:
-	RegisterCoreAPI()
+	RegisterCoreAPI(const std::string & name)
 	{
-		Registry::get()->addCore(std::make_shared<RegistarT<T>>());
+		auto r = std::make_shared<T>();
+		Registry::get()->addCore(name, r);
 	}
 };
 
@@ -108,7 +100,7 @@ public:
 private:
 	size_t nextIndex;
 
-	boost::mutex mutex;//FIXME: remove and make TypeRegistry part of Context
+	boost::mutex mutex;
 
 	std::map<std::type_index, std::string> keys;
 

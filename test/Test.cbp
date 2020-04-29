@@ -105,8 +105,11 @@
 		<Unit filename="erm/ERMPersistenceTest.cpp" />
 		<Unit filename="erm/ERM_BM.cpp" />
 		<Unit filename="erm/ERM_BU.cpp" />
+		<Unit filename="erm/ERM_FU.cpp" />
 		<Unit filename="erm/ERM_MA.cpp" />
+		<Unit filename="erm/ERM_MC.cpp" />
 		<Unit filename="erm/ERM_MF.cpp" />
+		<Unit filename="erm/ERM_VR.cpp" />
 		<Unit filename="erm/ExamplesTest.cpp" />
 		<Unit filename="events/ApplyDamageTest.cpp" />
 		<Unit filename="events/EventBusTest.cpp" />
@@ -152,12 +155,17 @@
 		<Unit filename="mock/mock_spells_effects_Registry.h" />
 		<Unit filename="mock/mock_vstd_CLoggerBase.h" />
 		<Unit filename="mock/mock_vstd_RNG.h" />
+		<Unit filename="netpacks/EntitiesChangedTest.cpp" />
+		<Unit filename="netpacks/NetPackFixture.cpp" />
+		<Unit filename="netpacks/NetPackFixture.h" />
 		<Unit filename="rmg/CRmgTemplateTest.cpp" />
+		<Unit filename="scripting/LuaSandboxTest.cpp" />
 		<Unit filename="scripting/LuaSpellEffectAPITest.cpp" />
 		<Unit filename="scripting/LuaSpellEffectTest.cpp" />
 		<Unit filename="scripting/PoolTest.cpp" />
 		<Unit filename="scripting/ScriptFixture.cpp" />
 		<Unit filename="scripting/ScriptFixture.h" />
+		<Unit filename="serializer/JsonUpdaterTest.cpp" />
 		<Unit filename="spells/AbilityCasterTest.cpp" />
 		<Unit filename="spells/CSpellTest.cpp" />
 		<Unit filename="spells/TargetConditionTest.cpp" />
@@ -199,6 +207,7 @@
 		<Unit filename="testdata/TerrainTest/underground_terrain.json" />
 		<Unit filename="testdata/erm/std.verm" />
 		<Unit filename="testdata/erm/testy.erm" />
+		<Unit filename="testdata/lua/SandboxTest.lua" />
 		<Unit filename="testdata/lua/SpellEffectAPIMoveUnit.lua" />
 		<Unit filename="testdata/lua/SpellEffectAPITest.lua" />
 		<Unit filename="testdata/rmg/1.json" />

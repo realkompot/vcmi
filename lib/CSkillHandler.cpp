@@ -122,6 +122,17 @@ std::string CSkill::toString() const
 	return ss.str();
 }
 
+void CSkill::updateFrom(const JsonNode & data)
+{
+
+}
+
+void CSkill::serializeJson(JsonSerializeFormat & handler)
+{
+
+}
+
+
 ///CSkillHandler
 CSkillHandler::CSkillHandler()
 {
@@ -183,7 +194,7 @@ const std::string & CSkillHandler::skillName(int skill) const
 	return objects[skill]->name;
 }
 
-CSkill * CSkillHandler::loadFromJson(const JsonNode & json, const std::string & identifier, size_t index)
+CSkill * CSkillHandler::loadFromJson(const std::string & scope, const JsonNode & json, const std::string & identifier, size_t index)
 {
 	CSkill * skill = new CSkill(SecondarySkill(index), identifier);
 
@@ -249,31 +260,6 @@ std::vector<bool> CSkillHandler::getDefaultAllowed() const
 {
 	std::vector<bool> allowedSkills(objects.size(), true);
 	return allowedSkills;
-}
-
-const Entity * CSkillHandler::getBaseByIndex(const int32_t index) const
-{
-	return (*this)[SecondarySkill(index)].get();
-}
-
-const Skill * CSkillHandler::getById(const SecondarySkill & id) const
-{
-	return (*this)[id].get();
-}
-
-const Skill * CSkillHandler::getByIndex(const int32_t index) const
-{
-	return (*this)[SecondarySkill(index)].get();
-}
-
-void CSkillHandler::forEachBase(const std::function<void(const Entity * entity, bool & stop)> & cb) const
-{
-	forEachT(cb);
-}
-
-void CSkillHandler::forEach(const std::function<void(const Skill * entity, bool & stop)> & cb) const
-{
-	forEachT(cb);
 }
 
 si32 CSkillHandler::decodeSkill(const std::string & identifier)

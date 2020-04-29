@@ -21,6 +21,7 @@ class ContextMock : public Context
 {
 public:
 	MOCK_METHOD1(run, void(const JsonNode &));
+	MOCK_METHOD2(run, void(ServerCallback *, const JsonNode &));
 
 	MOCK_METHOD2(callGlobal, JsonNode(const std::string &, const JsonNode &));
 	MOCK_METHOD3(callGlobal, JsonNode(ServerCallback *, const std::string &, const JsonNode &));

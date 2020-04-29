@@ -19,13 +19,17 @@ namespace api
 {
 namespace events
 {
-VCMI_REGISTER_CORE_SCRIPT_API(EventSubscriptionProxy);
+VCMI_REGISTER_CORE_SCRIPT_API(EventSubscriptionProxy, "EventSubscription");
 
 const std::vector<EventSubscriptionProxy::RegType> EventSubscriptionProxy::REGISTER =
 {
 
 };
 
+const std::vector<EventSubscriptionProxy::CustomRegType> EventSubscriptionProxy::REGISTER_CUSTOM =
+{
+
+};
 
 }
 }

@@ -23,71 +23,95 @@ namespace ERMConverter
 	//console printer
 	using namespace ERM;
 
-	enum class EDir{GET, SET};
+	struct Variable
+	{
+		std::string name = "";
+		std::string macro = "";
+		int index = 0;
+
+		Variable(const std::string & name_, int index_)
+		{
+			name = name_;
+			index = index_;
+		}
+
+		Variable(const std::string & macro_)
+		{
+			macro = macro_;
+		}
+
+		bool isEmpty() const
+		{
+			return name == "" && macro == "";
+		}
+	};
+
+	struct LVL2IexpToVar : boost::static_visitor<Variable>
+	{
+		LVL2IexpToVar() = default;
+
+		Variable operator()(const TVarExpNotMacro & val) const
+		{
+			if(val.val.is_initialized())
+				return Variable(val.varsym, val.val.get());
+			else
+				return Variable(val.varsym, 0);
+		}
+
+		Variable operator()(const TMacroUsage & val) const
+		{
+			return Variable(val.macro);
+		}
+	};
+
+	struct LVL1IexpToVar : boost::static_visitor<Variable>
+	{
+		LVL1IexpToVar() = default;
+
+		Variable operator()(int const & constant) const
+		{
+			return Variable("", constant);
+		}
+
+		Variable operator()(const TVarExp & var) const
+		{
+			return boost::apply_visitor(LVL2IexpToVar(), var);
+		}
+	};
 
 	struct LVL2Iexp : boost::static_visitor<std::string>
 	{
-		EDir dir;
+		LVL2Iexp() = default;
 
-		LVL2Iexp(EDir dir_)
-			: dir(dir_)
-		{}
-
-		std::string processNotMacro(TVarExpNotMacro const & val) const
+		std::string operator()(const TVarExpNotMacro & val) const
 		{
 			if(val.questionMark.is_initialized())
 				throw EIexpProblem("Question marks ('?') are not allowed in getter i-expressions");
 
-			//TODO:
-
 			if(val.val.is_initialized())
-			{
 				return boost::to_string(boost::format("%s['%d']") % val.varsym % val.val.get());
-			}
 			else
-			{
-				return boost::to_string(boost::format("quick['%s']") % val.varsym);
-			}
+				return boost::to_string(boost::format("Q['%s']") % val.varsym);
 		}
 
-		std::string operator()(TVarExpNotMacro const & val) const
+		std::string operator()(const TMacroUsage & val) const
 		{
-			return processNotMacro(val);
-		}
-
-		std::string operator()(TMacroUsage const & val) const
-		{
-			return val.macro;
+			return boost::to_string(boost::format("M['%s']") % val.macro);
 		}
 	};
 
 	struct LVL1Iexp : boost::static_visitor<std::string>
 	{
-		EDir dir;
-
-		LVL1Iexp(EDir dir_)
-			: dir(dir_)
-		{}
-
-		LVL1Iexp()
-			: dir(EDir::GET)
-		{}
+		LVL1Iexp() = default;
 
 		std::string operator()(int const & constant) const
 		{
-			if(dir == EDir::GET)
-			{
-				return std::to_string(constant);
-			}
-			else
-			{
-				throw EIexpProblem("Cannot set a constant!");
-			}
+			return std::to_string(constant);
 		}
 
-		std::string operator()(TVarExp const & var) const
+		std::string operator()(const TVarExp & var) const
 		{
-			return boost::apply_visitor(LVL2Iexp(dir), var);
+			return boost::apply_visitor(LVL2Iexp(), var);
 		}
 	};
 
@@ -96,7 +120,7 @@ namespace ERMConverter
 		Condition()
 		{}
 
-		std::string operator()(TComparison const & cmp) const
+		std::string operator()(const TComparison & cmp) const
 		{
 			std::string lhs = boost::apply_visitor(LVL1Iexp(), cmp.lhs);
 			std::string rhs = boost::apply_visitor(LVL1Iexp(), cmp.rhs);
@@ -124,7 +148,7 @@ namespace ERMConverter
 		}
 		std::string operator()(int const & flag) const
 		{
-			return boost::to_string(boost::format("ERM.flag['%d']") % flag);
+			return boost::to_string(boost::format("F['%d']") % flag);
 		}
 	};
 
@@ -140,6 +164,11 @@ namespace ERMConverter
 		Converter(std::ostream * out_)
 			: out(out_)
 		{}
+	protected:
+		void putLine(const std::string & line) const
+		{
+			(*out) << line << std::endl;
+		}
 	};
 
 	struct GetBodyOption : public boost::static_visitor<std::string>
@@ -147,39 +176,35 @@ namespace ERMConverter
 		GetBodyOption()
 		{}
 
-		virtual std::string operator()(TVarConcatString const & cmp) const
+		virtual std::string operator()(const TVarConcatString & cmp) const
 		{
 			throw EScriptExecError("String concatenation not allowed in this receiver");
 		}
-		virtual std::string operator()(TStringConstant const & cmp) const
+		virtual std::string operator()(const TStringConstant & cmp) const
 		{
 			throw EScriptExecError("String constant not allowed in this receiver");
 		}
-		virtual std::string operator()(TCurriedString const & cmp) const
+		virtual std::string operator()(const TCurriedString & cmp) const
 		{
 			throw EScriptExecError("Curried string not allowed in this receiver");
 		}
-		virtual std::string operator()(TSemiCompare const & cmp) const
+		virtual std::string operator()(const TSemiCompare & cmp) const
 		{
 			throw EScriptExecError("Semi comparison not allowed in this receiver");
 		}
-	// 	virtual void operator()(TMacroUsage const& cmp) const
-	// 	{
-	// 		throw EScriptExecError("Macro usage not allowed in this receiver");
-	// 	}
-		virtual std::string operator()(TMacroDef const & cmp) const
+		virtual std::string operator()(const TMacroDef & cmp) const
 		{
 			throw EScriptExecError("Macro definition not allowed in this receiver");
 		}
-		virtual std::string operator()(TIexp const & cmp) const
+		virtual std::string operator()(const TIexp & cmp) const
 		{
 			throw EScriptExecError("i-expression not allowed in this receiver");
 		}
-		virtual std::string operator()(TVarpExp const & cmp) const
+		virtual std::string operator()(const TVarpExp & cmp) const
 		{
 			throw EScriptExecError("Varp expression not allowed in this receiver");
 		}
-		virtual std::string operator()(spirit::unused_type const & cmp) const
+		virtual std::string operator()(const spirit::unused_type & cmp) const
 		{
 			throw EScriptExecError("\'Nothing\' not allowed in this receiver");
 		}
@@ -187,12 +212,12 @@ namespace ERMConverter
 
 	struct BodyOption : public boost::static_visitor<ParamIO>
 	{
-		ParamIO operator()(TVarConcatString const & cmp) const
+		ParamIO operator()(const TVarConcatString & cmp) const
 		{
 			throw EScriptExecError("String concatenation not allowed in this receiver");
 		}
 
-		ParamIO operator()(TStringConstant const & cmp) const
+		ParamIO operator()(const TStringConstant & cmp) const
 		{
 			boost::format fmt("[===[%s]===]");
 			fmt % cmp.str;
@@ -203,22 +228,22 @@ namespace ERMConverter
 			return ret;
 		}
 
-		ParamIO operator()(TCurriedString const & cmp) const
+		ParamIO operator()(const TCurriedString & cmp) const
 		{
 			throw EScriptExecError("Curried string not allowed in this receiver");
 		}
 
-		ParamIO operator()(TSemiCompare const & cmp) const
+		ParamIO operator()(const TSemiCompare & cmp) const
 		{
 			throw EScriptExecError("Semi comparison not allowed in this receiver");
 		}
 
-		ParamIO operator()(TMacroDef const & cmp) const
+		ParamIO operator()(const TMacroDef & cmp) const
 		{
 			throw EScriptExecError("Macro definition not allowed in this receiver");
 		}
 
-		ParamIO operator()(TIexp const & cmp) const
+		ParamIO operator()(const TIexp & cmp) const
 		{
 			ParamIO ret;
 			ret.isInput = true;
@@ -226,72 +251,61 @@ namespace ERMConverter
 			return ret;
 		}
 
-		ParamIO operator()(TVarpExp const & cmp) const
+		ParamIO operator()(const TVarpExp & cmp) const
 		{
 			ParamIO ret;
 			ret.isInput = false;
 
-			ret.name = boost::apply_visitor(LVL2Iexp(EDir::SET), cmp.var);
+			ret.name = boost::apply_visitor(LVL2Iexp(), cmp.var);
 			return ret;
 		}
 
-		ParamIO operator()(spirit::unused_type const & cmp) const
+		ParamIO operator()(const spirit::unused_type & cmp) const
 		{
 			throw EScriptExecError("\'Nothing\' not allowed in this receiver");
 		}
 	};
 
-	struct VR_S : public GetBodyOption
-	{
-		VR_S()
-		{}
-
-		using GetBodyOption::operator();
-
-		std::string operator()(TIexp const & cmp) const override
-		{
-			return boost::apply_visitor(LVL1Iexp(), cmp);
-		}
-		std::string operator()(TStringConstant const & cmp) const override
-		{
-			boost::format fmt("[===[%s]===]");
-			fmt % cmp.str;
-			return fmt.str();
-		}
-	};
-
 	struct Receiver : public Converter
 	{
-		std::string name;
-		std::vector<std::string> identifiers;
-
-		Receiver(std::ostream * out_, std::string name_, std::vector<std::string> identifiers_)
-			: Converter(out_),
-			name(name_),
-			identifiers(identifiers_)
+		Receiver(std::ostream * out_)
+			: Converter(out_)
 		{}
 
-		void operator()(TVRLogic const & trig) const
+		virtual void operator()(const TVRLogic & trig) const
 		{
 			throw EInterpreterError("VR logic is not allowed in this receiver!");
 		}
 
-		void operator()(TVRArithmetic const & trig) const
+		virtual void operator()(const TVRArithmetic & trig) const
 		{
 			throw EInterpreterError("VR arithmetic is not allowed in this receiver!");
 		}
 
-		void operator()(TNormalBodyOption const & trig) const
+		virtual void operator()(const TNormalBodyOption & trig) const
 		{
-			std::string params;
+			throw EInterpreterError("Normal body is not allowed in this receiver!");
+		}
+
+	};
+
+	struct GenericReceiver : public Receiver
+	{
+		std::string name;
+
+		GenericReceiver(std::ostream * out_, const std::string & name_)
+			: Receiver(out_),
+			name(name_)
+		{}
+
+		using Receiver::operator();
+
+		void operator()(const TNormalBodyOption & trig) const override
+		{
 			std::string outParams;
 			std::string inParams;
 
-			for(auto iter = std::begin(identifiers); iter != std::end(identifiers); ++iter)
-			{
-				params += ", ";
-				params += *iter;
-			}
+			bool hasOutput = false;
 
 			{
 				std::vector<ParamIO> optionParams;
@@ -313,6 +327,8 @@ namespace ERMConverter
 					}
 					else
 					{
+						hasOutput = true;
+
 						if(outParams.empty())
 						{
 							outParams = p.name;
@@ -328,28 +344,224 @@ namespace ERMConverter
 				}
 			}
 
-			boost::format callFormat("%s = ERM.%s(x%s):%s(x%s)");
+			boost::format callFormat;
 
-			callFormat % outParams;
+			if(hasOutput)
+			{
+				callFormat.parse("%s = %s:%s(x%s)");
+				callFormat % outParams;
+			}
+			else
+			{
+				callFormat.parse("%s:%s(x%s)");
+			}
+
 			callFormat % name;
-			callFormat % params;
 			callFormat % trig.optionCode;
 			callFormat % inParams;
 
-			(*out) << callFormat.str() << std::endl;
+			putLine(callFormat.str());
 		}
 	};
 
-	struct VR : public Converter
+	struct FU : public Receiver
 	{
-		std::string var;
+		Variable v;
 
-		VR(std::ostream * out_, std::string var_)
-			: Converter(out_),
-			var(var_)
+		FU(std::ostream * out_, const ERM::TIexp & tid)
+			: Receiver(out_),
+			v(boost::apply_visitor(LVL1IexpToVar(), tid))
+		{
+		}
+
+		FU(std::ostream * out_)
+			: Receiver(out_),
+			v("", 0)
+		{
+		}
+
+		using Receiver::operator();
+
+		void operator()(const TNormalBodyOption & trig) const override
+		{
+			switch(trig.optionCode)
+			{
+			case 'E':
+				{
+					putLine("do return end");
+				}
+				break;
+			case 'P':
+				{
+					std::vector<ParamIO> optionParams;
+
+					for(auto & p : trig.params)
+						optionParams.push_back(boost::apply_visitor(BodyOption(), p));
+
+					auto index = 1;
+
+					putLine("local newx = {}");
+
+					for(auto & p : optionParams)
+					{
+						if(p.isInput)
+						{
+							boost::format fmt("newx['%d'] = %s");
+							fmt % index % p.name;
+							putLine(fmt.str());
+						}
+
+						index++;
+					}
+
+					boost::format callFormat("FU%d(newx)");
+					callFormat % v.index;
+					putLine(callFormat.str());
+
+					index = 1;
+					for(auto & p : optionParams)
+					{
+						if(!p.isInput)
+						{
+							boost::format fmt("%s = newx['%d']");
+							fmt % p.name % index;
+							putLine(fmt.str());
+						}
+
+						index++;
+					}
+				}
+				break;
+			default:
+				throw EInterpreterError("Unknown opcode in FU receiver");
+				break;
+			}
+		}
+	};
+
+	struct MC_S : public GetBodyOption
+	{
+		MC_S()
 		{}
 
-		void operator()(TVRLogic const & trig) const
+		using GetBodyOption::operator();
+
+		std::string operator()(const TMacroDef & cmp) const override
+		{
+			return cmp.macro;
+		}
+	};
+
+	struct MC : public Receiver
+	{
+		Variable v;
+
+		MC(std::ostream * out_, const ERM::TIexp & tid)
+			: Receiver(out_),
+			v(boost::apply_visitor(LVL1IexpToVar(), tid))
+		{
+		}
+
+		MC(std::ostream * out_)
+			: Receiver(out_),
+			v("", 0)
+		{
+		}
+
+		using Receiver::operator();
+
+		void operator()(const TNormalBodyOption & option) const override
+		{
+			switch(option.optionCode)
+			{
+			case 'S':
+				{
+					for(auto & p : option.params)
+					{
+						std::string macroName = boost::apply_visitor(MC_S(), p);
+
+						boost::format callFormat;
+
+						if(v.isEmpty())
+						{
+							callFormat.parse("ERM:addMacro('%s', 'v', '%s')");
+							callFormat % macroName % macroName;
+						}
+						else
+						{
+							callFormat.parse("ERM:addMacro('%s', '%s', '%d')");
+							callFormat % macroName % v.name % v.index;
+						}
+
+						putLine(callFormat.str());
+					}
+				}
+				break;
+			default:
+				throw EInterpreterError("Unknown opcode in MC receiver");
+				break;
+			}
+		}
+	};
+
+	struct VR_S : public GetBodyOption
+	{
+		VR_S()
+		{}
+
+		using GetBodyOption::operator();
+
+		std::string operator()(const TIexp & cmp) const override
+		{
+			return boost::apply_visitor(LVL1Iexp(), cmp);
+		}
+		std::string operator()(const TStringConstant & cmp) const override
+		{
+			boost::format fmt("[===[%s]===]");
+			fmt % cmp.str;
+			return fmt.str();
+		}
+	};
+
+	struct VR_H : public GetBodyOption
+	{
+		VR_H()
+		{}
+
+		using GetBodyOption::operator();
+
+		std::string operator()(const TIexp & cmp) const override
+		{
+			Variable p = boost::apply_visitor(LVL1IexpToVar(), cmp);
+
+			if(p.index <= 0)
+				throw EScriptExecError("VR:H requires flag index");
+
+			if(p.name != "")
+				throw EScriptExecError("VR:H accept only flag index");
+
+
+			boost::format fmt("'%d'");
+			fmt % p.index;
+			return fmt.str();
+		}
+	};
+
+	struct VR : public Receiver
+	{
+		std::string var;//todo: remove it
+		Variable v;
+
+		VR(std::ostream * out_, const ERM::TIexp & tid)
+			: Receiver(out_),
+			var(boost::apply_visitor(LVL1Iexp(), tid)),
+			v(boost::apply_visitor(LVL1IexpToVar(), tid))
+		{
+		}
+
+		using Receiver::operator();
+
+		void operator()(const TVRLogic & trig) const override
 		{
 			std::string rhs = boost::apply_visitor(LVL1Iexp(), trig.var);
 
@@ -373,11 +585,10 @@ namespace ERMConverter
 
 			boost::format fmt("%s = %s %s(%s, %s)");
 			fmt % var % opcode % var % rhs;
-
-			(*out) << fmt.str() << std::endl;
+			putLine(fmt.str());
 		}
 
-		void operator()(TVRArithmetic const & trig) const
+		void operator()(const TVRArithmetic & trig) const override
 		{
 			std::string rhs = boost::apply_visitor(LVL1Iexp(), trig.rhs);
 
@@ -401,31 +612,63 @@ namespace ERMConverter
 
 			boost::format fmt("%s = %s %s %s");
 			fmt % var %  var % opcode % rhs;
-			(*out) << fmt.str() << std::endl;
+			putLine(fmt.str());
 		}
 
-		void operator()(TNormalBodyOption const & trig) const
+		void operator()(const TNormalBodyOption & trig) const override
 		{
 			switch(trig.optionCode)
 			{
 			case 'C': //setting/checking v vars
 				{
-					//TODO
+					if(v.index <= 0)
+						throw EScriptExecError("VR:C requires indexed variable");
+
+					std::vector<ParamIO> optionParams;
+
+					for(auto & p : trig.params)
+						optionParams.push_back(boost::apply_visitor(BodyOption(), p));
+
+					auto index = v.index;
+
+					for(auto & p : optionParams)
+					{
+						boost::format fmt;
+
+						if(p.isInput)
+						{
+							fmt.parse("%s['%d'] = %s") % v.name % index % p.name;
+						}
+						else
+						{
+							fmt.parse("%s = %s['%d']") % p.name % v.name % index;
+						}
+						putLine(fmt.str());
+						index++;
+					}
 				}
 				break;
 			case 'H': //checking if string is empty
 				{
-					//TODO
+					if(trig.params.size() != 1)
+						throw EScriptExecError("VR:H option takes exactly 1 parameter!");
+
+					std::string opt = boost::apply_visitor(VR_H(), trig.params[0]);
+					boost::format fmt("ERM.VR(%s):H(%s)");
+					fmt % var % opt;
+					putLine(fmt.str());
 				}
 				break;
 			case 'M': //string operations
 				{
 					//TODO
+					throw EScriptExecError("VR:M not implemented");
 				}
 				break;
 			case 'R': //random variables
 				{
 					//TODO
+					throw EScriptExecError("VR:R not implemented");
 				}
 				break;
 			case 'S': //setting variable
@@ -441,16 +684,19 @@ namespace ERMConverter
 			case 'T': //random variables
 				{
 					//TODO
+					throw EScriptExecError("VR:T not implemented");
 				}
 				break;
 			case 'U': //search for a substring
 				{
 					//TODO
+					throw EScriptExecError("VR:U not implemented");
 				}
 				break;
 			case 'V': //convert string to value
 				{
 					//TODO
+					throw EScriptExecError("VR:V not implemented");
 				}
 				break;
 			default:
@@ -480,7 +726,7 @@ namespace ERMConverter
 			}
 		}
 
-		void convert(const std::string & name, boost::optional<Tidentifier> identifier, boost::optional<Tbody> body) const
+		void convert(const std::string & name, const boost::optional<Tidentifier> & identifier, const boost::optional<Tbody> & body) const
 		{
 			if(name == "VR")
 			{
@@ -491,15 +737,21 @@ namespace ERMConverter
 				if(tid.size() != 1)
 					throw EScriptExecError("VR receiver takes exactly 1 argument");
 
-				auto var = boost::apply_visitor(LVL1Iexp(), tid[0]);
-
-				performBody(body, VR(out, var));
-
+				performBody(body, VR(out, tid[0]));
 			}
 			else if(name == "FU")
 			{
-				//TODO: FU receiver
-				throw EScriptExecError("FU receiver is not implemented");
+				if(identifier.is_initialized())
+				{
+					ERM::Tidentifier tid = identifier.get();
+
+					if(tid.size() > 0)
+						performBody(body, FU(out, tid[0]));
+				}
+				else
+				{
+					performBody(body, FU(out));
+				}
 			}
 			else if(name == "DO")
 			{
@@ -517,12 +769,27 @@ namespace ERMConverter
 				auto stopVal = boost::apply_visitor(LVL1Iexp(), tid[2]);
 				auto increment = boost::apply_visitor(LVL1Iexp(), tid[3]);
 
-				(*out) << "\t" << "for __iter = " << startVal <<", " << stopVal << "-1, " << increment << " do " << std::endl;
-				(*out) << "\t\t" << "local x = x or {}" << std::endl;
-				(*out) << "\t\t" << "x['16'] = __iter" << std::endl;
-				(*out) << "\t\t" << "FU" << funNum << "(x)" << std::endl;
-				(*out) << "\t\t" << "__iter = x['16']" << std::endl;
-				(*out) << "\t" << "end" << std::endl;
+				(*out) << "for __iter = " << startVal <<", " << stopVal << "-1, " << increment << " do " << std::endl;
+				(*out) << "local x = x or {}" << std::endl;
+				(*out) << "x['16'] = __iter" << std::endl;
+				(*out) << "FU" << funNum << "(x)" << std::endl;
+				(*out) << "__iter = x['16']" << std::endl;
+				(*out) << "end" << std::endl;
+			}
+			else if(name == "MC")
+			{
+				if(identifier.is_initialized())
+				{
+					ERM::Tidentifier tid = identifier.get();
+					if(tid.size() != 1)
+						throw EScriptExecError("MC receiver takes no more than 1 argument");
+
+					performBody(body, MC(out, tid[0]));
+				}
+				else
+				{
+					performBody(body, MC(out));
+				}
 			}
 			else
 			{
@@ -534,11 +801,31 @@ namespace ERMConverter
 						identifiers.push_back(boost::apply_visitor(LVL1Iexp(), id));
 				}
 
-				performBody(body, Receiver(out, name, identifiers));
+				putLine("do");
+
+				std::string params;
+
+				for(auto iter = std::begin(identifiers); iter != std::end(identifiers); ++iter)
+				{
+					if(!params.empty())
+						params += ", ";
+					params += *iter;
+				}
+
+				boost::format fmt("local %s = ERM.%s(%s)");
+				fmt % name;
+				fmt % name;
+				fmt % params;
+
+				putLine(fmt.str());
+
+				performBody(body, GenericReceiver(out, name));
+
+				putLine("end");
 			}
 		}
 
-		void convertConditionInner(Tcondition const & cond, char op) const
+		void convertConditionInner(const Tcondition & cond, char op) const
 		{
 			std::string lhs = boost::apply_visitor(Condition(), cond.cond);
 
@@ -576,12 +863,12 @@ namespace ERMConverter
 			}
 		}
 
-		void convertConditionOuter(Tcondition const & cond) const
+		void convertCondition(const Tcondition & cond) const
 		{
 			//&c1/c2/c3|c4/c5/c6 -> (c1  & c2  & c3)  | c4  |  c5  | c6
 			std::string lhs = boost::apply_visitor(Condition(), cond.cond);
 
-			(*out) << lhs;
+			(*out) << " if " << lhs;
 
 			if(cond.rhs.is_initialized())
 			{
@@ -597,80 +884,63 @@ namespace ERMConverter
 
 				convertConditionInner(cond.rhs.get().get(), cond.ctype);
 			}
+
+			putLine(" then ");
 		}
 
-		void convertCondition(Tcondition const & cond) const
+		void convertReceiverOrInstruction(const boost::optional<Tcondition> & condition,
+			const std::string & name,
+			const boost::optional<Tidentifier> & identifier,
+			const boost::optional<Tbody> & body) const
 		{
-			(*out) << " if ";
-			convertConditionOuter(cond);
-			(*out) << " then " << std::endl;
+			if(name=="if")
+			{
+				if(condition.is_initialized())
+					convertCondition(condition.get());
+				else
+					putLine("if true then");
+			}
+			else if(name=="el")
+			{
+				putLine("else");
+			}
+			else if(name=="en")
+			{
+				putLine("end");
+			}
+			else
+			{
+				if(condition.is_initialized())
+				{
+					convertCondition(condition.get());
+					convert(name, identifier, body);
+					putLine("end");
+				}
+				else
+				{
+					convert(name, identifier, body);
+				}
+			}
 		}
 
-		void operator()(Ttrigger const & trig) const
+		void operator()(const Ttrigger & trig) const
 		{
 			throw EInterpreterError("Triggers cannot be executed!");
 		}
 
-		void operator()(TPostTrigger const & trig) const
+		void operator()(const TPostTrigger & trig) const
 		{
 			throw EInterpreterError("Post-triggers cannot be executed!");
 		}
 
-		void operator()(Tinstruction const & trig) const
+		void operator()(const Tinstruction & trig) const
 		{
-			if(trig.condition.is_initialized())
-			{
-				convertCondition(trig.condition.get());
-
-				convert(trig.name, trig.identifier, boost::make_optional(trig.body));
-
-				(*out) << "end" << std::endl;
-
-			}
-			else
-			{
-				convert(trig.name, trig.identifier, boost::make_optional(trig.body));
-			}
+			convertReceiverOrInstruction(trig.condition, trig.name, trig.identifier, boost::make_optional(trig.body));
 		}
 
-		void operator()(Treceiver const & trig) const
+		void operator()(const Treceiver & trig) const
 		{
-			if(trig.name=="if")
-			{
-				if(trig.condition.is_initialized())
-				{
-					convertCondition(trig.condition.get());
-				}
-				else
-				{
-					(*out) << "if true then" << std::endl;
-				}
-			}
-			else if(trig.name=="el")
-			{
-				(*out) << "else" << std::endl;
-			}
-			else if(trig.name=="en")
-			{
-				(*out) << "end" << std::endl;
-			}
-			else
-			{
-				if(trig.condition.is_initialized())
-				{
-					convertCondition(trig.condition.get());
-
-					convert(trig.name, trig.identifier, trig.body);
-
-					(*out) << "end" << std::endl;
-				}
-				else
-				{
-					convert(trig.name, trig.identifier, trig.body);
-				}
-			}
-
-
+			convertReceiverOrInstruction(trig.condition, trig.name, trig.identifier, trig.body);
 		}
 	};
 
@@ -680,11 +950,11 @@ namespace ERMConverter
 			: Converter(out_)
 		{}
 
-		void operator()(Tcommand const & cmd) const
+		void operator()(const Tcommand & cmd) const
 		{
 			boost::apply_visitor(ERMExp(out), cmd.cmd);
 		}
-		void operator()(std::string const & comment) const
+		void operator()(const std::string & comment) const
 		{
 			(*out) << "-- " << comment << std::endl;
 		}
@@ -709,9 +979,9 @@ namespace ERMConverter
 		{
 			return std::to_string(val);
 		}
-		std::string operator()(std::string const & val)
+		std::string operator()(const std::string & val)
 		{
-			return "[===[" + std::string(val) + "]===]";
+			return "[===[" + val + "]===]";
 		}
 	};
 
@@ -1116,7 +1386,6 @@ namespace ERMConverter
 		}
 	}
 
-
 	struct Line : public Converter
 	{
 		Line(std::ostream * out_)
@@ -1290,11 +1559,6 @@ struct ScriptScanner : boost::static_visitor<>
 	}
 };
 
-void ERMInterpreter::scanScripts()
-{
-	for(auto p : scripts)
-		boost::apply_visitor(ScriptScanner(this, p.first), p.second);
-}
 
 ERMInterpreter::ERMInterpreter(vstd::CLoggerBase * logger_)
 	: logger(logger_)
@@ -1406,45 +1670,36 @@ ERM::TTriggerBase & ERMInterpreter::retrieveTrigger(ERM::TLine & line)
 	throw ELineProblem("Given line is not an ERM trigger!");
 }
 
-int ERMInterpreter::getRealLine(const LinePointer &lp)
-{
-	for(std::map<VERMInterpreter::LinePointer, ERM::TLine>::const_iterator i = scripts.begin(); i != scripts.end(); i++)
-		if(i->first.lineNum == lp.lineNum && i->first.file->filename == lp.file->filename)
-			return i->first.realLineNum;
-
-	return -1;
-}
-
 const std::string ERMInterpreter::triggerSymbol = "trigger";
 const std::string ERMInterpreter::postTriggerSymbol = "postTrigger";
 const std::string ERMInterpreter::defunSymbol = "defun";
 
 void ERMInterpreter::loadScript(const std::string & name, const std::string & source)
 {
-	ERMParser ep(source);
-	FileInfo * finfo = new FileInfo();
-	finfo->filename = name;
+	CERMPreprocessor preproc(source);
 
-	std::vector<LineInfo> buf = ep.parseFile();
-	finfo->length = buf.size();
-	files.push_back(finfo);
+	ERMParser ep;
+
+	std::vector<LineInfo> buf = ep.parseFile(preproc);
 
 	for(int g=0; g<buf.size(); ++g)
-	{
-		scripts[LinePointer(finfo, g, buf[g].realLineNum)] = buf[g].tl;
-	}
+		scripts[LinePointer(static_cast<int>(buf.size()), g, buf[g].realLineNum)] = buf[g].tl;
 }
 
 std::string ERMInterpreter::convert()
 {
+	for(auto p : scripts)
+		boost::apply_visitor(ScriptScanner(this, p.first), p.second);
+
 	std::stringstream out;
 
 	out << "local ERM = require(\"core:erm\")" << std::endl;
 
 	out << "local v = ERM.v" << std::endl;
 	out << "local z = ERM.z" << std::endl;
-	out << "local flag = ERM.flag" << std::endl;
-	out << "local quick = ERM.quick" << std::endl;
+	out << "local F = ERM.F" << std::endl;
+	out << "local M = ERM.M" << std::endl;
+	out << "local Q = ERM.Q" << std::endl;
 
 	ERMConverter::convertInstructions(out, this);
 
@@ -1463,7 +1718,7 @@ std::string ERMInterpreter::convert()
 	}
 
 	for(const auto & p : postTriggers)
-		;//TODO
+		;//TODO:postTriggers
 
 	out << "ERM:callInstructions(instructions)" << std::endl;
 

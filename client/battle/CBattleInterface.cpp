@@ -964,7 +964,7 @@ void CBattleInterface::unitAdded(const CStack * stack)
 
 	if(stack->initialPosition < 0) //turret
 	{
-		const CCreature *turretCreature = CGI->creh->creatures[siegeH->town->town->clientInfo.siegeShooter];
+		const CCreature *turretCreature = CGI->creh->objects[siegeH->town->town->clientInfo.siegeShooter];
 
 		creAnims[stack->ID] = AnimationControls::getAnimation(turretCreature);
 
@@ -1012,7 +1012,7 @@ void CBattleInterface::initStackProjectile(const CStack * stack)
 {
 	const CCreature * creature;//creature whose shots should be loaded
 	if(stack->getCreature()->idNumber == CreatureID::ARROW_TOWERS)
-		creature = CGI->creh->creatures[siegeH->town->town->clientInfo.siegeShooter];
+		creature = CGI->creh->objects[siegeH->town->town->clientInfo.siegeShooter];
 	else
 		creature = stack->getCreature();
 
@@ -1744,16 +1744,16 @@ std::vector<PossiblePlayerBattleAction> CBattleInterface::getPossibleActionsForS
 	auto allActions = curInt->cb->getClientActionsForStack(stack, data);
 
 	return std::vector<PossiblePlayerBattleAction>(allActions);
-	}
+}
 
 void CBattleInterface::reorderPossibleActionsPriority(const CStack * stack, MouseHoveredHexContext context)
-	{
+{
 	if(tacticsMode || possibleActions.empty()) return; //this function is not supposed to be called in tactics mode or before getPossibleActionsForStack
 
 	auto assignPriority = [&](PossiblePlayerBattleAction const & item) -> uint8_t //large lambda assigning priority which would have to be part of possibleActions without it
-		{
+	{
 		switch(item)
-			{
+		{
 		case PossiblePlayerBattleAction::AIMED_SPELL_CREATURE:
 		case PossiblePlayerBattleAction::ANY_LOCATION:
 		case PossiblePlayerBattleAction::NO_LOCATION:
@@ -1784,7 +1784,7 @@ void CBattleInterface::reorderPossibleActionsPriority(const CStack * stack, Mous
 			return 10; break;
 		default:
 			return 200; break;
-				}
+		}
 	};
 
 	auto comparer = [&](PossiblePlayerBattleAction const & lhs, PossiblePlayerBattleAction const & rhs)
@@ -1793,7 +1793,7 @@ void CBattleInterface::reorderPossibleActionsPriority(const CStack * stack, Mous
 	};
 
 	std::make_heap(possibleActions.begin(), possibleActions.end(), comparer);
-	}
+}
 
 void CBattleInterface::endAction(const BattleAction* action)
 {

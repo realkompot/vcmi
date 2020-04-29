@@ -25,6 +25,7 @@ public:
 	using Wrapper = SharedWrapper<BattleStackMoved, BattleStackMovedProxy>;
 
 	static const std::vector<Wrapper::RegType> REGISTER;
+	static const std::vector<typename Wrapper::CustomRegType> REGISTER_CUSTOM;
 
 	static int addTileToMove(lua_State * L, std::shared_ptr<BattleStackMoved> object);
 

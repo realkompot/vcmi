@@ -65,13 +65,10 @@ std::string CERMPreprocessor::retrieveCommandLine()
 	bool openedString = false;
 	int openedBraces = 0;
 
-
 	while(sourceStream.good())
 	{
-
 		std::string line ;
 		getline(line); //reading line
-
 
 		size_t dash = line.find_first_of('^');
 		bool inTheMiddle = openedBraces || openedString;
@@ -164,13 +161,16 @@ void CERMPreprocessor::getline(std::string &ret)
 	boost::trim(ret); //get rid of wspace
 }
 
-ERMParser::ERMParser(std::string source_)
-	:source(source_)
-{}
-
-std::vector<LineInfo> ERMParser::parseFile()
+ERMParser::ERMParser()
 {
-	CERMPreprocessor preproc(source);
+	ERMgrammar = std::make_shared<ERM::ERM_grammar<std::string::const_iterator>>();
+
+}
+
+ERMParser::~ERMParser() = default;
+
+std::vector<LineInfo> ERMParser::parseFile(CERMPreprocessor & preproc)
+{
 	std::vector<LineInfo> ret;
 	try
 	{
@@ -382,7 +382,7 @@ namespace ERM
 			body %= qi::lit(":") >> *(bodyOption) > qi::lit(";");
 
 			instruction %= cmdName >> -identifier >> -condition >> body;
-			receiver %= cmdName >> -identifier >> -condition >> body; //receiver without body exists... change needed
+			receiver %= cmdName >> -identifier >> -condition >> body;
 			postTrigger %= cmdName >> -identifier >> -condition > qi::lit(";");
 
 			command %= (qi::lit("!") >>
@@ -487,7 +487,7 @@ namespace ERM
 	};
 }
 
-ERM::TLine ERMParser::parseLine( const std::string & line, int realLineNo )
+ERM::TLine ERMParser::parseLine(const std::string & line, int realLineNo)
 {
 	try
 	{
@@ -502,13 +502,12 @@ ERM::TLine ERMParser::parseLine( const std::string & line, int realLineNo )
 
 ERM::TLine ERMParser::parseLine(const std::string & line)
 {
-	std::string::const_iterator beg = line.begin(),
-		end = line.end();
+	auto beg = line.begin();
+	auto end = line.end();
 
-	ERM::ERM_grammar<std::string::const_iterator> ERMgrammar;
 	ERM::TLine AST;
 
-	bool r = qi::phrase_parse(beg, end, ERMgrammar, ascii::space, AST);
+	bool r = qi::phrase_parse(beg, end, *ERMgrammar.get(), ascii::space, AST);
 	if(!r || beg != end)
 	{
 		logGlobal->error("Parse error: cannot parse: %s", std::string(beg, end));
@@ -517,7 +516,7 @@ ERM::TLine ERMParser::parseLine(const std::string & line)
 	return AST;
 }
 
-int ERMParser::countHatsBeforeSemicolon( const std::string & line ) const
+int ERMParser::countHatsBeforeSemicolon(const std::string & line) const
 {
 	//CHECK: omit macros? or anything else?
 	int numOfHats = 0; //num of '^' before ';'
@@ -532,14 +531,14 @@ int ERMParser::countHatsBeforeSemicolon( const std::string & line ) const
 	return numOfHats;
 }
 
-void ERMParser::repairEncoding( std::string & str ) const
+void ERMParser::repairEncoding(std::string & str) const
 {
 	for(int g=0; g<str.size(); ++g)
 		if(str[g] & 0x80)
 			str[g] = '|';
 }
 
-void ERMParser::repairEncoding( char * str, int len ) const
+void ERMParser::repairEncoding(char * str, int len) const
 {
 	for(int g=0; g<len; ++g)
 		if(str[g] & 0x80)

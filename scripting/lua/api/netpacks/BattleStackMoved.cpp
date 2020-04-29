@@ -48,6 +48,11 @@ const std::vector<BattleStackMovedProxy::RegType> BattleStackMovedProxy::REGISTE
 	}
 };
 
+const std::vector<BattleStackMovedProxy::CustomRegType> BattleStackMovedProxy::REGISTER_CUSTOM =
+{
+	{"new", &Wrapper::constructor, true}
+};
+
 int BattleStackMovedProxy::addTileToMove(lua_State * L, std::shared_ptr<BattleStackMoved> object)
 {
 	LuaStack S(L);

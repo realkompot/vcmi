@@ -242,6 +242,8 @@ namespace ERM
 
 	//script line
 	typedef boost::variant<TVExp, TERMline> TLine;
+
+	template <typename T> class ERM_grammar;
 }
 
 struct LineInfo
@@ -252,17 +254,18 @@ struct LineInfo
 
 class ERMParser
 {
+public:
+	std::shared_ptr<ERM::ERM_grammar<std::string::const_iterator>> ERMgrammar;
+
+	ERMParser();
+	virtual ~ERMParser();
+
+	std::vector<LineInfo> parseFile(CERMPreprocessor & preproc);
 private:
-	std::string source;
 	void repairEncoding(char * str, int len) const; //removes nonstandard ascii characters from string
 	void repairEncoding(std::string & str) const; //removes nonstandard ascii characters from string
 	enum ELineType{COMMAND_FULL, COMMENT, UNFINISHED, END_OF};
 	int countHatsBeforeSemicolon(const std::string & line) const;
 	ERM::TLine parseLine(const std::string & line, int realLineNo);
-
-
-public:
-	ERMParser(std::string source_);
-	std::vector<LineInfo> parseFile();
-	static ERM::TLine parseLine(const std::string & line);
+	ERM::TLine parseLine(const std::string & line);
 };

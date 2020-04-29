@@ -27,20 +27,20 @@ protected:
 	void SetUp() override
 	{
 		subject = std::make_shared<CSkill>(SecondarySkill(42));
-
-		for(int level = 1; level <= 3; level++)
-		{
-			CSkill::LevelInfo & skillAtLevel = subject->at(level);
-
-			skillAtLevel.iconSmall = "TestS"+std::to_string(level);
-			skillAtLevel.iconMedium = "TestM"+std::to_string(level);
-			skillAtLevel.iconLarge = "TestL"+std::to_string(level);
-		}
 	}
 };
 
 TEST_F(CSkillTest, RegistersIcons)
 {
+	for(int level = 1; level <= 3; level++)
+	{
+		CSkill::LevelInfo & skillAtLevel = subject->at(level);
+
+		skillAtLevel.iconSmall = "TestS"+std::to_string(level);
+		skillAtLevel.iconMedium = "TestM"+std::to_string(level);
+		skillAtLevel.iconLarge = "TestL"+std::to_string(level);
+	}
+
 	auto cb = std::bind(&CSkillTest::registarCb, this, _1, _2, _3);
 
 	for(int level = 1; level <= 3; level++)

@@ -25,6 +25,7 @@ class CGHeroInstance;
 struct BattleHex;
 class JsonNode;
 class CRandomGenerator;
+class JsonSerializeFormat;
 
 struct SSpecialtyInfo
 {	si32 type;
@@ -107,6 +108,9 @@ public:
 	const std::string & getJsonKey() const override;
 	HeroTypeID getId() const override;
 	void registerIcons(const IconRegistar & cb) const override;
+
+	void updateFrom(const JsonNode & data);
+	void serializeJson(JsonSerializeFormat & handler);
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
@@ -199,6 +203,9 @@ public:
 	bool isMagicHero() const;
 	SecondarySkill chooseSecSkill(const std::set<SecondarySkill> & possibles, CRandomGenerator & rand) const; //picks secondary skill out from given possibilities
 
+	void updateFrom(const JsonNode & data);
+	void serializeJson(JsonSerializeFormat & handler);
+
 	template <typename Handler> void serialize(Handler & h, const int version)
 	{
 		h & identifier;
@@ -258,26 +265,12 @@ struct DLL_LINKAGE CObstacleInfo
 	}
 };
 
-class DLL_LINKAGE CHeroClassHandler : public IHandlerBase, public HeroClassService
+class DLL_LINKAGE CHeroClassHandler : public CHandlerBase<HeroClassID, HeroClass, CHeroClass, HeroClassService>
 {
-	CHeroClass *loadFromJson(const JsonNode & node, const std::string & identifier);
 public:
-	std::vector< ConstTransitivePtr<CHeroClass> > heroClasses;
-
 	std::vector<JsonNode> loadLegacyData(size_t dataSize) override;
 
-	void loadObject(std::string scope, std::string name, const JsonNode & data) override;
-	void loadObject(std::string scope, std::string name, const JsonNode & data, size_t index) override;
-
 	void afterLoadFinalization() override;
-
-	const Entity * getBaseByIndex(const int32_t index) const override;
-
-	const HeroClass * getById(const HeroClassID & id) const override;
-	const HeroClass * getByIndex(const int32_t index) const override;
-
-	void forEachBase(const std::function<void(const Entity * entity, bool & stop)> & cb) const override;
-	void forEach(const std::function<void(const HeroClass * entity, bool & stop)> & cb) const override;
 
 	std::vector<bool> getDefaultAllowed() const override;
 
@@ -285,11 +278,16 @@ public:
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
-		h & heroClasses;
+		h & objects;
 	}
+
+protected:
+	const std::vector<std::string> & getTypeNames() const override;
+	CHeroClass * loadFromJson(const std::string & scope, const JsonNode & node, const std::string & identifier, size_t index) override;
+
 };
 
-class DLL_LINKAGE CHeroHandler : public IHandlerBase, public HeroTypeService
+class DLL_LINKAGE CHeroHandler : public CHandlerBase<HeroTypeID, HeroType, CHero, HeroTypeService>
 {
 	/// expPerLEvel[i] is amount of exp needed to reach level i;
 	/// consists of 201 values. Any higher levels require experience larger that ui64 can hold
@@ -305,13 +303,8 @@ class DLL_LINKAGE CHeroHandler : public IHandlerBase, public HeroTypeService
 	void loadTerrains();
 	void loadObstacles();
 
-	/// Load single hero from json
-	CHero * loadFromJson(const JsonNode & node, const std::string & identifier);
-
 public:
 	CHeroClassHandler classes;
-
-	std::vector< ConstTransitivePtr<CHero> > heroes;
 
 	//default costs of going through terrains. -1 means terrain is impassable
 	std::vector<int> terrCosts;
@@ -350,14 +343,6 @@ public:
 	void loadObject(std::string scope, std::string name, const JsonNode & data, size_t index) override;
 	void afterLoadFinalization() override;
 
-	const Entity * getBaseByIndex(const int32_t index) const override;
-
-	const HeroType * getById(const HeroTypeID & id) const override;
-	const HeroType * getByIndex(const int32_t index) const override;
-
-	void forEachBase(const std::function<void(const Entity * entity, bool & stop)> & cb) const override;
-	void forEach(const std::function<void(const HeroType * entity, bool & stop)> & cb) const override;
-
 	CHeroHandler();
 	~CHeroHandler();
 
@@ -366,11 +351,15 @@ public:
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
 		h & classes;
-		h & heroes;
+		h & objects;
 		h & expPerLevel;
 		h & ballistics;
 		h & terrCosts;
 		h & obstacles;
 		h & absoluteObstacles;
 	}
+
+protected:
+	const std::vector<std::string> & getTypeNames() const override;
+	CHero * loadFromJson(const std::string & scope, const JsonNode & node, const std::string & identifier, size_t index) override;
 };

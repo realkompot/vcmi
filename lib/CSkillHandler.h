@@ -16,6 +16,8 @@
 #include "GameConstants.h"
 #include "IHandlerBase.h"
 
+class JsonSerializeFormat;
+
 class DLL_LINKAGE CSkill : public Skill
 {
 public:
@@ -68,6 +70,9 @@ public:
 	std::string name; //as displayed in GUI
 	std::array<si32, 2> gainChance; // gainChance[0/1] = default gain chance on level-up for might/magic heroes
 
+	void updateFrom(const JsonNode & data);
+	void serializeJson(JsonSerializeFormat & handler);
+
 	template <typename Handler> void serialize(Handler & h, const int version)
 	{
 		h & id;
@@ -85,7 +90,7 @@ public:
 	friend DLL_LINKAGE std::ostream & operator<<(std::ostream & out, const CSkill::LevelInfo & info);
 };
 
-class DLL_LINKAGE CSkillHandler: public CHandlerBase<SecondarySkill, CSkill>, public SkillService
+class DLL_LINKAGE CSkillHandler: public CHandlerBase<SecondarySkill, Skill, CSkill, SkillService>
 {
 public:
 	CSkillHandler();
@@ -97,18 +102,9 @@ public:
 	void beforeValidate(JsonNode & object) override;
 
 	std::vector<bool> getDefaultAllowed() const override;
-	const std::vector<std::string> & getTypeNames() const override;
 
 	const std::string & skillInfo(int skill, int level) const;
 	const std::string & skillName(int skill) const;
-
-	const Entity * getBaseByIndex(const int32_t index) const override;
-
-	const Skill * getById(const SecondarySkill & id) const override;
-	const Skill * getByIndex(const int32_t index) const override;
-
-	void forEachBase(const std::function<void(const Entity * entity, bool & stop)> & cb) const override;
-	void forEach(const std::function<void(const Skill * entity, bool & stop)> & cb) const override;
 
 	///json serialization helpers
 	static si32 decodeSkill(const std::string & identifier);
@@ -120,7 +116,7 @@ public:
 		h & objects;
 	}
 
-
 protected:
-	CSkill * loadFromJson(const JsonNode & json, const std::string & identifier, size_t index) override;
+	const std::vector<std::string> & getTypeNames() const override;
+	CSkill * loadFromJson(const std::string & scope, const JsonNode & json, const std::string & identifier, size_t index) override;
 };

@@ -40,9 +40,6 @@ public:
 	void battleStart(const CCreatureSet *army1, const CCreatureSet *army2, int3 tile, const CGHeroInstance *hero1, const CGHeroInstance *hero2, bool side) override; //called by engine when battle starts; side=0 - left, side=1 - right
 	void battleCatapultAttacked(const CatapultAttack & ca) override; //called when catapult makes an attack
 
-	BattleAction goTowards(const CStack * stack, BattleHex hex );
-
-
-
+	BattleAction goTowards(const CStack * stack, BattleHex hex);
 };
 

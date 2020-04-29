@@ -14,6 +14,7 @@
 #include "../../lib/ScriptHandler.h"
 #include "../../lib/NetPacks.h"
 #include "../JsonComparer.h"
+#include "../../lib/serializer/Cast.h"
 
 
 ///All unsorted ERM tests goes here
@@ -42,12 +43,12 @@ public:
 
 	void onCommit(CPackForClient * pack)
 	{
-		InfoWindow * iw = dynamic_cast<InfoWindow *>(pack);
+		InfoWindow * iw = dynamic_ptr_cast<InfoWindow>(pack);
 
 		if(iw)
-		{
 			actualTexts.push_back(iw->text.toString());
-		}
+		else
+			GTEST_FAIL() << "Invalid NetPack";
 	}
 
 protected:
@@ -62,20 +63,16 @@ TEST_F(ExamplesTest, TESTY_ERM)
 	setDefaultExpectaions();
 
 	const std::string scriptPath = "test/erm/testy.erm";
+	loadScriptFromFile(scriptPath);
 
-	JsonNode scriptConfig(JsonNode::JsonType::DATA_STRUCT);
-	scriptConfig["source"].String() = scriptPath;
-
-	loadScript(scriptConfig);
-
-	run();
+	runClientServer();
 
 	JsonNode ret = context->callGlobal(&serverMock, "FU42", JsonNode());
 
 	JsonNode expected;
 
 	JsonComparer c(false);
-	c.compare("!!FU42 ret", ret, expected);
+	c.compare("!?FU42 ret", ret, expected);
 
 	std::vector<std::string> expectedTexts =
 	{
@@ -97,13 +94,9 @@ TEST_F(ExamplesTest, STD_VERM)
 	setDefaultExpectaions();
 
 	const std::string scriptPath = "test/erm/std.verm";
+	loadScriptFromFile(scriptPath);
 
-	JsonNode scriptConfig(JsonNode::JsonType::DATA_STRUCT);
-	scriptConfig["source"].String() = scriptPath;
-
-	loadScript(scriptConfig);
-
-	run();
+	runClientServer();
 
 	JsonNode ret = context->callGlobal(&serverMock, "FU42", JsonNode());
 

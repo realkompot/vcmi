@@ -204,8 +204,8 @@ void CBonusSelection::createBonusesIcons()
 			picName = graphics->ERMUtoPicture[faction][buildID];
 			picNumber = -1;
 
-			if(vstd::contains(CGI->townh->factions[faction]->town->buildings, buildID))
-				desc = CGI->townh->factions[faction]->town->buildings.find(buildID)->second->Name();
+			if(vstd::contains((*CGI->townh)[faction]->town->buildings, buildID))
+				desc = (*CGI->townh)[faction]->town->buildings.find(buildID)->second->Name();
 
 			break;
 		}
@@ -320,7 +320,7 @@ void CBonusSelection::createBonusesIcons()
 			}
 			else
 			{
-				boost::algorithm::replace_first(desc, "%s", CGI->heroh->heroes[bonDescs[i].info2]->name);
+				boost::algorithm::replace_first(desc, "%s", CGI->heroh->objects[bonDescs[i].info2]->name);
 			}
 			break;
 		}

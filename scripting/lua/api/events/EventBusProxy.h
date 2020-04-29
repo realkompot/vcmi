@@ -21,10 +21,10 @@ namespace api
 namespace events
 {
 
-class EventBusProxy : public OpaqueWrapperEx<::events::EventBus, EventBusProxy>
+class EventBusProxy : public OpaqueWrapper<::events::EventBus, EventBusProxy>
 {
 public:
-	using Wrapper = OpaqueWrapperEx<::events::EventBus, EventBusProxy>;
+	using Wrapper = OpaqueWrapper<::events::EventBus, EventBusProxy>;
 	static const std::vector<typename Wrapper::RegType> REGISTER;
 	static const std::vector<typename Wrapper::CustomRegType> REGISTER_CUSTOM;
 

@@ -27,6 +27,7 @@ class IBonusTypeHandler;
 class CBonusTypeHandler;
 class CTerrainViewPatternConfig;
 class CRmgTemplateStorage;
+class IHandlerBase;
 
 namespace scripting
 {
@@ -51,6 +52,8 @@ public:
 	const scripting::Service * scripts() const override;
 	const spells::Service * spells() const override;
 	const SkillService * skills() const override;
+
+	void updateEntity(Metatype metatype, int32_t index, const JsonNode & data) override;
 
 	const spells::effects::Registry * spellEffects() const override;
 	spells::effects::Registry * spellEffects() override;

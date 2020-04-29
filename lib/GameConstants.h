@@ -92,6 +92,10 @@ operator ENUM_NAME() const							\
 {													\
 	return num;										\
 }													\
+si32 getNum() const									\
+{													\
+	return static_cast<si32>(num);										\
+}													\
 ENUM_NAME toEnum() const							\
 {													\
 	return num;										\
@@ -167,11 +171,19 @@ class BaseForID
 {
 protected:
 	NumericType num;
+
 public:
 	NumericType getNum() const
 	{
 		return num;
 	}
+
+	//to make it more similar to IDLIKE
+	NumericType toEnum() const
+	{
+		return num;
+	}
+
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
 		h & num;

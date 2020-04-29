@@ -72,7 +72,7 @@ std::string HeroTypeID::encode(const si32 index)
 
 const CArtifact * ArtifactID::toArtifact() const
 {
-	return VLC->arth->artifacts.at(*this);
+	return VLC->arth->objects.at(*this);
 }
 
 const Artifact * ArtifactID::toArtifact(const ArtifactService * service) const
@@ -96,7 +96,7 @@ std::string ArtifactID::encode(const si32 index)
 
 const CCreature * CreatureID::toCreature() const
 {
-	return VLC->creh->creatures.at(*this);
+	return VLC->creh->objects.at(*this);
 }
 
 const Creature * CreatureID::toCreature(const CreatureService * creatures) const

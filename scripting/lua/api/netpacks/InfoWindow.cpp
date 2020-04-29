@@ -43,6 +43,11 @@ const std::vector<InfoWindowProxy::RegType> InfoWindowProxy::REGISTER =
 	},
 };
 
+const std::vector<InfoWindowProxy::CustomRegType> InfoWindowProxy::REGISTER_CUSTOM =
+{
+	{"new", &Wrapper::constructor, true}
+};
+
 int InfoWindowProxy::addReplacement(lua_State * L, std::shared_ptr<InfoWindow> object)
 {
 	int top = lua_gettop(L);

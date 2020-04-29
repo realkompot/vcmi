@@ -65,7 +65,6 @@ class ERM_BU_D : public ERM_BU
 protected:
 	void doTest(double output)
 	{
-
 		std::stringstream source;
 		source << "VERM" << std::endl;
 		source << "!?PI;" << std::endl;
@@ -160,7 +159,7 @@ TEST_F(ERM_BU_G, Get)
 	source << "!!BU:G?v2;" << std::endl;
 
 	loadScript(VLC->scriptHandler->erm, source.str());
-	run();
+	runClientServer();
 
 	EXPECT_CALL(binfoMock, battleGetBattlefieldType()).WillOnce(Return(BFieldType::SNOW_TREES));
 	context->callGlobal("FU1", JsonNode());
@@ -189,7 +188,7 @@ TEST_F(ERM_BU_M, Simple)
 	source << "!!BU:M^Test 1^;" << std::endl;
 
 	loadScript(VLC->scriptHandler->erm, source.str());
-	run();
+	runClientServer();
 
 	auto checkApply = [&](BattleLogMessage * pack)
 	{
@@ -231,7 +230,7 @@ TEST_F(ERM_BU_S, Summon)
 	source << "!!BU:S^core:angel^/10/59/0/-1/0;" << std::endl;
 
 	loadScript(VLC->scriptHandler->erm, source.str());
-	run();
+	runClientServer();
 
 	auto checkApply = [&](BattleUnitsChanged * pack)
 	{
@@ -277,10 +276,8 @@ TEST_F(ERM_BU_T, NoTactics)
 	loadScript(VLC->scriptHandler->erm, source.str());
 
 	EXPECT_CALL(binfoMock, battleTacticDist()).WillOnce(Return(0));
+	JsonNode actualState = runClientServer();
 
-	run();
-
-	JsonNode actualState = context->saveState();
 	EXPECT_EQ(actualState["ERM"]["v"]["2"], JsonUtils::floatNode(0)) << actualState.toJson(true);
 }
 
@@ -294,10 +291,7 @@ TEST_F(ERM_BU_T, Tactics)
 	loadScript(VLC->scriptHandler->erm, source.str());
 
 	EXPECT_CALL(binfoMock, battleTacticDist()).WillOnce(Return(4));
-
-	run();
-
-	JsonNode actualState = context->saveState();
+	JsonNode actualState = runClientServer();
 
 	EXPECT_EQ(actualState["ERM"]["v"]["2"], JsonUtils::floatNode(1)) << actualState.toJson(true);
 }

@@ -93,7 +93,7 @@ const CTown * CGameInfoCallback::getNativeTown(PlayerColor color) const
 {
 	const PlayerSettings *ps = getPlayerSettings(color);
 	ERROR_RET_VAL_IF(!ps, "There is no such player!", nullptr);
-	return VLC->townh->factions[ps->castle]->town;
+	return (*VLC->townh)[ps->castle]->town;
 }
 
 const CGObjectInstance * CGameInfoCallback::getObjByQuestIdentifier(int identifier) const
@@ -348,7 +348,7 @@ bool CGameInfoCallback::getHeroInfo(const CGObjectInstance * hero, InfoAboutHero
 			int maxAIValue = 0;
 			const CCreature * mostStrong = nullptr;
 
-			for(auto creature : VLC->creh->creatures)
+			for(auto creature : VLC->creh->objects)
 			{
 				if(creature->faction == factionIndex && creature->AIValue > maxAIValue)
 				{

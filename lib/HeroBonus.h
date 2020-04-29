@@ -501,8 +501,8 @@ public:
 	void clear();
 	bool empty() const { return bonuses.empty(); }
 	void resize(TInternalContainer::size_type sz, std::shared_ptr<Bonus> c = nullptr );
-	std::shared_ptr<Bonus> &operator[] (TInternalContainer::size_type n) { return bonuses[n]; }
-	const std::shared_ptr<Bonus> &operator[] (TInternalContainer::size_type n) const { return bonuses[n]; }
+	STRONG_INLINE std::shared_ptr<Bonus> &operator[] (TInternalContainer::size_type n) { return bonuses[n]; }
+	STRONG_INLINE const std::shared_ptr<Bonus> &operator[] (TInternalContainer::size_type n) const { return bonuses[n]; }
 	std::shared_ptr<Bonus> &back() { return bonuses.back(); }
 	std::shared_ptr<Bonus> &front() { return bonuses.front(); }
 	const std::shared_ptr<Bonus> &back() const { return bonuses.back(); }
@@ -667,7 +667,7 @@ public:
 	virtual int getMinDamage(bool ranged) const;
 	virtual int getMaxDamage(bool ranged) const;
 	virtual int getAttack(bool ranged) const;
-	virtual int getDefence(bool ranged) const;
+	virtual int getDefense(bool ranged) const;
 
 	int MoraleVal() const; //range [-3, +3]
 	int LuckVal() const; //range [-3, +3]
@@ -763,7 +763,8 @@ public:
 	void exportBonuses();
 
 	const BonusList &getBonusList() const;
-	BonusList &getExportedBonusList();
+	BonusList & getExportedBonusList();
+	const BonusList & getExportedBonusList() const;
 	CBonusSystemNode::ENodeTypes getNodeType() const;
 	void setNodeType(CBonusSystemNode::ENodeTypes type);
 	const TNodesVector &getParentNodes() const;

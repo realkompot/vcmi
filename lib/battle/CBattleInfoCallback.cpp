@@ -509,7 +509,7 @@ void CBattleInfoCallback::battleGetTurnOrder(std::vector<battle::Units> & out, c
 		return;
 
 	for(int i = 1; i < 4; i++)
-		boost::sort(phase[i], CMP_stack(i, actualTurn, lastMoved));	
+		boost::sort(phase[i], CMP_stack(i, actualTurn, lastMoved));
 
 	int pi = 1;
 	while(!outputFull() && pi < 4)
@@ -527,7 +527,7 @@ void CBattleInfoCallback::battleGetTurnOrder(std::vector<battle::Units> & out, c
 			else
 			{
 				out.back().push_back(current);
-				lastMoved = current->unitSide();	
+				lastMoved = current->unitSide();
 			}
 		}
 	}
@@ -662,7 +662,7 @@ bool CBattleInfoCallback::battleCanAttack(const CStack * stack, const CStack * t
 	auto &id = stack->getCreature()->idNumber;
 	if (id == CreatureID::FIRST_AID_TENT || id == CreatureID::CATAPULT)
 		return false;
-	
+
 	return target->alive();
 }
 
@@ -755,7 +755,7 @@ TDmgRange CBattleInfoCallback::calculateDmgRange(const BattleAttackInfo & info) 
 	attackDefenceDifference += info.attacker->getAttack(info.shooting) * multAttackReduction;
 
 	double multDefenceReduction = 1.0 - battleBonusValue(attackerBonuses, Selector::type(Bonus::ENEMY_DEFENCE_REDUCTION)) / 100.0;
-	attackDefenceDifference -= info.defender->getDefence(info.shooting) * multDefenceReduction;
+	attackDefenceDifference -= info.defender->getDefense(info.shooting) * multDefenceReduction;
 
 	const std::string cachingStrSlayer = "type_SLAYER";
 	static const auto selectorSlayer = Selector::type(Bonus::SLAYER);
@@ -1249,8 +1249,7 @@ std::pair<const battle::Unit *, BattleHex> CBattleInfoCallback::getNearestStack(
 
 BattleHex CBattleInfoCallback::getAvaliableHex(CreatureID creID, ui8 side, int initialPos) const
 {
-	bool twoHex = VLC->creh->creatures[creID]->isDoubleWide();
-	//bool flying = VLC->creh->creatures[creID]->isFlying();
+	bool twoHex = VLC->creh->objects[creID]->isDoubleWide();
 
 	int pos;
 	if (initialPos > -1)

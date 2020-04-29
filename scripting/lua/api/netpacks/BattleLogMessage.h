@@ -25,6 +25,7 @@ public:
 	using Wrapper = SharedWrapper<BattleLogMessage, BattleLogMessageProxy>;
 
 	static const std::vector<Wrapper::RegType> REGISTER;
+	static const std::vector<typename Wrapper::CustomRegType> REGISTER_CUSTOM;
 
 	static int addText(lua_State * L, std::shared_ptr<BattleLogMessage> object);
 };

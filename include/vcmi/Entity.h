@@ -10,6 +10,7 @@
 
 #pragma once
 
+class IBonusBearer;
 
 class DLL_LINKAGE Entity
 {
@@ -31,4 +32,11 @@ class DLL_LINKAGE EntityT : public Entity
 {
 public:
 	virtual IdType getId() const = 0;
+};
+
+template <typename IdType>
+class DLL_LINKAGE EntityWithBonuses : public EntityT<IdType>
+{
+public:
+	virtual const IBonusBearer * accessBonuses() const = 0;
 };

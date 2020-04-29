@@ -16,7 +16,7 @@ class ERMScriptModule : public scripting::Module
 public:
 	ERMScriptModule();
 
-	std::string compile(const std::string & name, const std::string & source) const override;
+	std::string compile(const std::string & name, const std::string & source, vstd::CLoggerBase * logger) const override;
 
 	std::shared_ptr<scripting::ContextBase> createContextFor(const scripting::Script * source, const Environment * env) const override;
 

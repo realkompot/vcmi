@@ -167,12 +167,12 @@ TEST_F(UnitStateTest, getAttack)
 	EXPECT_EQ(subject.getAttack(true), DEFAULT_ATTACK);
 }
 
-TEST_F(UnitStateTest, getDefence)
+TEST_F(UnitStateTest, getDefense)
 {
 	setDefaultExpectations();
 
-	EXPECT_EQ(subject.getDefence(false), DEFAULT_DEFENCE);
-	EXPECT_EQ(subject.getDefence(true), DEFAULT_DEFENCE);
+	EXPECT_EQ(subject.getDefense(false), DEFAULT_DEFENCE);
+	EXPECT_EQ(subject.getDefense(true), DEFAULT_DEFENCE);
 }
 
 TEST_F(UnitStateTest, attackWithFrenzy)
@@ -195,8 +195,8 @@ TEST_F(UnitStateTest, defenceWithFrenzy)
 
 	int expectedDefence = 0;
 
-	EXPECT_EQ(subject.getDefence(false), expectedDefence);
-	EXPECT_EQ(subject.getDefence(true), expectedDefence);
+	EXPECT_EQ(subject.getDefense(false), expectedDefence);
+	EXPECT_EQ(subject.getDefense(true), expectedDefence);
 }
 
 TEST_F(UnitStateTest, additionalAttack)

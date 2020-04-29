@@ -185,6 +185,7 @@ void CClient::newGame()
 	CSH->th->update();
 	CMapService mapService;
 	gs = new CGameState();
+	gs->preInit(VLC);
 	logNetwork->trace("\tCreating gamestate: %i", CSH->th->getDiff());
 	gs->init(&mapService, CSH->si.get(), settings["general"]["saveRandomMaps"].Bool());
 	logNetwork->trace("Initializing GameState (together): %d ms", CSH->th->getDiff());
@@ -233,7 +234,7 @@ void CClient::loadGame()
 		throw; //obviously we cannot continue here
 	}
 	logNetwork->trace("Loaded common part of save %d ms", CSH->th->getDiff());
-
+	gs->preInit(VLC);
 	gs->updateOnLoad(CSH->si.get());
 	initMapHandler();
 

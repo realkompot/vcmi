@@ -363,12 +363,12 @@ void CMapFormatJson::serializeAllowedFactions(JsonSerializeFormat & handler, std
 	//TODO: unify allowed factions with others - make them std::vector<bool>
 
 	std::vector<bool> temp;
-	temp.resize(VLC->townh->factions.size(), false);
+	temp.resize(VLC->townh->size(), false);
 	auto standard = VLC->townh->getDefaultAllowed();
 
     if(handler.saving)
 	{
-		for(auto faction : VLC->townh->factions)
+		for(auto faction : VLC->townh->objects)
 			if(faction->town && vstd::contains(value, faction->index))
 				temp[std::size_t(faction->index)] = true;
 	}
@@ -513,7 +513,7 @@ void CMapFormatJson::serializePlayerInfo(JsonSerializeFormat & handler)
 							}
 							else
 							{
-								temp = VLC->heroh->heroes[hero->subID]->identifier;
+								temp = VLC->heroh->objects[hero->subID]->identifier;
 							}
 							handler.serializeString("type", temp);
 						}

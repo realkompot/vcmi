@@ -322,7 +322,7 @@ CStackWindow::ButtonsSection::ButtonsSection(CStackWindow * owner, int yOffset)
 			};
 			auto upgradeBtn = std::make_shared<CButton>(Point(221 + buttonIndex * 40, 5), "stackWindow/upgradeButton", CGI->generaltexth->zelp[446], onClick, SDLK_1);
 
-			upgradeBtn->addOverlay(std::make_shared<CAnimImage>("CPRSMALL", VLC->creh->creatures[upgradeInfo.info.newID[buttonIndex]]->iconIndex));
+			upgradeBtn->addOverlay(std::make_shared<CAnimImage>("CPRSMALL", VLC->creh->objects[upgradeInfo.info.newID[buttonIndex]]->iconIndex));
 
 			upgrade[buttonIndex] = upgradeBtn;
 		}
@@ -522,7 +522,7 @@ CStackWindow::MainSection::MainSection(CStackWindow * owner, int yOffset, bool s
 	if(battleStack != nullptr) // in battle
 	{
 		addStatLabel(EStat::ATTACK, parent->info->creature->getAttack(battleStack->isShooter()), battleStack->getAttack(battleStack->isShooter()));
-		addStatLabel(EStat::DEFENCE, parent->info->creature->getDefence(battleStack->isShooter()), battleStack->getDefence(battleStack->isShooter()));
+		addStatLabel(EStat::DEFENCE, parent->info->creature->getDefense(battleStack->isShooter()), battleStack->getDefense(battleStack->isShooter()));
 		addStatLabel(EStat::DAMAGE, parent->info->stackNode->getMinDamage(battleStack->isShooter()) * dmgMultiply, battleStack->getMaxDamage(battleStack->isShooter()) * dmgMultiply);
 		addStatLabel(EStat::HEALTH, parent->info->creature->MaxHealth(), battleStack->MaxHealth());
 		addStatLabel(EStat::SPEED, parent->info->creature->Speed(), battleStack->Speed());
@@ -542,7 +542,7 @@ CStackWindow::MainSection::MainSection(CStackWindow * owner, int yOffset, bool s
 		const bool caster = parent->info->stackNode->valOfBonuses(Bonus::CASTS);
 
 		addStatLabel(EStat::ATTACK, parent->info->creature->getAttack(shooter), parent->info->stackNode->getAttack(shooter));
-		addStatLabel(EStat::DEFENCE, parent->info->creature->getDefence(shooter), parent->info->stackNode->getDefence(shooter));
+		addStatLabel(EStat::DEFENCE, parent->info->creature->getDefense(shooter), parent->info->stackNode->getDefense(shooter));
 		addStatLabel(EStat::DAMAGE, parent->info->stackNode->getMinDamage(shooter) * dmgMultiply, parent->info->stackNode->getMaxDamage(shooter) * dmgMultiply);
 		addStatLabel(EStat::HEALTH, parent->info->creature->MaxHealth(), parent->info->stackNode->MaxHealth());
 		addStatLabel(EStat::SPEED, parent->info->creature->Speed(), parent->info->stackNode->Speed());

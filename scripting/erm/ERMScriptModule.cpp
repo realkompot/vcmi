@@ -33,14 +33,29 @@ ERMScriptModule::ERMScriptModule()
 
 }
 
-std::string ERMScriptModule::compile(const std::string & name, const std::string & source) const
+std::string ERMScriptModule::compile(const std::string & name, const std::string & source, vstd::CLoggerBase * logger) const
 {
-	std::shared_ptr<ERMInterpreter> interp = std::make_shared<ERMInterpreter>(logMod);
+	std::shared_ptr<ERMInterpreter> interp = std::make_shared<ERMInterpreter>(logger);
 
-	interp->loadScript(name, source);
-	interp->scanScripts();
+	try
+	{
+		interp->loadScript(name, source);
+		return interp->convert();
+	}
+	catch(const std::exception & ex)
+	{
+		logger->error(ex.what());
+	}
+	catch(const std::string & ex)
+	{
+		logger->error(ex);
+	}
+	catch(...)
+	{
+		logger->error("Sorry, caught unknown exception type. No more info available.");
+	}
 
-	return interp->convert();
+	return "";
 }
 
 std::shared_ptr<scripting::ContextBase> ERMScriptModule::createContextFor(const scripting::Script * source, const Environment * env) const

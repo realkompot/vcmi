@@ -112,7 +112,7 @@ const std::vector<std::string> CComponent::getFileName()
 	case spell:      return gen(spellsArr);
 	case morale:     return gen(moraleArr);
 	case luck:       return gen(luckArr);
-	case building:   return std::vector<std::string>(4, CGI->townh->factions[subtype]->town->clientInfo.buildingsIcons);
+	case building:   return std::vector<std::string>(4, (*CGI->townh)[subtype]->town->clientInfo.buildingsIcons);
 	case hero:       return gen(heroArr);
 	case flag:       return gen(flagArr);
 	}
@@ -167,7 +167,7 @@ std::string CComponent::getDescription()
 	case spell:      return CGI->spellh->objects[subtype]->getLevelDescription(val);
 	case morale:     return CGI->generaltexth->heroscrn[ 4 - (val>0) + (val<0)];
 	case luck:       return CGI->generaltexth->heroscrn[ 7 - (val>0) + (val<0)];
-	case building:   return CGI->townh->factions[subtype]->town->buildings[BuildingID(val)]->Description();
+	case building:   return (*CGI->townh)[subtype]->town->buildings[BuildingID(val)]->Description();
 	case hero:       return "";
 	case flag:       return "";
 	}
@@ -193,7 +193,7 @@ std::string CComponent::getSubtitleInternal()
 	case primskill:  return boost::str(boost::format("%+d %s") % val % (subtype < 4 ? CGI->generaltexth->primarySkillNames[subtype] : CGI->generaltexth->allTexts[387]));
 	case secskill:   return CGI->generaltexth->levels[val-1] + "\n" + CGI->skillh->skillName(subtype);
 	case resource:   return boost::lexical_cast<std::string>(val);
-	case creature:   return (val? boost::lexical_cast<std::string>(val) + " " : "") + CGI->creh->creatures[subtype]->*(val != 1 ? &CCreature::namePl : &CCreature::nameSing);
+	case creature:   return (val? boost::lexical_cast<std::string>(val) + " " : "") + CGI->creh->objects[subtype]->*(val != 1 ? &CCreature::namePl : &CCreature::nameSing);
 	case artifact:   return CGI->artifacts()->getByIndex(subtype)->getName();
 	case experience:
 		{
@@ -213,10 +213,10 @@ std::string CComponent::getSubtitleInternal()
 	case luck:       return "";
 	case building:
 		{
-			auto building = CGI->townh->factions[subtype]->town->buildings[BuildingID(val)];
+			auto building = (*CGI->townh)[subtype]->town->buildings[BuildingID(val)];
 			if(!building)
 			{
-				logGlobal->error("Town of faction %s has no building #%d", CGI->townh->factions[subtype]->town->faction->name, val);
+				logGlobal->error("Town of faction %s has no building #%d", (*CGI->townh)[subtype]->town->faction->name, val);
 				return (boost::format("Missing building #%d") % val).str();
 			}
 			return building->Name();

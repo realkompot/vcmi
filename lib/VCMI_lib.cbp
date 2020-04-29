@@ -163,11 +163,13 @@
 		<Unit filename="../scripts/lib/erm/BM.lua" />
 		<Unit filename="../scripts/lib/erm/BU.lua" />
 		<Unit filename="../scripts/lib/erm/IF.lua" />
+		<Unit filename="../scripts/lib/erm/MA.lua" />
 		<Unit filename="../scripts/lib/erm/MF.lua" />
 		<Unit filename="../scripts/lib/erm/MF_T.lua" />
 		<Unit filename="../scripts/lib/erm/PI_T.lua" />
 		<Unit filename="../scripts/lib/erm/ReceiverBase.lua" />
 		<Unit filename="../scripts/lib/erm/TriggerBase.lua" />
+		<Unit filename="../scripts/lib/erm/VR.lua" />
 		<Unit filename="AI_Base.h" />
 		<Unit filename="CArtHandler.cpp" />
 		<Unit filename="CArtHandler.h" />
@@ -430,6 +432,8 @@
 		<Unit filename="serializer/JsonSerializer.cpp" />
 		<Unit filename="serializer/JsonSerializer.h" />
 		<Unit filename="serializer/JsonTreeSerializer.h" />
+		<Unit filename="serializer/JsonUpdater.cpp" />
+		<Unit filename="serializer/JsonUpdater.h" />
 		<Unit filename="spells/AbilityCaster.cpp" />
 		<Unit filename="spells/AbilityCaster.h" />
 		<Unit filename="spells/AdventureSpellMechanics.cpp" />

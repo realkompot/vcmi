@@ -205,7 +205,7 @@ BattleInfo * BattleInfo::setupBattle(int3 tile, ETerrainType terrain, BFieldType
 	if(town)
 	{
 		curB->town = town;
-		curB->terrainType = VLC->townh->factions[town->subID]->nativeTerrain;
+		curB->terrainType = (*VLC->townh)[town->subID]->nativeTerrain;
 	}
 	else
 	{

@@ -15,7 +15,7 @@
 class ArtifactID;
 class CreatureID;
 
-class DLL_LINKAGE Artifact : public EntityT<ArtifactID>
+class DLL_LINKAGE Artifact : public EntityWithBonuses<ArtifactID>
 {
 public:
 	virtual bool isBig() const = 0;

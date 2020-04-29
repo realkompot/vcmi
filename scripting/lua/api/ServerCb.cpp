@@ -20,7 +20,7 @@ namespace scripting
 namespace api
 {
 
-VCMI_REGISTER_CORE_SCRIPT_API(ServerCbProxy);
+VCMI_REGISTER_CORE_SCRIPT_API(ServerCbProxy, "Server");
 
 const std::vector<ServerCbProxy::RegType> ServerCbProxy::REGISTER =
 {
@@ -40,6 +40,11 @@ const std::vector<ServerCbProxy::RegType> ServerCbProxy::REGISTER =
 		"commitPackage",
 		&ServerCbProxy::commitPackage
 	}
+};
+
+const std::vector<ServerCbProxy::CustomRegType> ServerCbProxy::REGISTER_CUSTOM =
+{
+
 };
 
 int ServerCbProxy::commitPackage(lua_State * L, ServerCallback * object)

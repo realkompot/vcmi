@@ -267,7 +267,7 @@ void CGPandoraBox::giveContentsAfterExp(const CGHeroInstance *h) const
 	cb->giveResources(h->getOwner(), resources);
 
 	for(auto & elem : artifacts)
-		cb->giveHeroNewArtifact(h, VLC->arth->artifacts[elem],ArtifactPosition::FIRST_AVAILABLE);
+		cb->giveHeroNewArtifact(h, VLC->arth->objects[elem],ArtifactPosition::FIRST_AVAILABLE);
 
 	iw.components.clear();
 	iw.text.clear();

@@ -29,7 +29,7 @@ public:
 	{
 		lua_settop(L, 0);
 		lua_pushlightuserdata(L, static_cast<CPackForClient *>(object.get()));
-        return 1;
+		return 1;
 	}
 };
 

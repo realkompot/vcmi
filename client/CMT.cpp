@@ -578,24 +578,6 @@ void processCommand(const std::string &message)
 	{
 		exit(EXIT_SUCCESS);
 	}
-//	else if(ermInteractiveMode)
-//	{
-//		if(cn == "exit")
-//		{
-//			return;
-//		}
-//		else
-//		{
-//			if(CSH->client && CSH->client->erm)
-//				CSH->client->erm->executeUserCommand(message);
-//			std::cout << "erm>";
-//		}
-//	}
-//	else if(cn == "erm")
-//	{
-//		ermInteractiveMode = true;
-//		std::cout << "erm>";
-//	}
 	else if(cn==std::string("activate"))
 	{
 		int what;

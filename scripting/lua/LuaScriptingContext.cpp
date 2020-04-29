@@ -33,28 +33,33 @@ LuaContext::LuaContext(const Script * source, const Environment * env_)
 {
 	L = luaL_newstate();
 
-	luaopen_base(L);
-	popAll();
+	static const std::vector<luaL_Reg> STD_LIBS =
+	{
+		{"", luaopen_base},
+		{LUA_TABLIBNAME, luaopen_table},
+		{LUA_STRLIBNAME, luaopen_string},
+		{LUA_MATHLIBNAME, luaopen_math},
+		{LUA_BITLIBNAME, luaopen_bit}
+	};
 
-	luaopen_math(L);
-	popAll();
+	for(const luaL_Reg & lib : STD_LIBS)
+	{
+		lua_pushcfunction(L, lib.func);
+		lua_pushstring(L, lib.name);
+		lua_call(L, 1, 0);
+	}
 
-	luaopen_string(L);
-	popAll();
-
-	luaopen_table(L);
-	popAll();
-
-	luaopen_bit(L);
 	popAll();
 
 	cleanupGlobals();
 
-	registerCore();
+	popAll();
 
-	int top = lua_gettop(L);
-	if(top != 0)
-		logger->error("Lua stack at %s unbalanced: %d", BOOST_CURRENT_FUNCTION, top);
+	lua_newtable(L);
+	modules = std::make_shared<LuaReference>(L);
+	popAll();
+
+	registerCore();
 
 	popAll();
 
@@ -68,10 +73,10 @@ LuaContext::LuaContext(const Script * source, const Environment * env_)
 
 	S.push(env->eventBus());
 	lua_setglobal(L, "EVENT_BUS");
-	popAll();
 
-	lua_newtable(L);
-	modules = std::make_shared<LuaReference>(L);
+	S.push(env->services());
+	lua_setglobal(L, "SERVICES");
+
 	popAll();
 }
 
@@ -84,30 +89,65 @@ LuaContext::~LuaContext()
 
 void LuaContext::cleanupGlobals()
 {
-	lua_pushnil(L);
+	LuaStack S(L);
+	S.clear();
+	S.pushNil();
 	lua_setglobal(L, "collectgarbage");
 
-	lua_pushnil(L);
+	S.pushNil();
 	lua_setglobal(L, "dofile");
 
-	lua_pushnil(L);
+	S.pushNil();
 	lua_setglobal(L, "load");
 
-	lua_pushnil(L);
+	S.pushNil();
 	lua_setglobal(L, "loadfile");
 
-	lua_pushnil(L);
+	S.pushNil();
 	lua_setglobal(L, "loadstring");
 
-	lua_pushnil(L);
+	S.pushNil();
 	lua_setglobal(L, "print");
 
-	//TODO:
-	//string.dump
+	S.clear();
 
-	//math.random
+	lua_getglobal(L, LUA_STRLIBNAME);
 
-	//math.randomseed
+	S.push("dump");
+	S.pushNil();
+	lua_rawset(L, -3);
+	S.clear();
+
+	lua_getglobal(L, LUA_MATHLIBNAME);
+
+	S.push("random");
+	S.pushNil();
+	lua_rawset(L, -3);
+
+
+	S.push("randomseed");
+	S.pushNil();
+	lua_rawset(L, -3);
+	S.clear();
+}
+
+void LuaContext::run(ServerCallback * server, const JsonNode & initialState)
+{
+	{
+		LuaStack S(L);
+		S.push(server);
+		lua_setglobal(L, "SERVER");
+		S.clear();
+	}
+
+	run(initialState);
+
+	{
+		LuaStack S(L);
+		S.pushNil();
+		lua_setglobal(L, "SERVER");
+		S.clear();
+	}
 }
 
 void LuaContext::run(const JsonNode & initialState)
@@ -145,16 +185,18 @@ int LuaContext::errorRetVoid(const std::string & message)
 
 JsonNode LuaContext::callGlobal(const std::string & name, const JsonNode & parameters)
 {
+	LuaStack S(L);
+
 	lua_getglobal(L, name.c_str());
 
-	if(!lua_isfunction(L, -1))
+	if(!S.isFunction(-1))
 	{
 		boost::format fmt("%s is not a function");
 		fmt % name;
 
 		logger->error(fmt.str());
 
-		popAll();
+		S.clear();
 
 		return JsonNode();
 	}
@@ -162,9 +204,7 @@ JsonNode LuaContext::callGlobal(const std::string & name, const JsonNode & param
 	int argc = parameters.Vector().size();
 
 	for(int idx = 0; idx < argc; idx++)
-	{
-		push(parameters.Vector()[idx]);
-	}
+		S.push(parameters.Vector()[idx]);
 
 	if(lua_pcall(L, argc, 1, 0))
 	{
@@ -175,7 +215,7 @@ JsonNode LuaContext::callGlobal(const std::string & name, const JsonNode & param
 
 		logger->error(fmt.str());
 
-		popAll();
+		S.clear();
 
 		return JsonNode();
 	}
@@ -183,6 +223,7 @@ JsonNode LuaContext::callGlobal(const std::string & name, const JsonNode & param
 	JsonNode ret;
 
 	pop(ret);
+	S.balance();
 
 	return ret;
 }
@@ -271,7 +312,7 @@ void LuaContext::setGlobal(const std::string & name, double value)
 void LuaContext::setGlobal(const std::string & name, const JsonNode & value)
 {
 	LuaStack S(L);
-	push(value);
+	S.push(value);
 	lua_setglobal(L, name.c_str());
 	S.balance();
 }
@@ -281,59 +322,6 @@ JsonNode LuaContext::saveState()
 	JsonNode data;
 	getGlobal(STATE_FIELD, data);
 	return std::move(data);
-}
-
-void LuaContext::push(const JsonNode & value)
-{
-	switch(value.getType())
-	{
-	case JsonNode::JsonType::DATA_BOOL:
-		{
-			lua_pushboolean(L, value.Bool());
-		}
-		break;
-	case JsonNode::JsonType::DATA_FLOAT:
-		{
-			lua_pushnumber(L, value.Float());
-		}
-		break;
-	case JsonNode::JsonType::DATA_INTEGER:
-		{
-			lua_pushinteger(L, value.Integer());
-		}
-		break;
-	case JsonNode::JsonType::DATA_STRUCT:
-		{
-			lua_newtable(L);
-			for(auto & keyValue : value.Struct())
-			{
-				lua_pushlstring(L, keyValue.first.c_str(), keyValue.first.size());
-
-				push(keyValue.second);
-
-				lua_settable(L, -3);
-			}
-		}
-		break;
-	case JsonNode::JsonType::DATA_STRING:
-		push(value.String());
-		break;
-	case JsonNode::JsonType::DATA_VECTOR:
-		{
-			lua_newtable(L);
-            for(int idx = 0; idx < value.Vector().size(); idx++)
-			{
-				lua_pushinteger(L, idx + 1);
-				push(value.Vector()[idx]);
-				lua_settable(L, -3);
-			}
-		}
-		break;
-
-	default:
-		lua_pushnil(L);
-		break;
-	}
 }
 
 void LuaContext::pop(JsonNode & value)
@@ -346,7 +334,7 @@ void LuaContext::pop(JsonNode & value)
 		value.Float() = lua_tonumber(L, -1);
 		break;
 	case LUA_TBOOLEAN:
-		value.Bool() = lua_toboolean(L, -1);
+		value.Bool() = (lua_toboolean(L, -1) != 0);
 		break;
 	case LUA_TSTRING:
 		value.String() = toStringRaw(-1);
@@ -430,9 +418,20 @@ void LuaContext::registerCore()
 	push(&LuaContext::require, this);
 	lua_setglobal(L, "require");
 
+	push(&LuaContext::logError, this);
+	lua_setglobal(L, "logError");
+
+	popAll();//just in case
+
 	for(auto & registar : api::Registry::get()->getCoreData())
 	{
-		registar->perform(L, api::TypeRegistry::get());
+		registar.second->pushMetatable(L); //table
+
+		modules->push(); //table modules
+		push(registar.first); //table modules name
+		lua_pushvalue(L, -3); //table modules name table
+		lua_rawset(L, -3);
+
 		popAll();
 	}
 }
@@ -479,8 +478,6 @@ int LuaContext::loadModule()
 	if(resourceName.empty())
 		return errorRetVoid("Module name is empty");
 
-	popAll();
-
 	auto temp = vstd::split(resourceName, ":");
 
 	std::string scope;
@@ -505,7 +502,7 @@ int LuaContext::loadModule()
 			return errorRetVoid("Module not found: "+modulePath);
 		}
 
-		registar->perform(L, api::TypeRegistry::get());
+		registar->pushMetatable(L);
 	}
 	else if(scope == "core")
 	{
@@ -547,11 +544,18 @@ int LuaContext::loadModule()
 		return errorRetVoid("No access to scope "+scope);
 	}
 
-	modules->push();
-	lua_pushvalue(L, -2);
-	lua_rawset(L, -2);
+	modules->push(); //name table modules
+	lua_pushvalue(L, 1);//name table modules name
 
-	lua_settop(L, 1);
+	if(!lua_isstring(L, -1))
+		return errorRetVoid("Module name corrupted");
+
+	lua_pushvalue(L, -3);//name table modules name table
+	lua_rawset(L, -3);//name table modules
+	lua_pop(L, 1);//name table
+
+	lua_replace(L, 1);//table table
+	lua_settop(L, 1);//table
 	return 1;
 }
 
@@ -566,6 +570,32 @@ int LuaContext::printImpl()
 {
 	//TODO:
 	return 0;
+}
+
+int LuaContext::logError(lua_State * L)
+{
+	LuaContext * self = static_cast<LuaContext *>(lua_touserdata(L, lua_upvalueindex(1)));
+
+	if(!self)
+	{
+		lua_pushstring(L, "internal error");
+		lua_error(L);
+		return 0;
+	}
+
+	return self->logErrorImpl();
+}
+
+int LuaContext::logErrorImpl()
+{
+	LuaStack S(L);
+
+	std::string message;
+
+	if(S.tryGet(1, message))
+		logger->error(message);
+
+	return S.retVoid();
 }
 
 

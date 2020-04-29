@@ -509,6 +509,16 @@ void CSpell::registerIcons(const IconRegistar & cb) const
 	cb(getIndex(), "SPELLSCR", iconScroll);
 }
 
+void CSpell::updateFrom(const JsonNode & data)
+{
+	//todo:CSpell::updateFrom
+}
+
+void CSpell::serializeJson(JsonSerializeFormat & handler)
+{
+
+}
+
 ///CSpell::AnimationInfo
 CSpell::AnimationItem::AnimationItem()
 	:resourceName(""),verticalPosition(VerticalPosition::TOP),pause(0)
@@ -576,31 +586,6 @@ bool DLL_LINKAGE isInScreenRange(const int3 & center, const int3 & pos)
 CSpellHandler::CSpellHandler() = default;
 
 CSpellHandler::~CSpellHandler() = default;
-
-const Entity * CSpellHandler::getBaseByIndex(const int32_t index) const
-{
-	return getByIndex(index);
-}
-
-const spells::Spell * CSpellHandler::getById(const SpellID & id) const
-{
-	return (*this)[id].get();
-}
-
-const spells::Spell * CSpellHandler::getByIndex(const int32_t index) const
-{
-	return (*this)[SpellID(index)].get();
-}
-
-void CSpellHandler::forEachBase(const std::function<void(const Entity * entity, bool & stop)>& cb) const
-{
-	forEachT(cb);
-}
-
-void CSpellHandler::forEach(const std::function<void(const spells::Spell * entity, bool & stop)>& cb) const
-{
-	forEachT(cb);
-}
 
 std::vector<JsonNode> CSpellHandler::loadLegacyData(size_t dataSize)
 {
@@ -710,7 +695,7 @@ const std::vector<std::string> & CSpellHandler::getTypeNames() const
 	return typeNames;
 }
 
-CSpell * CSpellHandler::loadFromJson(const JsonNode & json, const std::string & identifier, size_t index)
+CSpell * CSpellHandler::loadFromJson(const std::string & scope, const JsonNode & json, const std::string & identifier, size_t index)
 {
 	using namespace SpellConfig;
 
@@ -753,7 +738,7 @@ CSpell * CSpellHandler::loadFromJson(const JsonNode & json, const std::string & 
 	{
 		const int chance = node.second.Integer();
 
-		VLC->modh->identifiers.requestIdentifier(node.second.meta, "faction",node.first, [=](si32 factionID)
+		VLC->modh->identifiers.requestIdentifier(node.second.meta, "faction", node.first, [=](si32 factionID)
 		{
 			spell->probabilities[factionID] = chance;
 		});

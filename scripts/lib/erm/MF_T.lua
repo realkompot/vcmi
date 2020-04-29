@@ -16,6 +16,4 @@ elseif type(sub) ~= "userdata" then
 	error("ApplyDamage subscription failed")
 end
 
-trigger.sub1 = sub
-
 return trigger

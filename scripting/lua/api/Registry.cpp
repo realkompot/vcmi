@@ -29,9 +29,9 @@ void Registry::add(const std::string & name, std::shared_ptr<Registar> item)
 	data[name] = item;
 }
 
-void Registry::addCore(std::shared_ptr<Registar> item)
+void Registry::addCore(const std::string & name, std::shared_ptr<Registar> item)
 {
-	coreData.push_back(item);
+	coreData[name] = item;
 }
 
 const Registar * Registry::find(const std::string & name) const
@@ -57,7 +57,7 @@ TypeRegistry * TypeRegistry::get()
 
 const char * TypeRegistry::getKeyForType(const std::type_info & type)
 {
-	//std::type_index is unique and stable (because all bindings are in vcmiLua shared lib), but there is now way to convert it to Lua value
+	//std::type_index is unique and stable (because all bindings are in vcmiLua shared lib), but there is no way to convert it to Lua value
 	//there is no guarantee that name is unique, but it is at least somewhat human readable, so we append unique number to name
 	//TODO: name demangle
 

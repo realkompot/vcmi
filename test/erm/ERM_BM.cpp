@@ -49,9 +49,7 @@ TEST_F(ERM_BM, GetAttack)
 
 	loadScript(VLC->scriptHandler->erm, source.str());
 	SCOPED_TRACE("\n" + subject->code);
-	run();
-
-	JsonNode actualState = context->saveState();
+	JsonNode actualState = runClientServer();
 
 	EXPECT_EQ(actualState["ERM"]["v"]["1"].Float(), ATTACK_VALUE);
 }

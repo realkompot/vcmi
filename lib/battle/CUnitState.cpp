@@ -463,7 +463,6 @@ void CHealth::serializeJson(JsonSerializeFormat & handler)
 	handler.serializeInt("resurrected", resurrected, 0);
 }
 
-
 ///CUnitState
 CUnitState::CUnitState()
 	: env(nullptr),
@@ -798,7 +797,7 @@ int CUnitState::getAttack(bool ranged) const
 	return ret;
 }
 
-int CUnitState::getDefence(bool ranged) const
+int CUnitState::getDefense(bool ranged) const
 {
 	if(!inFrenzy->empty())
 	{
@@ -830,9 +829,6 @@ std::shared_ptr<CUnitState> CUnitState::acquireState() const
 
 void CUnitState::serializeJson(JsonSerializeFormat & handler)
 {
-	if(!handler.saving)
-		reset();
-
 	handler.serializeBool("cloned", cloned);
 	handler.serializeBool("defending", defending);
 	handler.serializeBool("defendingAnim", defendingAnim);
@@ -902,8 +898,8 @@ void CUnitState::load(const JsonNode & data)
 {
 	//TODO: use instance resolver
 	reset();
-    JsonDeserializer deser(nullptr, data);
-    deser.serializeStruct("state", *this);
+	JsonDeserializer deser(nullptr, data);
+	deser.serializeStruct("state", *this);
 }
 
 void CUnitState::damage(int64_t & amount)

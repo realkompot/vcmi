@@ -68,6 +68,8 @@ public:
 	const std::string & getJsonKey() const override;
 	void registerIcons(const IconRegistar & cb) const override;
 	ArtifactID getId() const override;
+	virtual const IBonusBearer * accessBonuses() const override;
+
 	const std::string & getEventText() const override;
 	const std::string & getDescription() const override;
 	uint32_t getPrice() const override;
@@ -80,6 +82,9 @@ public:
 	void addNewBonus(const std::shared_ptr<Bonus>& b) override;
 
 	virtual void levelUpArtifact (CArtifactInstance * art){};
+
+	void updateFrom(const JsonNode & data);
+	void serializeJson(JsonSerializeFormat & handler);
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
@@ -236,22 +241,13 @@ public:
 	}
 };
 
-class DLL_LINKAGE CArtHandler : public IHandlerBase, public ArtifactService
+class DLL_LINKAGE CArtHandler : public CHandlerBase<ArtifactID, Artifact, CArtifact, ArtifactService>
 {
 public:
 	std::vector<CArtifact*> treasures, minors, majors, relics; //tmp vectors!!! do not touch if you don't know what you are doing!!!
 
-	std::vector< ConstTransitivePtr<CArtifact> > artifacts;
 	std::vector<CArtifact *> allowedArtifacts;
 	std::set<ArtifactID> growingArtifacts;
-
-	const Entity * getBaseByIndex(const int32_t index) const override;
-
-	const Artifact * getById(const ArtifactID & id) const override;
-	const Artifact * getByIndex(const int32_t index) const override;
-
-	void forEachBase(const std::function<void(const Entity * entity, bool & stop)> & cb) const override;
-	void forEach(const std::function<void(const Artifact * entity, bool & stop)> & cb) const override;
 
 	void addBonuses(CArtifact *art, const JsonNode &bonusList);
 
@@ -285,7 +281,7 @@ public:
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
-		h & artifacts;
+		h & objects;
 		h & allowedArtifacts;
 		h & treasures;
 		h & minors;
@@ -294,8 +290,11 @@ public:
 		h & growingArtifacts;
 	}
 
+protected:
+	const std::vector<std::string> & getTypeNames() const override;
+	CArtifact * loadFromJson(const std::string & scope, const JsonNode & json, const std::string & identifier, size_t index) override;
+
 private:
-	CArtifact * loadFromJson(const JsonNode & node, const std::string & identifier);
 
 	void addSlot(CArtifact * art, const std::string & slotID);
 	void loadSlots(CArtifact * art, const JsonNode & node);

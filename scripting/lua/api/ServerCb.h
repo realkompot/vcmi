@@ -27,6 +27,7 @@ public:
 	static int commitPackage(lua_State * L, ServerCallback * object);
 
 	static const std::vector<typename Wrapper::RegType> REGISTER;
+	static const std::vector<typename Wrapper::CustomRegType> REGISTER_CUSTOM;
 
 	template<typename NetPack>
 	static int apply(lua_State * L, ServerCallback * object);

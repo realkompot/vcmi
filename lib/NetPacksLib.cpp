@@ -1654,5 +1654,6 @@ DLL_LINKAGE Component::Component(const CStackBasicDescriptor &stack)
 
 DLL_LINKAGE void EntitiesChanged::applyGs(CGameState * gs)
 {
-
+	for(const auto & change : changes)
+		gs->updateEntity(change.metatype, change.entityIndex, change.data);
 }

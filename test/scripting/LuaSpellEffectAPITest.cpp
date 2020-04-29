@@ -35,15 +35,11 @@ protected:
 
 TEST_F(LuaSpellEffectAPITest, ApplicableOnExpert)
 {
-	JsonNode scriptConfig(JsonNode::JsonType::DATA_STRUCT);
-
-	scriptConfig["source"].String() = "test/lua/SpellEffectAPITest.lua";
-
-	loadScript(scriptConfig);
+	loadScriptFromFile("test/lua/SpellEffectAPITest.lua");
 
 	context->setGlobal("effectLevel", 3);
 
-	run();
+	runClientServer();
 
 	JsonNode params;
 
@@ -58,14 +54,11 @@ TEST_F(LuaSpellEffectAPITest, ApplicableOnExpert)
 
 TEST_F(LuaSpellEffectAPITest, NotApplicableOnAdvanced)
 {
-	JsonNode scriptConfig(JsonNode::JsonType::DATA_STRUCT);
-
-	scriptConfig["source"].String() = "test/lua/SpellEffectAPITest.lua";
-	loadScript(scriptConfig);
+	loadScriptFromFile("test/lua/SpellEffectAPITest.lua");
 
 	context->setGlobal("effectLevel", 2);
 
-	run();
+	runClientServer();
 
 	JsonNode params;
 
@@ -79,14 +72,11 @@ TEST_F(LuaSpellEffectAPITest, NotApplicableOnAdvanced)
 
 TEST_F(LuaSpellEffectAPITest, ApplicableOnLeftSideOfField)
 {
-	JsonNode scriptConfig(JsonNode::JsonType::DATA_STRUCT);
-
-	scriptConfig["source"].String() = "test/lua/SpellEffectAPITest.lua";
-	loadScript(scriptConfig);
+	loadScriptFromFile("test/lua/SpellEffectAPITest.lua");
 
 	context->setGlobal("effectLevel", 1);
 
-	run();
+	runClientServer();
 
 	JsonNode params;
 
@@ -111,12 +101,9 @@ TEST_F(LuaSpellEffectAPITest, ApplicableOnLeftSideOfField)
 
 TEST_F(LuaSpellEffectAPITest, NotApplicableOnRightSideOfField)
 {
-	JsonNode scriptConfig(JsonNode::JsonType::DATA_STRUCT);
+	loadScriptFromFile("test/lua/SpellEffectAPITest.lua");
 
-	scriptConfig["source"].String() = "test/lua/SpellEffectAPITest.lua";
-	loadScript(scriptConfig);
-
-	run();
+	runClientServer();
 
 	context->setGlobal("effectLevel", 1);
 
@@ -143,12 +130,9 @@ TEST_F(LuaSpellEffectAPITest, NotApplicableOnRightSideOfField)
 
 TEST_F(LuaSpellEffectAPITest, ApplyMoveUnit)
 {
-	JsonNode scriptConfig(JsonNode::JsonType::DATA_STRUCT);
+	loadScriptFromFile("test/lua/SpellEffectAPIMoveUnit.lua");
 
-	scriptConfig["source"].String() = "test/lua/SpellEffectAPIMoveUnit.lua";
-	loadScript(scriptConfig);
-
-	run();
+	runClientServer();
 
 	BattleHex hex1(11,2);
 

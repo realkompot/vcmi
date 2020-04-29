@@ -116,7 +116,7 @@ int CGHeroInstance::getNativeTerrain() const
 	int nativeTerrain = -1;
 	for(auto stack : stacks)
 	{
-		int stackNativeTerrain = VLC->townh->factions[stack.second->type->faction]->nativeTerrain;
+		int stackNativeTerrain = (*VLC->townh)[stack.second->type->faction]->nativeTerrain;
 		if(stackNativeTerrain == -1)
 			continue;
 
@@ -260,7 +260,7 @@ void CGHeroInstance::initHero(CRandomGenerator & rand, HeroTypeID SUBID)
 void CGHeroInstance::setType(si32 ID, si32 subID)
 {
 	assert(ID == Obj::HERO); // just in case
-	type = VLC->heroh->heroes[subID];
+	type = VLC->heroh->objects[subID];
 	portrait = type->imageIndex;
 	CGObjectInstance::setType(ID, type->heroClass->getIndex()); // to find object handler we must use heroClass->id
 	this->subID = subID; // after setType subID used to store unique hero identify id. Check issue 2277 for details
@@ -271,7 +271,7 @@ void CGHeroInstance::initHero(CRandomGenerator & rand)
 {
 	assert(validTypes(true));
 	if(!type)
-		type = VLC->heroh->heroes[subID];
+		type = VLC->heroh->objects[subID];
 
 	if (ID == Obj::HERO)
 		appearance = VLC->objtypeh->getHandlerFor(Obj::HERO, type->heroClass->getIndex())->getTemplates().front();
@@ -743,7 +743,7 @@ bool CGHeroInstance::canCastThisSpell(const spells::Spell * spell) const
 	{
 		if(inSpellBook)
 		{//hero has this spell in spellbook
-			logGlobal->error("Special spell %s in spellbook.", spell->getLevel());
+			logGlobal->error("Special spell %s in spellbook.", spell->getName());
 		}
 		return specificBonus;
 	}
@@ -824,7 +824,7 @@ CStackBasicDescriptor CGHeroInstance::calculateNecromancy (const BattleResult &b
 			};
 			int maxCasualtyLevel = 1;
 			for(auto & casualty : casualties)
-				vstd::amax(maxCasualtyLevel, VLC->creh->creatures[casualty.first]->level);
+				vstd::amax(maxCasualtyLevel, VLC->creh->objects[casualty.first]->level);
 			// pick best bonus available
 			std::shared_ptr<Bonus> topPick;
 			for(std::shared_ptr<Bonus> newPick : *improvedNecromancy)
@@ -840,7 +840,7 @@ CStackBasicDescriptor CGHeroInstance::calculateNecromancy (const BattleResult &b
 				{
 					auto quality = [getCreatureID](std::shared_ptr<Bonus> pick) -> std::vector<int>
 					{
-						const CCreature * c = VLC->creh->creatures[getCreatureID(pick)];
+						const CCreature * c = VLC->creh->objects[getCreatureID(pick)];
 						std::vector<int> v = {c->level, static_cast<int>(c->cost.marketValue()), -pick->additionalInfo[1]};
 						return v;
 					};
@@ -857,7 +857,7 @@ CStackBasicDescriptor CGHeroInstance::calculateNecromancy (const BattleResult &b
 		// raise upgraded creature (at 2/3 rate) if no space available otherwise
 		if(getSlotFor(creatureTypeRaised) == SlotID())
 		{
-			for(CreatureID upgraded : VLC->creh->creatures[creatureTypeRaised]->upgrades)
+			for(CreatureID upgraded : VLC->creh->objects[creatureTypeRaised]->upgrades)
 			{
 				if(getSlotFor(upgraded) != SlotID())
 				{
@@ -868,11 +868,11 @@ CStackBasicDescriptor CGHeroInstance::calculateNecromancy (const BattleResult &b
 			}
 		}
 		// calculate number of creatures raised - low level units contribute at 50% rate
-		const double raisedUnitHealth = VLC->creh->creatures[creatureTypeRaised]->MaxHealth();
+		const double raisedUnitHealth = VLC->creh->objects[creatureTypeRaised]->MaxHealth();
 		double raisedUnits = 0;
 		for(auto & casualty : casualties)
 		{
-			const CCreature * c = VLC->creh->creatures[casualty.first];
+			const CCreature * c = VLC->creh->objects[casualty.first];
 			double raisedFromCasualty = std::min(c->MaxHealth() / raisedUnitHealth, 1.0) * casualty.second * necromancySkill;
 			if(c->level < requiredCasualtyLevel)
 				raisedFromCasualty *= 0.5;
@@ -948,7 +948,7 @@ si32 CGHeroInstance::getManaNewTurn() const
 //  */
 // void CGHeroInstance::giveArtifact (ui32 aid) //use only for fixed artifacts
 // {
-// 	CArtifact * const artifact = VLC->arth->artifacts[aid]; //pointer to constant object
+// 	CArtifact * const artifact = VLC->arth->objects[aid]; //pointer to constant object
 // 	CArtifactInstance *ai = CArtifactInstance::createNewArtifactInstance(artifact);
 // 	ai->putAt(this, ai->firstAvailableSlot(this));
 // }
@@ -1365,7 +1365,7 @@ std::string CGHeroInstance::getHeroTypeName() const
 		}
 		else
 		{
-			return VLC->heroh->heroes[subID]->identifier;
+			return VLC->heroh->objects[subID]->identifier;
 		}
 	}
 	return "";

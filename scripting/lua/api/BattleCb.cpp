@@ -21,7 +21,7 @@ namespace scripting
 namespace api
 {
 
-VCMI_REGISTER_CORE_SCRIPT_API(BattleCbProxy);
+VCMI_REGISTER_CORE_SCRIPT_API(BattleCbProxy, "Battle");
 
 const std::vector<BattleCbProxy::RegType> BattleCbProxy::REGISTER =
 {
@@ -54,6 +54,13 @@ const std::vector<BattleCbProxy::RegType> BattleCbProxy::REGISTER =
 		LuaCallWrapper<const BattleCb>::createFunctor(&BattleCb::battleIsFinished)
 	}
 };
+
+
+const std::vector<BattleCbProxy::CustomRegType> BattleCbProxy::REGISTER_CUSTOM =
+{
+
+};
+
 
 int BattleCbProxy::getBattlefieldType(lua_State * L, const BattleCb * object)
 {

@@ -271,7 +271,7 @@ public:
 	int getMaxDamage(bool ranged) const override;
 
 	int getAttack(bool ranged) const override;
-	int getDefence(bool ranged) const override;
+	int getDefense(bool ranged) const override;
 
 	void save(JsonNode & data) override;
 	void load(const JsonNode & data) override;

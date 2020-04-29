@@ -25,6 +25,7 @@ class JsonNode;
 class CTown;
 class CFaction;
 struct BattleHex;
+class JsonSerializeFormat;
 
 /// a typical building encountered in every castle ;]
 /// this is structure available to both client and server
@@ -164,6 +165,9 @@ public:
 
 	bool hasTown() const override;
 
+	void updateFrom(const JsonNode & data);
+	void serializeJson(JsonSerializeFormat & handler);
+
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
 		h & name;
@@ -297,7 +301,7 @@ public:
 	}
 };
 
-class DLL_LINKAGE CTownHandler : public IHandlerBase, public FactionService
+class DLL_LINKAGE CTownHandler : public CHandlerBase<FactionID, Faction, CFaction, FactionService>
 {
 	struct BuildingRequirementsHelper
 	{
@@ -330,15 +334,12 @@ class DLL_LINKAGE CTownHandler : public IHandlerBase, public FactionService
 
 	void loadPuzzle(CFaction & faction, const JsonNode & source);
 
-	CFaction * loadFromJson(const JsonNode & data, const std::string & identifier);
-
 	void loadRandomFaction();
-public:
-	std::vector<ConstTransitivePtr<CFaction> > factions;
 
+public:
 	CTown * randomTown;
 
-	CTownHandler(); //c-tor, set pointer in VLC to this
+	CTownHandler();
 	~CTownHandler();
 
 	std::vector<JsonNode> loadLegacyData(size_t dataSize) override;
@@ -352,17 +353,9 @@ public:
 	std::vector<bool> getDefaultAllowed() const override;
 	std::set<TFaction> getAllowedFactions(bool withTown = true) const;
 
-	const Entity * getBaseByIndex(const int32_t index) const override;
-
-	const Faction * getById(const FactionID & id) const override;
-	const Faction * getByIndex(const int32_t index) const override;
-
-	void forEachBase(const std::function<void(const Entity * entity, bool & stop)> & cb) const override;
-	void forEach(const std::function<void(const Faction * entity, bool & stop)> & cb) const override;
-
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
-		h & factions;
+		h & objects;
 
 		if(version >= 770)
 		{
@@ -373,4 +366,8 @@ public:
 			loadRandomFaction();
 		}
 	}
+
+protected:
+	const std::vector<std::string> & getTypeNames() const override;
+	CFaction * loadFromJson(const std::string & scope, const JsonNode & data, const std::string & identifier, size_t index) override;
 };

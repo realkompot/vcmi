@@ -14,15 +14,25 @@ set(lib_SRCS
 		api/events/EventBusProxy.cpp
 		api/events/SubscriptionRegistryProxy.cpp
 
-		api/BattleCb.cpp
-		api/GameCb.cpp
-		api/Registry.cpp
-		api/ServerCb.cpp
-
 		api/netpacks/BattleLogMessage.cpp
 		api/netpacks/BattleStackMoved.cpp
 		api/netpacks/BattleUnitsChanged.cpp
+		api/netpacks/EntitiesChanged.cpp
 		api/netpacks/InfoWindow.cpp
+
+		api/Artifact.cpp
+		api/BattleCb.cpp
+		api/BonusSystem.cpp
+		api/Creature.cpp
+		api/Faction.cpp
+		api/GameCb.cpp
+		api/HeroClass.cpp
+		api/HeroType.cpp
+		api/Registry.cpp
+		api/ServerCb.cpp
+		api/Services.cpp
+		api/Skill.cpp
+		api/Spell.cpp
 )
 
 add_library(vcmiLua SHARED ${lib_SRCS})

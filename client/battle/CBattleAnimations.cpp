@@ -760,7 +760,7 @@ bool CShootingAnimation::init()
 	if (shooterInfo->idNumber == CreatureID::ARROW_TOWERS)
 	{
 		int creID = owner->siegeH->town->town->clientInfo.siegeShooter;
-		shooterInfo = CGI->creh->creatures[creID];
+		shooterInfo = CGI->creh->objects[creID];
 	}
 
 	ProjectileInfo spi;

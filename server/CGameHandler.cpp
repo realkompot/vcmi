@@ -248,7 +248,7 @@ static void giveExp(BattleResult &r)
 	r.exp[1] = 0;
 	for (auto i = r.casualties[!r.winner].begin(); i!=r.casualties[!r.winner].end(); i++)
 	{
-		r.exp[r.winner] += VLC->creh->creatures.at(i->first)->valOfBonuses(Bonus::STACK_HEALTH) * i->second;
+		r.exp[r.winner] += VLC->creh->objects.at(i->first)->valOfBonuses(Bonus::STACK_HEALTH) * i->second;
 	}
 }
 
@@ -1068,7 +1068,7 @@ void CGameHandler::makeAttack(const CStack * attacker, const CStack * defender, 
 
 		//TODO: should spell override creature`s projectile?
 
-        auto spell = bat.spellID.toSpell();
+		auto spell = bat.spellID.toSpell();
 
 		battle::Target target;
 		target.emplace_back(defender);
@@ -1122,7 +1122,15 @@ void CGameHandler::makeAttack(const CStack * attacker, const CStack * defender, 
 			totalKills += bsa.killedAmount;
 		}
 
-		addGenericDamageLog(blm, attacker, defender, totalDamage, totalKills, multipleTargets);
+		{
+			MetaString text;
+			attacker->addText(text, MetaString::GENERAL_TXT, 376);
+			attacker->addNameReplacement(text);
+			text.addReplacement(totalDamage);
+			blm.lines.push_back(text);
+		}
+
+		addGenericKilledLog(blm, defender, totalKills, multipleTargets);
 	}
 	sendAndApply(&blm);
 
@@ -1164,7 +1172,7 @@ void CGameHandler::makeAttack(const CStack * attacker, const CStack * defender, 
 		StacksInjured pack;
 		pack.stacks.push_back(bsa);
 		sendAndApply(&pack);
-		sendGenericDamageLog(attacker, bsa.killedAmount, false);
+		sendGenericKilledLog(attacker, bsa.killedAmount, false);
 	}
 
 	handleAfterAttackCasting(ranged, attacker, defender);
@@ -1255,60 +1263,41 @@ void CGameHandler::applyBattleEffects(BattleAttack & bat, BattleLogMessage & blm
 	}
 }
 
-void CGameHandler::sendGenericDamageLog(const CStack * defender, int32_t killed, bool multiple)
+void CGameHandler::sendGenericKilledLog(const CStack * defender, int32_t killed, bool multiple)
 {
 	if(killed > 0)
 	{
-		boost::format txt;
-		if(killed > 1)
-		{
-			txt = boost::format(VLC->generaltexth->allTexts[379]) % killed % (multiple ? VLC->generaltexth->allTexts[43] : defender->getCreature()->namePl); // creatures perish
-		}
-		else //killed == 1
-		{
-			txt = boost::format(VLC->generaltexth->allTexts[378]) % (multiple ? VLC->generaltexth->allTexts[42] : defender->getCreature()->nameSing); // creature perishes
-		}
-		std::string trimmed = boost::to_string(txt);
-		boost::algorithm::trim(trimmed); // these default h3 texts have unnecessary new lines, so get rid of them before displaying
-
-		MetaString line;
-		line.addReplacement(trimmed);
 		BattleLogMessage blm;
-		blm.lines.push_back(line);
+		addGenericKilledLog(blm, defender, killed, multiple);
 		sendAndApply(&blm);
 	}
 }
 
-void CGameHandler::addGenericDamageLog(BattleLogMessage & blm, const battle::Unit * attacker, const CStack * defender, int64_t dmg, int32_t killed, bool multiple)
+void CGameHandler::addGenericKilledLog(BattleLogMessage & blm, const CStack * defender, int32_t killed, bool multiple)
 {
-	std::string formattedText;
-
-	MetaString text;
-	attacker->addText(text, MetaString::GENERAL_TXT, 376);
-	attacker->addNameReplacement(text);
-	text.addReplacement(dmg);
-
 	if(killed > 0)
 	{
-		std::string formattedText = " ";
+		const int32_t txtIndex = (killed > 1) ? 379 : 378;
+		std::string formatString = VLC->generaltexth->allTexts.at(txtIndex);
 
-		boost::format txt;
+		// these default h3 texts have unnecessary new lines, so get rid of them before displaying (and trim just in case, trimming newlines does not works for some reason)
+		formatString.erase(std::remove(formatString.begin(), formatString.end(), '\n'), formatString.end());
+		formatString.erase(std::remove(formatString.begin(), formatString.end(), '\r'), formatString.end());
+		boost::algorithm::trim(formatString);
+
+		boost::format txt(formatString);
 		if(killed > 1)
 		{
-			txt = boost::format(VLC->generaltexth->allTexts[379]) % killed % (multiple ? VLC->generaltexth->allTexts[43] : defender->getCreature()->namePl); // creatures perish
+			txt % killed % (multiple ? VLC->generaltexth->allTexts[43] : defender->getCreature()->namePl); // creatures perish
 		}
 		else //killed == 1
 		{
-			txt = boost::format(VLC->generaltexth->allTexts[378]) % (multiple ? VLC->generaltexth->allTexts[42] : defender->getCreature()->nameSing); // creature perishes
+			txt % (multiple ? VLC->generaltexth->allTexts[42] : defender->getCreature()->nameSing); // creature perishes
 		}
-		std::string trimmed = boost::to_string(txt);
-		boost::algorithm::trim(trimmed); // these default h3 texts have unnecessary new lines, so get rid of them before displaying
-		formattedText.append(trimmed);
+		MetaString line;
+		line.addReplacement(txt.str());
+		blm.lines.push_back(line);
 	}
-
-	text.addReplacement(formattedText);
-	blm.lines.push_back(text);
-	sendAndApply(&blm);
 }
 
 void CGameHandler::handleClientDisconnection(std::shared_ptr<CConnection> c)
@@ -1667,6 +1656,7 @@ void CGameHandler::init(StartInfo *si)
 	}
 	CMapService mapService;
 	gs = new CGameState();
+	gs->preInit(VLC);
 	logGlobal->info("Gamestate created!");
 	gs->init(&mapService, si);
 	logGlobal->info("Gamestate initialized!");
@@ -1717,11 +1707,11 @@ void CGameHandler::setPortalDwelling(const CGTownInstance * town, bool forced=fa
 
 			if (clear)
 			{
-				ssi.creatures[GameConstants::CREATURES_PER_TOWN].first = std::max((ui32)1, (VLC->creh->creatures.at(creatureId)->growth)/2);
+				ssi.creatures[GameConstants::CREATURES_PER_TOWN].first = std::max((ui32)1, (VLC->creh->objects.at(creatureId)->growth)/2);
 			}
 			else
 			{
-				ssi.creatures[GameConstants::CREATURES_PER_TOWN].first = VLC->creh->creatures.at(creatureId)->growth;
+				ssi.creatures[GameConstants::CREATURES_PER_TOWN].first = VLC->creh->objects.at(creatureId)->growth;
 			}
 			ssi.creatures[GameConstants::CREATURES_PER_TOWN].second.push_back(creatureId);
 			sendAndApply(&ssi);
@@ -1807,8 +1797,8 @@ void CGameHandler::newTurn()
 					do
 					{
 						newMonster.second = VLC->creh->pickRandomMonster(getRandomGenerator());
-					} while (VLC->creh->creatures[newMonster.second] &&
-						VLC->townh->factions[VLC->creh->creatures[newMonster.second]->faction]->town == nullptr); // find first non neutral creature
+					} while (VLC->creh->objects[newMonster.second] &&
+						(*VLC->townh)[(*VLC->creh)[newMonster.second]->faction]->town == nullptr); // find first non neutral creature
 					n.creatureid = newMonster.second;
 				}
 			}
@@ -1955,7 +1945,7 @@ void CGameHandler::newTurn()
 				if (!t->creatures.at(k).second.empty()) // there are creatures at this level
 				{
 					ui32 &availableCount = sac.creatures.at(k).first;
-					const CCreature *cre = VLC->creh->creatures.at(t->creatures.at(k).second.back());
+					const CCreature *cre = VLC->creh->objects.at(t->creatures.at(k).second.back());
 
 					if (n.specialWeek == NewTurn::PLAGUE)
 						availableCount = t->creatures.at(k).first / 2; //halve their number, no growth
@@ -2944,6 +2934,7 @@ void CGameHandler::load(const std::string & filename)
 	{
 		logGlobal->error("Failed to load game: %s", e.what());
 	}
+	gs->preInit(VLC);
 	gs->updateOnLoad(lobby->si.get());
 }
 
@@ -3181,7 +3172,7 @@ bool CGameHandler::buildStructure(ObjectInstanceID tid, BuildingID requestedID, 
 				return;
 			}
 
-			CCreature * crea = VLC->creh->creatures.at(t->town->creatures.at(level).at(upgradeNumber));
+			CCreature * crea = VLC->creh->objects.at(t->town->creatures.at(level).at(upgradeNumber));
 
 			SetAvailableCreatures ssi;
 			ssi.tid = t->id;
@@ -3321,7 +3312,7 @@ bool CGameHandler::recruitCreatures(ObjectInstanceID objid, ObjectInstanceID dst
 {
 	const CGDwelling * dw = static_cast<const CGDwelling *>(getObj(objid));
 	const CArmedInstance *dst = nullptr;
-	const CCreature *c = VLC->creh->creatures.at(crid);
+	const CCreature *c = VLC->creh->objects.at(crid);
 	const bool warMachine = c->warMachine != ArtifactID::NONE;
 
 	//TODO: test for owning
@@ -3354,7 +3345,7 @@ bool CGameHandler::recruitCreatures(ObjectInstanceID objid, ObjectInstanceID dst
 	SlotID slot = dst->getSlotFor(crid);
 
 	if ((!found && complain("Cannot recruit: no such creatures!"))
-		|| (cram  >  VLC->creh->creatures.at(crid)->maxAmount(getPlayer(dst->tempOwner)->resources) && complain("Cannot recruit: lack of resources!"))
+		|| (cram  >  VLC->creh->objects.at(crid)->maxAmount(getPlayer(dst->tempOwner)->resources) && complain("Cannot recruit: lack of resources!"))
 		|| (cram<=0  &&  complain("Cannot recruit: cram <= 0!"))
 		|| (!slot.validSlot()  && !warMachine && complain("Cannot recruit: no available slot!")))
 	{
@@ -3422,7 +3413,7 @@ bool CGameHandler::upgradeCreature(ObjectInstanceID objid, SlotID pos, CreatureI
 	giveResources(player, -totalCost);
 
 	//upgrade creature
-	changeStackType(StackLocation(obj, pos), VLC->creh->creatures.at(upgID));
+	changeStackType(StackLocation(obj, pos), VLC->creh->objects.at(upgID));
 	return true;
 }
 
@@ -3599,7 +3590,7 @@ bool CGameHandler::assembleArtifacts (ObjectInstanceID heroID, ArtifactPosition 
 
 	if (assemble)
 	{
-		CArtifact *combinedArt = VLC->arth->artifacts[assembleTo];
+		CArtifact *combinedArt = VLC->arth->objects[assembleTo];
 		if (!combinedArt->constituents)
 			COMPLAIN_RET("assembleArtifacts: Artifact being attempted to assemble is not a combined artifacts!");
 		if (!vstd::contains(destArtifact->assemblyPossibilities(hero), combinedArt))
@@ -3639,7 +3630,7 @@ bool CGameHandler::buyArtifact(ObjectInstanceID hid, ArtifactID aid)
 			return false;
 
 		giveResource(hero->getOwner(),Res::GOLD,-GameConstants::SPELLBOOK_GOLD_COST);
-		giveHeroNewArtifact(hero, VLC->arth->artifacts[ArtifactID::SPELLBOOK], ArtifactPosition::SPELLBOOK);
+		giveHeroNewArtifact(hero, VLC->arth->objects[ArtifactID::SPELLBOOK], ArtifactPosition::SPELLBOOK);
 		assert(hero->getArt(ArtifactPosition::SPELLBOOK));
 		giveSpells(town,hero);
 		return true;
@@ -3710,7 +3701,7 @@ bool CGameHandler::buyArtifact(const IMarket *m, const CGHeroInstance *h, Res::E
 
 	sendAndApply(&saa);
 
-	giveHeroNewArtifact(h, VLC->arth->artifacts[aid], ArtifactPosition::FIRST_AVAILABLE);
+	giveHeroNewArtifact(h, VLC->arth->objects[aid], ArtifactPosition::FIRST_AVAILABLE);
 	return true;
 }
 
@@ -5027,7 +5018,7 @@ bool CGameHandler::handleDamageFromObstacle(const CStack * curStack, bool stackI
 				StacksInjured si;
 				si.stacks.push_back(bsa);
 				sendAndApply(&si);
-				sendGenericDamageLog(curStack, bsa.killedAmount, false);
+				sendGenericKilledLog(curStack, bsa.killedAmount, false);
 			}
 		}
 
@@ -5517,7 +5508,7 @@ bool CGameHandler::dig(const CGHeroInstance *h)
 		iw.text.addTxt(MetaString::GENERAL_TXT, 58); //"Congratulations! After spending many hours digging here, your hero has uncovered the "
 		iw.text.addTxt(MetaString::ART_NAMES, ArtifactID::GRAIL);
 		iw.soundID = soundBase::ULTIMATEARTIFACT;
-		giveHeroNewArtifact(h, VLC->arth->artifacts[ArtifactID::GRAIL], ArtifactPosition::PRE_FIRST); //give grail
+		giveHeroNewArtifact(h, VLC->arth->objects[ArtifactID::GRAIL], ArtifactPosition::PRE_FIRST); //give grail
 		sendAndApply(&iw);
 
 		iw.soundID = soundBase::invalid;
@@ -5759,7 +5750,7 @@ void CGameHandler::handleAfterAttackCasting(bool ranged, const CStack * attacker
 		si.stacks.push_back(bsa);
 
 		sendAndApply(&si);
-		sendGenericDamageLog(defender, bsa.killedAmount, false);
+		sendGenericKilledLog(defender, bsa.killedAmount, false);
 	}
 }
 
@@ -6510,7 +6501,7 @@ void CGameHandler::spawnWanderingMonsters(CreatureID creatureID)
 
 	RandomGeneratorUtil::randomShuffle(tiles, getRandomGenerator());
 	logGlobal->trace("Spawning wandering monsters. Found %d free tiles. Creature type: %d", tiles.size(), creatureID.num);
-	const CCreature *cre = VLC->creh->creatures.at(creatureID);
+	const CCreature *cre = VLC->creh->objects.at(creatureID);
 	for (int i = 0; i < amount; ++i)
 	{
 		tile = tiles.begin();
@@ -6533,7 +6524,7 @@ void CGameHandler::handleCheatCode(std::string & cheat, PlayerColor player, cons
 		if (!hero) return;
 		///Give hero spellbook
 		if (!hero->hasSpellbook())
-			giveHeroNewArtifact(hero, VLC->arth->artifacts[ArtifactID::SPELLBOOK], ArtifactPosition::SPELLBOOK);
+			giveHeroNewArtifact(hero, VLC->arth->objects[ArtifactID::SPELLBOOK], ArtifactPosition::SPELLBOOK);
 
 		///Give all spells with bonus (to allow banned spells)
 		GiveBonus giveBonus(GiveBonus::HERO);
@@ -6576,7 +6567,7 @@ void CGameHandler::handleCheatCode(std::string & cheat, PlayerColor player, cons
 		creatures.insert(std::make_pair("vcmiangband", std::make_pair(66, 10))); //10 black knights
 		creatures.insert(std::make_pair("vcmiglaurung", std::make_pair(133, 5000))); //5000 crystal dragons
 
-		const CCreature * creature = VLC->creh->creatures.at(creatures[cheat].first);
+		const CCreature * creature = VLC->creh->objects.at(creatures[cheat].first);
 		for (int i = 0; i < GameConstants::ARMY_SIZE; i++)
 			if (!hero->hasStackAtSlot(SlotID(i)))
 				insertNewStack(StackLocation(hero, SlotID(i)), creature, creatures[cheat].second);
@@ -6586,18 +6577,18 @@ void CGameHandler::handleCheatCode(std::string & cheat, PlayerColor player, cons
 		if (!hero) return;
 		///Give all war machines to hero
 		if (!hero->getArt(ArtifactPosition::MACH1))
-			giveHeroNewArtifact(hero, VLC->arth->artifacts[ArtifactID::BALLISTA], ArtifactPosition::MACH1);
+			giveHeroNewArtifact(hero, VLC->arth->objects[ArtifactID::BALLISTA], ArtifactPosition::MACH1);
 		if (!hero->getArt(ArtifactPosition::MACH2))
-			giveHeroNewArtifact(hero, VLC->arth->artifacts[ArtifactID::AMMO_CART], ArtifactPosition::MACH2);
+			giveHeroNewArtifact(hero, VLC->arth->objects[ArtifactID::AMMO_CART], ArtifactPosition::MACH2);
 		if (!hero->getArt(ArtifactPosition::MACH3))
-			giveHeroNewArtifact(hero, VLC->arth->artifacts[ArtifactID::FIRST_AID_TENT], ArtifactPosition::MACH3);
+			giveHeroNewArtifact(hero, VLC->arth->objects[ArtifactID::FIRST_AID_TENT], ArtifactPosition::MACH3);
 	}
 	else if (cheat == "vcmiforgeofnoldorking")
 	{
 		if (!hero) return;
 		///Give hero all artifacts except war machines, spell scrolls and spell book
-		for (int g = 7; g < VLC->arth->artifacts.size(); ++g) //including artifacts from mods
-			giveHeroNewArtifact(hero, VLC->arth->artifacts[g], ArtifactPosition::PRE_FIRST);
+		for (int g = 7; g < VLC->arth->objects.size(); ++g) //including artifacts from mods
+			giveHeroNewArtifact(hero, VLC->arth->objects[g], ArtifactPosition::PRE_FIRST);
 	}
 	else if (cheat == "vcmiglorfindel")
 	{

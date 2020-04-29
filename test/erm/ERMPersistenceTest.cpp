@@ -35,21 +35,17 @@ protected:
 
 TEST_F(ERMPersistenceTest, Empty)
 {
-	JsonNode state;
+	std::stringstream source;
+	source << "VERM" << std::endl;
+	source << "!#VRj:S2;" << std::endl;
 
-	std::stringstream builder;
-	builder << "VERM" << std::endl;
-	builder << "!#VRj:S2;" << std::endl;
-
-	loadScript(VLC->scriptHandler->erm, builder.str());
-
-	run(state);
-
-	JsonNode actualState = context->saveState();
+	loadScript(VLC->scriptHandler->erm, source.str());
+	JsonNode actualState = runClientServer();
 
 	SCOPED_TRACE("\n" + subject->code);
 
-	state["ERM"]["quick"]["j"].Float() = 2;
+	JsonNode state;
+	state["ERM"]["Q"]["j"].Float() = 2;
 	state["ERM"]["instructionsCalled"].Bool() = true;
 
 	JsonComparer c(false);
@@ -62,21 +58,18 @@ TEST_F(ERMPersistenceTest, QuickVar)
 
 	JsonNode state;
 	state["foo"].String() = "foo";
-	state["ERM"]["quick"]["m"].Integer() = VALUE;
+	state["ERM"]["Q"]["m"].Integer() = VALUE;
 
-	std::stringstream builder;
-	builder << "VERM" << std::endl;
-	builder << "!#VRm:+2;" << std::endl;
+	std::stringstream source;
+	source << "VERM" << std::endl;
+	source << "!#VRm:+2;" << std::endl;
 
-	loadScript(VLC->scriptHandler->erm, builder.str());
-
-	run(state);
-
-	JsonNode actualState = context->saveState();
+	loadScript(VLC->scriptHandler->erm, source.str());
+	JsonNode actualState = runClientServer(state);
 
 	SCOPED_TRACE("\n" + subject->code);
 
-	state["ERM"]["quick"]["m"].Float() = VALUE + 2;
+	state["ERM"]["Q"]["m"].Float() = VALUE + 2;
 	state["ERM"]["instructionsCalled"].Bool() = true;
 
 	JsonComparer c(false);
@@ -95,10 +88,7 @@ TEST_F(ERMPersistenceTest, RegularVar)
 	builder << "!#VRv57:-28;" << std::endl;
 
 	loadScript(VLC->scriptHandler->erm, builder.str());
-
-	run(state);
-
-	JsonNode actualState = context->saveState();
+	JsonNode actualState = runClientServer(state);
 
 	SCOPED_TRACE("\n" + subject->code);
 

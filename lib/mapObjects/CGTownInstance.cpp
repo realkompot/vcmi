@@ -50,7 +50,7 @@ void CCreGenAsCastleInfo::serializeJson(JsonSerializeFormat & handler)
 	if(!asCastle)
 	{
 		std::vector<bool> standard;
-		standard.resize(VLC->townh->factions.size(), true);
+		standard.resize(VLC->townh->size(), true);
 
 		JsonSerializeFormat::LIC allowedLIC(standard, &FactionID::decode, &FactionID::encode);
 		allowedLIC.any = allowedFactions;
@@ -259,7 +259,7 @@ void CGDwelling::newTurn(CRandomGenerator & rand) const
 	{
 		if(creatures[i].second.size())
 		{
-			CCreature *cre = VLC->creh->creatures[creatures[i].second[0]];
+			CCreature *cre = VLC->creh->objects[creatures[i].second[0]];
 			TQuantity amount = cre->growth * (1 + cre->valOfBonuses(Bonus::CREATURE_GROWTH_PERCENT)/100) + cre->valOfBonuses(Bonus::CREATURE_GROWTH);
 			if (VLC->modh->settings.DWELLINGS_ACCUMULATE_CREATURES && ID != Obj::REFUGEE_CAMP) //camp should not try to accumulate different kinds of creatures
 				sac.creatures[i].first += amount;
@@ -284,7 +284,7 @@ void CGDwelling::updateGuards() const
 	//default condition - creatures are of level 5 or higher
 	for (auto creatureEntry : creatures)
 	{
-		if (VLC->creh->creatures[creatureEntry.second.at(0)]->level >= 5 && ID != Obj::REFUGEE_CAMP)
+		if (VLC->creh->objects[creatureEntry.second.at(0)]->level >= 5 && ID != Obj::REFUGEE_CAMP)
 		{
 			guarded = true;
 			break;
@@ -295,7 +295,7 @@ void CGDwelling::updateGuards() const
 	{
 		for (auto creatureEntry : creatures)
 		{
-			const CCreature * crea = VLC->creh->creatures[creatureEntry.second.at(0)];
+			const CCreature * crea = VLC->creh->objects[creatureEntry.second.at(0)];
 			SlotID slot = getSlotFor(crea->idNumber);
 
 			if (hasStackAtSlot(slot)) //stack already exists, overwrite it
@@ -323,7 +323,7 @@ void CGDwelling::updateGuards() const
 void CGDwelling::heroAcceptsCreatures( const CGHeroInstance *h) const
 {
 	CreatureID crid = creatures[0].second[0];
-	CCreature *crs = VLC->creh->creatures[crid];
+	CCreature *crs = VLC->creh->objects[crid];
 	TQuantity count = creatures[0].first;
 
 	if(crs->level == 1  &&  ID != Obj::REFUGEE_CAMP) //first level - creatures are for free
@@ -527,7 +527,7 @@ GrowthInfo CGTownInstance::getGrowthInfo(int level) const
 	if (creatures[level].second.empty())
 		return ret; //no dwelling
 
-	const CCreature *creature = VLC->creh->creatures[creatures[level].second.back()];
+	const CCreature *creature = VLC->creh->objects[creatures[level].second.back()];
 	const int base = creature->growth;
 	int castleBonus = 0;
 
@@ -820,7 +820,7 @@ void CGTownInstance::newTurn(CRandomGenerator & rand) const
 					}
 					else //upgrade
 					{
-						cb->changeStackType(sl, VLC->creh->creatures[*c->upgrades.begin()]);
+						cb->changeStackType(sl, VLC->creh->objects[*c->upgrades.begin()]);
 					}
 				}
 				if ((stacksCount() < GameConstants::ARMY_SIZE && rand.nextInt(99) < 25) || Slots().empty()) //add new stack
@@ -833,7 +833,7 @@ void CGTownInstance::newTurn(CRandomGenerator & rand) const
 
 						TQuantity count = creatureGrowth(i);
 						if (!count) // no dwelling
-							count = VLC->creh->creatures[c]->growth;
+							count = VLC->creh->objects[c]->growth;
 
 						{//no lower tiers or above current month
 
@@ -841,7 +841,7 @@ void CGTownInstance::newTurn(CRandomGenerator & rand) const
 							{
 								StackLocation sl(this, n);
 								if (slotEmpty(n))
-									cb->insertNewStack(sl, VLC->creh->creatures[c], count);
+									cb->insertNewStack(sl, VLC->creh->objects[c], count);
 								else //add to existing
 									cb->changeStackCount(sl, count);
 							}
@@ -1033,7 +1033,7 @@ void CGTownInstance::setType(si32 ID, si32 subID)
 {
 	assert(ID == Obj::TOWN); // just in case
 	CGObjectInstance::setType(ID, subID);
-	town = VLC->townh->factions[subID]->town;
+	town = (*VLC->townh)[subID]->town;
 	randomizeArmy(subID);
 	updateAppearance();
 }
@@ -1230,7 +1230,7 @@ const CTown * CGTownInstance::getTown() const
 	{
 		if(nullptr == town)
 		{
-			return VLC->townh->factions[subID]->town;
+			return (*VLC->townh)[subID]->town;
 		}
 		else
 			return town;
@@ -1629,7 +1629,7 @@ GrowthInfo::Entry::Entry(const std::string &format, int _count)
 GrowthInfo::Entry::Entry(int subID, BuildingID building, int _count)
 	: count(_count)
 {
-	description = boost::str(boost::format("%s %+d") % VLC->townh->factions[subID]->town->buildings.at(building)->Name() % count);
+	description = boost::str(boost::format("%s %+d") % (*VLC->townh)[subID]->town->buildings.at(building)->Name() % count);
 }
 
 GrowthInfo::Entry::Entry(int _count, const std::string &fullDescription)

@@ -818,7 +818,7 @@ bool CRmgTemplateZone::addMonster(int3 &pos, si32 strength, bool clearSurroundin
 	CreatureID creId = CreatureID::NONE;
 	int amount = 0;
 	std::vector<CreatureID> possibleCreatures;
-	for (auto cre : VLC->creh->creatures)
+	for (auto cre : VLC->creh->objects)
 	{
 		if (cre->special)
 			continue;
@@ -834,14 +834,14 @@ bool CRmgTemplateZone::addMonster(int3 &pos, si32 strength, bool clearSurroundin
 	if (possibleCreatures.size())
 	{
 		creId = *RandomGeneratorUtil::nextItem(possibleCreatures, gen->rand);
-		amount = strength / VLC->creh->creatures[creId]->AIValue;
+		amount = strength / VLC->creh->objects[creId]->AIValue;
 		if (amount >= 4)
 			amount *= gen->rand.nextDouble(0.75, 1.25);
 	}
 	else //just pick any available creature
 	{
 		creId = CreatureID(132); //Azure Dragon
-		amount = strength / VLC->creh->creatures[creId]->AIValue;
+		amount = strength / VLC->creh->objects[creId]->AIValue;
 	}
 
 	auto guardFactory = VLC->objtypeh->getHandlerFor(Obj::MONSTER, creId);
@@ -1266,7 +1266,7 @@ void CRmgTemplateZone::initTerrainType ()
 {
 
 	if (matchTerrainToTown && townType != ETownType::NEUTRAL)
-		terrainType = VLC->townh->factions[townType]->nativeTerrain;
+		terrainType = (*VLC->townh)[townType]->nativeTerrain;
 	else
 		terrainType = *RandomGeneratorUtil::nextItem(terrainTypes, gen->rand);
 
@@ -2166,7 +2166,7 @@ void CRmgTemplateZone::addAllPossibleObjects()
 	int numZones = gen->getZones().size();
 
 	std::vector<CCreature *> creatures; //native creatures for this zone
-	for (auto cre : VLC->creh->creatures)
+	for (auto cre : VLC->creh->objects)
 	{
 		if (!cre->special && cre->faction == townType)
 		{

@@ -9,6 +9,8 @@
  */
 #pragma once
 
+#include <vcmi/Metatype.h>
+
 #include "CGameInfoCallback.h" // for CGameInfoCallback
 #include "CRandomGenerator.h"
 
@@ -118,6 +120,8 @@ public:
 	CArtifactInstance * getArtInstance(ArtifactInstanceID aid);
 	CGObjectInstance * getObjInstance(ObjectInstanceID oid);
 	CArmedInstance * getArmyInstance(ObjectInstanceID oid);
+
+	virtual void updateEntity(Metatype metatype, int32_t index, const JsonNode & data) = 0;
 };
 
 /// Interface class for handling general game logic and actions

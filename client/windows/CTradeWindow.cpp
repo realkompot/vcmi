@@ -244,7 +244,7 @@ void CTradeWindow::CTradeableItem::hover(bool on)
 	{
 	case CREATURE:
 	case CREATURE_PLACEHOLDER:
-		GH.statusbar->setText(boost::str(boost::format(CGI->generaltexth->allTexts[481]) % CGI->creh->creatures[id]->namePl));
+		GH.statusbar->setText(boost::str(boost::format(CGI->generaltexth->allTexts[481]) % CGI->creh->objects[id]->namePl));
 		break;
 	case ARTIFACT_PLACEHOLDER:
 		if(id < 0)
@@ -263,7 +263,7 @@ void CTradeWindow::CTradeableItem::clickRight(tribool down, bool previousState)
 		{
 		case CREATURE:
 		case CREATURE_PLACEHOLDER:
-			//GH.statusbar->print(boost::str(boost::format(CGI->generaltexth->allTexts[481]) % CGI->creh->creatures[id]->namePl));
+			//GH.statusbar->print(boost::str(boost::format(CGI->generaltexth->allTexts[481]) % CGI->creh->objects[id]->namePl));
 			break;
 		case ARTIFACT_TYPE:
 		case ARTIFACT_PLACEHOLDER:
@@ -285,9 +285,9 @@ std::string CTradeWindow::CTradeableItem::getName(int number) const
 		return CGI->generaltexth->restypes[id];
 	case CREATURE:
 		if(number == 1)
-			return CGI->creh->creatures[id]->nameSing;
+			return CGI->creh->objects[id]->nameSing;
 		else
-			return CGI->creh->creatures[id]->namePl;
+			return CGI->creh->objects[id]->namePl;
 	case ARTIFACT_TYPE:
 	case ARTIFACT_INSTANCE:
 		return CGI->artifacts()->getByIndex(id)->getName();
@@ -668,14 +668,14 @@ CMarketplaceWindow::CMarketplaceWindow(const IMarket * Market, const CGHeroInsta
 		switch (mode)
 		{
 		case EMarketMode::CREATURE_RESOURCE:
-			title = CGI->townh->factions[ETownType::STRONGHOLD]->town->buildings[BuildingID::FREELANCERS_GUILD]->Name();
+			title = (*CGI->townh)[ETownType::STRONGHOLD]->town->buildings[BuildingID::FREELANCERS_GUILD]->Name();
 			break;
 		case EMarketMode::RESOURCE_ARTIFACT:
-			title = CGI->townh->factions[market->o->subID]->town->buildings[BuildingID::ARTIFACT_MERCHANT]->Name();
+			title = (*CGI->townh)[market->o->subID]->town->buildings[BuildingID::ARTIFACT_MERCHANT]->Name();
 			sliderNeeded = false;
 			break;
 		case EMarketMode::ARTIFACT_RESOURCE:
-			title = CGI->townh->factions[market->o->subID]->town->buildings[BuildingID::ARTIFACT_MERCHANT]->Name();
+			title = (*CGI->townh)[market->o->subID]->town->buildings[BuildingID::ARTIFACT_MERCHANT]->Name();
 			sliderNeeded = false;
 			break;
 		default:

@@ -26,6 +26,7 @@ public:
 	using Wrapper = OpaqueWrapper<const BattleCb, BattleCbProxy>;
 
 	static const std::vector<typename Wrapper::RegType> REGISTER;
+	static const std::vector<typename Wrapper::CustomRegType> REGISTER_CUSTOM;
 
 	static int getBattlefieldType(lua_State * L, const BattleCb * object);
 	static int getTerrainType(lua_State * L, const BattleCb * object);

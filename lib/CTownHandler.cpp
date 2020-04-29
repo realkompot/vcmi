@@ -143,6 +143,16 @@ bool CFaction::hasTown() const
 	return town != nullptr;
 }
 
+void CFaction::updateFrom(const JsonNode & data)
+{
+
+}
+
+void CFaction::serializeJson(JsonSerializeFormat & handler)
+{
+
+}
+
 
 CTown::CTown()
 	: faction(nullptr), mageLevel(0), primaryRes(0), moatDamage(0), defaultTavernChance(0)
@@ -202,9 +212,6 @@ CTownHandler::CTownHandler()
 CTownHandler::~CTownHandler()
 {
 	delete randomTown;
-
-	for(auto faction : factions)
-		faction.dellNull();
 }
 
 JsonNode readBuilding(CLegacyConfigParser & parser)
@@ -226,7 +233,7 @@ JsonNode readBuilding(CLegacyConfigParser & parser)
 std::vector<JsonNode> CTownHandler::loadLegacyData(size_t dataSize)
 {
 	std::vector<JsonNode> dest(dataSize);
-	factions.resize(dataSize);
+	objects.resize(dataSize);
 
 	auto getBuild = [&](size_t town, size_t building) -> JsonNode &
 	{
@@ -465,7 +472,7 @@ void CTownHandler::loadBuilding(CTown * town, const std::string & stringID, cons
 
 	ret->town->buildings[ret->bid] = ret;
 
-	VLC->modh->identifiers.registerObject(source.meta, ret->town->getBuildingScope(), ret->identifier, ret->bid);
+	registerObject(source.meta, ret->town->getBuildingScope(), ret->identifier, ret->bid);
 }
 
 void CTownHandler::loadBuildings(CTown * town, const JsonNode & source)
@@ -704,7 +711,7 @@ void CTownHandler::loadTown(CTown * town, const JsonNode & source)
 
 		VLC->modh->identifiers.requestIdentifier(node.second.meta, "heroClass",node.first, [=](si32 classID)
 		{
-			VLC->heroh->classes.heroClasses[classID]->selectionProbability[town->faction->index] = chance;
+			VLC->heroh->classes[HeroClassID(classID)]->selectionProbability[town->faction->index] = chance;
 		});
 	}
 
@@ -754,10 +761,11 @@ void CTownHandler::loadPuzzle(CFaction &faction, const JsonNode &source)
 	assert(faction.puzzleMap.size() == GameConstants::PUZZLE_MAP_PIECES);
 }
 
-CFaction * CTownHandler::loadFromJson(const JsonNode &source, const std::string & identifier)
+CFaction * CTownHandler::loadFromJson(const std::string & scope, const JsonNode & source, const std::string & identifier, size_t index)
 {
-	auto  faction = new CFaction();
+	auto faction = new CFaction();
 
+	faction->index = static_cast<TFaction>(index);
 	faction->name = source["name"].String();
 	faction->identifier = identifier;
 
@@ -790,10 +798,9 @@ CFaction * CTownHandler::loadFromJson(const JsonNode &source, const std::string 
 
 void CTownHandler::loadObject(std::string scope, std::string name, const JsonNode & data)
 {
-	auto object = loadFromJson(data, normalizeIdentifier(scope, "core", name));
+	auto object = loadFromJson(scope, data, normalizeIdentifier(scope, "core", name), objects.size());
 
-	object->index = factions.size();
-	factions.push_back(object);
+	objects.push_back(object);
 
 	if (object->town)
 	{
@@ -825,18 +832,18 @@ void CTownHandler::loadObject(std::string scope, std::string name, const JsonNod
 		});
 	}
 
-	VLC->modh->identifiers.registerObject(scope, "faction", name, object->index);
+	registerObject(scope, "faction", name, object->index);
 }
 
 void CTownHandler::loadObject(std::string scope, std::string name, const JsonNode & data, size_t index)
 {
-	auto object = loadFromJson(data, normalizeIdentifier(scope, "core", name));
-	object->index = index;
-	if (factions.size() > index)
-		assert(factions[index] == nullptr); // ensure that this id was not loaded before
+	auto object = loadFromJson(scope, data, normalizeIdentifier(scope, "core", name), index);
+
+	if (objects.size() > index)
+		assert(objects[index] == nullptr); // ensure that this id was not loaded before
 	else
-		factions.resize(index + 1);
-	factions[index] = object;
+		objects.resize(index + 1);
+	objects[index] = object;
 
 	if (object->town)
 	{
@@ -856,7 +863,7 @@ void CTownHandler::loadObject(std::string scope, std::string name, const JsonNod
 		});
 	}
 
-	VLC->modh->identifiers.registerObject(scope, "faction", name, object->index);
+	registerObject(scope, "faction", name, object->index);
 }
 
 void CTownHandler::loadRandomFaction()
@@ -870,7 +877,7 @@ void CTownHandler::loadRandomFaction()
 
 void CTownHandler::loadCustom()
 {
-    loadRandomFaction();
+	loadRandomFaction();
 }
 
 void CTownHandler::afterLoadFinalization()
@@ -922,7 +929,7 @@ void CTownHandler::initializeWarMachines()
 std::vector<bool> CTownHandler::getDefaultAllowed() const
 {
 	std::vector<bool> allowedFactions;
-	for(auto town : factions)
+	for(auto town : objects)
 	{
 		allowedFactions.push_back(town->town != nullptr);
 	}
@@ -936,7 +943,7 @@ std::set<TFaction> CTownHandler::getAllowedFactions(bool withTown) const
 	if (withTown)
 		allowed = getDefaultAllowed();
 	else
-		allowed.resize( factions.size(), true);
+		allowed.resize( objects.size(), true);
 
 	for (size_t i=0; i<allowed.size(); i++)
 		if (allowed[i])
@@ -945,50 +952,9 @@ std::set<TFaction> CTownHandler::getAllowedFactions(bool withTown) const
 	return allowedFactions;
 }
 
-const Entity * CTownHandler::getBaseByIndex(const int32_t index) const
+const std::vector<std::string> & CTownHandler::getTypeNames() const
 {
-	return getByIndex(index);
-}
-
-const Faction * CTownHandler::getById(const FactionID & id) const
-{
-	return getByIndex(id.getNum());
-}
-
-const Faction * CTownHandler::getByIndex(const int32_t index) const
-{
-	if(index < 0 || index >= factions.size())
-	{
-		logGlobal->error("Unable to get faction with ID %d", int32_t(index));
-		return nullptr;
-	}
-	else
-	{
-		return factions.at(index).get();
-	}
-}
-
-void CTownHandler::forEachBase(const std::function<void(const Entity * entity, bool & stop)>& cb) const
-{
-	bool stop = false;
-
-	for(auto & object : factions)
-	{
-		cb(object.get(), stop);
-		if(stop)
-			break;
-	}
-}
-
-void CTownHandler::forEach(const std::function<void(const Faction * entity, bool & stop)>& cb) const
-{
-	bool stop = false;
-
-	for(auto & object : factions)
-	{
-		cb(object.get(), stop);
-		if(stop)
-			break;
-	}
+	static const std::vector<std::string> typeNames = { "faction", "town" };
+	return typeNames;
 }
 

@@ -21,7 +21,6 @@ class LuaStack
 {
 public:
 	LuaStack(lua_State * L_);
-	LuaStack(lua_State * L_, api::TypeRegistry * typeRegistry_);
 	void balance();
 	void clear();
 
@@ -30,7 +29,9 @@ public:
 	void pushNil();
 	void pushInteger(lua_Integer value);
 	void push(bool value);
+	void push(const char * value);
 	void push(const std::string & value);
+	void push(const JsonNode & value);
 
 	template<typename T>
 	void push(const boost::optional<T> & value)
@@ -65,17 +66,45 @@ public:
 		pushObject<T>(value);
 	}
 
-
 	template<typename T, typename std::enable_if< std::is_class<T>::value, int>::type = 0>
-	void push(std::unique_ptr<T> && value)
+	void push(std::shared_ptr<T> value)
 	{
+		using UData = std::shared_ptr<T>;
+
+		static auto KEY = api::TypeRegistry::get()->getKey<UData>();
+
 		if(!value)
 		{
 			pushNil();
 			return;
 		}
 
+		void * raw = lua_newuserdata(L, sizeof(UData));
+
+		if(!raw)
+		{
+			pushNil();
+			return;
+		}
+
+		new(raw) UData(value);
+
+		luaL_getmetatable(L, KEY);
+		lua_setmetatable(L, -2);
+	}
+
+	template<typename T, typename std::enable_if< std::is_class<T>::value, int>::type = 0>
+	void push(std::unique_ptr<T> && value)
+	{
 		using UData = std::unique_ptr<T>;
+
+		static auto KEY = api::TypeRegistry::get()->getKey<UData>();
+
+		if(!value)
+		{
+			pushNil();
+			return;
+		}
 
 		void * raw = lua_newuserdata(L, sizeof(UData));
 
@@ -87,7 +116,7 @@ public:
 
 		new(raw) UData(std::move(value));
 
-		luaL_getmetatable(L, typeRegistry->getKey<UData>());
+		luaL_getmetatable(L, KEY);
 		lua_setmetatable(L, -2);
 	}
 
@@ -116,7 +145,9 @@ public:
 	template<typename T, typename std::enable_if< std::is_class<T>::value, int>::type = 0>
 	bool tryGet(int position, T * & value)
 	{
-		void * raw = luaL_checkudata(L, position, typeRegistry->getKey<T *>());
+		static auto KEY = api::TypeRegistry::get()->getKey<T *>();
+
+		void * raw = luaL_checkudata(L, position, KEY);
 
 		if(!raw)
 			return false;
@@ -128,7 +159,9 @@ public:
 	template<typename T>
 	bool tryGet(int position, std::shared_ptr<T> & value)
 	{
-		void * raw = luaL_checkudata(L, position, typeRegistry->getKey<std::shared_ptr<T>>());
+		static auto KEY = api::TypeRegistry::get()->getKey<std::shared_ptr<T>>();
+
+		void * raw = luaL_checkudata(L, position, KEY);
 
 		if(!raw)
 			return false;
@@ -141,36 +174,56 @@ public:
 
 	int retNil();
 	int retVoid();
+	int retPushed();
+
+	inline bool isFunction(int position)
+	{
+		return lua_isfunction(L, position);
+	}
+
+	inline bool isNumber(int position)
+	{
+		return lua_isnumber(L, position);
+	}
+
+	template<typename T>
+	static int quickRetInt(lua_State * L, const T & value)
+	{
+		lua_settop(L, 0);
+		lua_pushinteger(L, static_cast<int32_t>(value));
+		return 1;
+	}
+
+	static int quickRetStr(lua_State * L, const std::string & value)
+	{
+		lua_settop(L, 0);
+		lua_pushlstring(L, value.c_str(), value.size());
+		return 1;
+	}
 
 private:
 	lua_State * L;
-	api::TypeRegistry * typeRegistry;
 	int initialTop;
 
 	template<typename Object>
 	void pushObject(Object * value)
 	{
-		if(value)
-		{
-			using UData = Object *;
+		using UData = Object *;
+		static auto KEY = api::TypeRegistry::get()->getKey<UData>();
 
-			void * raw = lua_newuserdata(L, sizeof(UData));
-
-			UData * ptr = static_cast<UData *>(raw);
-			*ptr = value;
-
-			luaL_getmetatable(L, typeRegistry->getKey<UData>());
-//			if(!lua_istable(L, -1))
-//			{
-//				lua_pushstring(L, "internal error");
-//				lua_error(L);
-//			}
-			lua_setmetatable(L, -2);
-		}
-		else
+		if(!value)
 		{
 			pushNil();
+			return;
 		}
+
+		void * raw = lua_newuserdata(L, sizeof(UData));
+
+		UData * ptr = static_cast<UData *>(raw);
+		*ptr = value;
+
+		luaL_getmetatable(L, KEY);
+		lua_setmetatable(L, -2);
 	}
 };
 

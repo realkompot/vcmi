@@ -36,6 +36,11 @@ const std::vector<BattleLogMessageProxy::RegType> BattleLogMessageProxy::REGISTE
 	},
 };
 
+const std::vector<BattleLogMessageProxy::CustomRegType> BattleLogMessageProxy::REGISTER_CUSTOM =
+{
+	{"new", &Wrapper::constructor, true}
+};
+
 int BattleLogMessageProxy::addText(lua_State * L, std::shared_ptr<BattleLogMessage> object)
 {
 	LuaStack S(L);

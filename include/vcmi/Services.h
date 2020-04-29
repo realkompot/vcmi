@@ -10,12 +10,15 @@
 
 #pragma once
 
+#include "Metatype.h"
+
 class ArtifactService;
 class CreatureService;
 class FactionService;
 class HeroClassService;
 class HeroTypeService;
 class SkillService;
+class JsonNode;
 
 namespace spells
 {
@@ -45,6 +48,8 @@ public:
 	virtual const scripting::Service * scripts() const = 0;
 	virtual const spells::Service * spells() const = 0;
 	virtual const SkillService * skills() const = 0;
+
+	virtual void updateEntity(Metatype metatype, int32_t index, const JsonNode & data) = 0;
 
 	virtual const spells::effects::Registry * spellEffects() const = 0;
 	virtual spells::effects::Registry * spellEffects() = 0;

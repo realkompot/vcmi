@@ -94,7 +94,7 @@ size_t OptionsTab::CPlayerSettingsHelper::getImageIndex()
 		case PlayerSettings::RANDOM:
 			return TOWN_RANDOM;
 		default:
-			return CGI->townh->factions[settings.castle]->town->clientInfo.icons[true][false] + 2;
+			return (*CGI->townh)[settings.castle]->town->clientInfo.icons[true][false] + 2;
 		}
 
 	case HERO:
@@ -108,7 +108,7 @@ size_t OptionsTab::CPlayerSettingsHelper::getImageIndex()
 		{
 			if(settings.heroPortrait >= 0)
 				return settings.heroPortrait;
-			return CGI->heroh->heroes[settings.hero]->imageIndex;
+			return (*CGI->heroh)[settings.hero]->imageIndex;
 		}
 		}
 
@@ -124,7 +124,7 @@ size_t OptionsTab::CPlayerSettingsHelper::getImageIndex()
 			return GOLD;
 		case PlayerSettings::RESOURCE:
 		{
-			switch(CGI->townh->factions[settings.castle]->town->primaryRes)
+			switch((*CGI->townh)[settings.castle]->town->primaryRes)
 			{
 			case Res::WOOD_AND_ORE:
 				return WOOD_ORE;
@@ -179,7 +179,7 @@ std::string OptionsTab::CPlayerSettingsHelper::getName()
 		case PlayerSettings::RANDOM:
 			return CGI->generaltexth->allTexts[522];
 		default:
-			return CGI->townh->factions[settings.castle]->name;
+			return (*CGI->townh)[settings.castle]->name;
 		}
 	}
 	case HERO:
@@ -194,7 +194,7 @@ std::string OptionsTab::CPlayerSettingsHelper::getName()
 		{
 			if(!settings.heroName.empty())
 				return settings.heroName;
-			return CGI->heroh->heroes[settings.hero]->name;
+			return (*CGI->heroh)[settings.hero]->name;
 		}
 		}
 	}
@@ -247,7 +247,7 @@ std::string OptionsTab::CPlayerSettingsHelper::getSubtitle()
 	case HERO:
 	{
 		if(settings.hero >= 0)
-			return getName() + " - " + CGI->heroh->heroes[settings.hero]->heroClass->name;
+			return getName() + " - " + (*CGI->heroh)[settings.hero]->heroClass->name;
 		return getName();
 	}
 
@@ -259,7 +259,7 @@ std::string OptionsTab::CPlayerSettingsHelper::getSubtitle()
 			return CGI->generaltexth->allTexts[87]; //500-1000
 		case PlayerSettings::RESOURCE:
 		{
-			switch(CGI->townh->factions[settings.castle]->town->primaryRes)
+			switch((*CGI->townh)[settings.castle]->town->primaryRes)
 			{
 			case Res::MERCURY:
 				return CGI->generaltexth->allTexts[694];
@@ -299,7 +299,7 @@ std::string OptionsTab::CPlayerSettingsHelper::getDescription()
 			return CGI->generaltexth->allTexts[92]; //At the start of the game, 500-1000 gold is added to your Kingdom's resource pool
 		case PlayerSettings::RESOURCE:
 		{
-			switch(CGI->townh->factions[settings.castle]->town->primaryRes)
+			switch((*CGI->townh)[settings.castle]->town->primaryRes)
 			{
 			case Res::MERCURY:
 				return CGI->generaltexth->allTexts[690];
@@ -368,7 +368,7 @@ void OptionsTab::CPlayerOptionTooltipBox::genTownWindow()
 	labelAssociatedCreatures = std::make_shared<CLabel>(pos.w / 2 + 8, 122, FONT_MEDIUM, CENTER, Colors::YELLOW, CGI->generaltexth->allTexts[79]);
 
 	std::vector<std::shared_ptr<CComponent>> components;
-	const CTown * town = CGI->townh->factions[settings.castle]->town;
+	const CTown * town = (*CGI->townh)[settings.castle]->town;
 	for(auto & elem : town->creatures)
 	{
 		if(!elem.empty())
@@ -383,8 +383,8 @@ void OptionsTab::CPlayerOptionTooltipBox::genHeroWindow()
 	genHeader();
 	labelHeroSpeciality = std::make_shared<CLabel>(pos.w / 2 + 4, 117, FONT_MEDIUM, CENTER, Colors::YELLOW, CGI->generaltexth->allTexts[78]);
 
-	imageSpeciality = std::make_shared<CAnimImage>("UN44", CGI->heroh->heroes[settings.hero]->imageIndex, 0, pos.w / 2 - 22, 134);
-	labelSpecialityName = std::make_shared<CLabel>(pos.w / 2, 188, FONT_SMALL, CENTER, Colors::WHITE, CGI->heroh->heroes[settings.hero]->specName);
+	imageSpeciality = std::make_shared<CAnimImage>("UN44", (*CGI->heroh)[settings.hero]->imageIndex, 0, pos.w / 2 - 22, 134);
+	labelSpecialityName = std::make_shared<CLabel>(pos.w / 2, 188, FONT_SMALL, CENTER, Colors::WHITE, (*CGI->heroh)[settings.hero]->specName);
 }
 
 void OptionsTab::CPlayerOptionTooltipBox::genBonusWindow()

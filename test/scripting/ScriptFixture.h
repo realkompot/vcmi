@@ -26,6 +26,7 @@
 #include "../mock/mock_battle_IBattleState.h"
 #include "../mock/mock_scripting_Pool.h"
 #include "../mock/mock_Environment.h"
+#include "../mock/mock_Services.h"
 #include "../mock/mock_vstd_CLoggerBase.h"
 #include "../mock/BattleFake.h"
 
@@ -55,15 +56,18 @@ public:
 	StrictMock<IBattleInfoCallbackMock> binfoMock;
 	StrictMock<IGameInfoCallbackMock> infoMock;
 	StrictMock<ServerCallbackMock> serverMock;
-    LoggerMock loggerMock;
+	StrictMock<ServicesMock> servicesMock;
+	LoggerMock loggerMock;
 
 	ScriptFixture();
 	virtual ~ScriptFixture();
 
+	void loadScriptFromFile(const std::string & path);
 	void loadScript(const JsonNode & scriptConfig);
 	void loadScript(ModulePtr module, const std::string & scriptSource);
 
-	void run(const JsonNode & scriptState = JsonNode());
+	JsonNode runClientServer(const JsonNode & scriptState = JsonNode());
+	JsonNode runServer(const JsonNode & scriptState = JsonNode());
 
 	JsonNode runScript(ModulePtr module, const std::string & scriptSource, const JsonNode & scriptState = JsonNode());
 

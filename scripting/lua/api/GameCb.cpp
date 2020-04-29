@@ -16,9 +16,14 @@ namespace scripting
 namespace api
 {
 
-VCMI_REGISTER_CORE_SCRIPT_API(GameCbProxy);
+VCMI_REGISTER_CORE_SCRIPT_API(GameCbProxy, "Game");
 
 const std::vector<GameCbProxy::RegType> GameCbProxy::REGISTER =
+{
+
+};
+
+const std::vector<GameCbProxy::CustomRegType> GameCbProxy::REGISTER_CUSTOM =
 {
 
 };

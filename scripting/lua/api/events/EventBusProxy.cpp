@@ -23,7 +23,7 @@ namespace api
 namespace events
 {
 
-VCMI_REGISTER_CORE_SCRIPT_API(EventBusProxy);
+VCMI_REGISTER_CORE_SCRIPT_API(EventBusProxy, "EventBus");
 
 const std::vector<EventBusProxy::RegType> EventBusProxy::REGISTER =
 {

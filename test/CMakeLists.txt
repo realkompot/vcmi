@@ -33,7 +33,9 @@ set(test_SRCS
 
 		erm/ERM_BM.cpp
 		erm/ERM_BU.cpp
+		erm/ERM_MA.cpp
 		erm/ERM_MF.cpp
+		erm/ERM_VR.cpp
 		erm/ERMPersistenceTest.cpp
 		erm/ExamplesTest.cpp
 
@@ -46,10 +48,14 @@ set(test_SRCS
 		map/CMapFormatTest.cpp
 		map/MapComparer.cpp
 
-		scripting/ScriptFixture.cpp
+		netpacks/EntitiesChangedTest.cpp
+		netpacks/NetPackFixture.cpp
+
+		scripting/LuaSandboxTest.cpp
 		scripting/LuaSpellEffectTest.cpp
 		scripting/LuaSpellEffectAPITest.cpp
 		scripting/PoolTest.cpp
+		scripting/ScriptFixture.cpp
 
 		spells/AbilityCasterTest.cpp
 		spells/CSpellTest.cpp
@@ -99,6 +105,8 @@ set(test_HEADERS
 		scripting/ScriptFixture.h
 
  		map/MapComparer.h
+
+ 		netpacks/NetPackFixture.h
 
 		spells/effects/EffectFixture.h
 

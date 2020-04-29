@@ -41,7 +41,7 @@ function IF:M(x, message)
 		end
 
 		if key1 == 'F' then
-			return _self.ERM.flag[key2]
+			return _self.ERM.F[key2]
 		end
 
 		return nil
