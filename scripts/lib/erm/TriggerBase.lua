@@ -24,5 +24,4 @@ function TriggerBase:call(event)
 	self.ERM.activeEvent = nil
 end
 
-
 return TriggerBase

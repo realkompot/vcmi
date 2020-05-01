@@ -18,11 +18,19 @@ class CERMPreprocessor
 	std::string fname;
 	std::stringstream sourceStream;
 	int lineNo;
-	enum {INVALID, ERM, VERM} version;
+
 
 	void getline(std::string &ret);
 
 public:
+	enum class Version : ui8
+	{
+		INVALID,
+		ERM,
+		VERM
+	};
+	Version version;
+
 	CERMPreprocessor(const std::string & source);
 	std::string retrieveCommandLine();
 	int getCurLineNo() const

@@ -61,6 +61,7 @@
 			<Add option="-DBOOST_ALL_DYN_LINK" />
 			<Add option="-DBOOST_SYSTEM_NO_DEPRECATED" />
 			<Add option="-DVCMI_NO_EXTRA_VERSION" />
+			<Add option="-DVCMI_DUMP_TEST_SCRIPTS" />
 			<Add directory="$(#zlib.include)" />
 			<Add directory="$(#boost.include)" />
 			<Add directory="googletest/googlemock/include" />
@@ -205,8 +206,10 @@
 		<Unit filename="testdata/TerrainTest/objects.json" />
 		<Unit filename="testdata/TerrainTest/surface_terrain.json" />
 		<Unit filename="testdata/TerrainTest/underground_terrain.json" />
+		<Unit filename="testdata/erm/std.json" />
 		<Unit filename="testdata/erm/std.verm" />
-		<Unit filename="testdata/erm/testy.erm" />
+		<Unit filename="testdata/erm/testy.json" />
+		<Unit filename="testdata/erm/testy.verm" />
 		<Unit filename="testdata/lua/SandboxTest.lua" />
 		<Unit filename="testdata/lua/SpellEffectAPIMoveUnit.lua" />
 		<Unit filename="testdata/lua/SpellEffectAPITest.lua" />

@@ -51,7 +51,7 @@ public:
 
 	void compile(vstd::CLoggerBase * logger);
 
-	void serializeJson(JsonSerializeFormat & handler);
+	void serializeJson(vstd::CLoggerBase * logger, JsonSerializeFormat & handler);
 	void serializeJsonState(JsonSerializeFormat & handler);
 
 	std::shared_ptr<Context> createContext(const Environment * env) const override;
@@ -92,7 +92,7 @@ public:
 	std::vector<bool> getDefaultAllowed() const override;
 	std::vector<JsonNode> loadLegacyData(size_t dataSize) override;
 
-	ScriptPtr loadFromJson(const std::string & scope, const JsonNode & json, const std::string & identifier) const;
+	ScriptPtr loadFromJson(vstd::CLoggerBase * logger, const std::string & scope, const JsonNode & json, const std::string & identifier) const;
 
 	void loadObject(std::string scope, std::string name, const JsonNode & data) override;
 	void loadObject(std::string scope, std::string name, const JsonNode & data, size_t index) override;

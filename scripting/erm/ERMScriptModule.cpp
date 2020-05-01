@@ -39,8 +39,7 @@ std::string ERMScriptModule::compile(const std::string & name, const std::string
 
 	try
 	{
-		interp->loadScript(name, source);
-		return interp->convert();
+		return interp->loadScript(name, source);
 	}
 	catch(const std::exception & ex)
 	{

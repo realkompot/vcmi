@@ -13,8 +13,10 @@
 #include "../../lib/VCMI_Lib.h"
 #include "../../lib/ScriptHandler.h"
 #include "../../lib/NetPacks.h"
-#include "../JsonComparer.h"
 #include "../../lib/serializer/Cast.h"
+#include "../../lib/VCMIDirs.h"
+#include "../../lib/filesystem/Filesystem.h"
+#include "../../lib/filesystem/FileInfo.h"
 
 
 ///All unsorted ERM tests goes here
@@ -28,7 +30,7 @@ using namespace ::scripting;
 class ExamplesTest : public Test, public ScriptFixture
 {
 public:
-	std::vector<std::string> actualTexts;
+	std::vector<std::string> actualMessages;
 
 	ExamplesTest()
 		: ScriptFixture()
@@ -46,9 +48,24 @@ public:
 		InfoWindow * iw = dynamic_ptr_cast<InfoWindow>(pack);
 
 		if(iw)
-			actualTexts.push_back(iw->text.toString());
+			actualMessages.push_back(iw->text.toString());
 		else
 			GTEST_FAIL() << "Invalid NetPack";
+	}
+
+	void saveScript(const std::string & name)
+	{
+#ifdef VCMI_DUMP_TEST_SCRIPTS
+
+	auto path = VCMIDirs::get().userDataPath() / name;
+
+	boost::filesystem::ofstream tmp(path, boost::filesystem::ofstream::trunc);
+
+	tmp.write(subject->code.c_str(), subject->code.size());
+	tmp.flush();
+	tmp.close();
+
+#endif
 	}
 
 protected:
@@ -58,65 +75,48 @@ protected:
 	}
 };
 
-TEST_F(ExamplesTest, TESTY_ERM)
+TEST_F(ExamplesTest, ALL)
 {
 	setDefaultExpectaions();
-
-	const std::string scriptPath = "test/erm/testy.erm";
-	loadScriptFromFile(scriptPath);
-
-	runClientServer();
-
-	JsonNode ret = context->callGlobal(&serverMock, "FU42", JsonNode());
-
-	JsonNode expected;
-
-	JsonComparer c(false);
-	c.compare("!?FU42 ret", ret, expected);
-
-	std::vector<std::string> expectedTexts =
+	auto sources = CResourceHandler::get()->getFilteredFiles([](const ResourceID & ident)
 	{
-		"Hello world number 0! (2)",
-		"Hello world number 1! (3)",
-		"Hello world number 2! (2)",
-		"Hello world number 3! (3)",
-		"Hello world number 4! (1)",
-		"Composed hello %world%, v2777=4, v2778=0!"
-	};
+		return ident.getType() == EResType::ERM && boost::algorithm::starts_with(ident.getName(), "SCRIPTS/TEST/ERM/");
+	});
 
-	SCOPED_TRACE("\n" + subject->code);
-
-	EXPECT_THAT(actualTexts, Eq(expectedTexts));
-}
-
-TEST_F(ExamplesTest, STD_VERM)
-{
-	setDefaultExpectaions();
-
-	const std::string scriptPath = "test/erm/std.verm";
-	loadScriptFromFile(scriptPath);
-
-	runClientServer();
-
-	JsonNode ret = context->callGlobal(&serverMock, "FU42", JsonNode());
-
-	JsonNode expected;
-
-	JsonComparer c(false);
-	c.compare("!!FU42 ret", ret, expected);
-
-	std::vector<std::string> expectedTexts =
+	for(const ResourceID & file : sources)
 	{
-		"Hello world!",
-		"5",
-		"2>1",
-		"x<=y",
-		"40320"
-	};
+		actualMessages.clear();
+		boost::filesystem::path scriptPath(file.getName() + ".VERM");
+		boost::filesystem::path baseName = scriptPath.stem();
+		boost::filesystem::path basePath = boost::filesystem::path("TEST/ERM/") / scriptPath.stem();
 
-	SCOPED_TRACE("\n" +subject->code);
+		std::string dataName = basePath.string()+".JSON";
+		std::string scriptName = basePath.string()+".VERM";
 
-	EXPECT_THAT(actualTexts, Eq(expectedTexts));
+		ResourceID dataPath(dataName);
+
+		if(!CResourceHandler::get()->existsResource(dataPath))
+		{
+			GTEST_FAIL() << dataName << " does not exists";
+			return;
+		}
+
+		const JsonNode expectedState(dataPath);
+
+		loadScriptFromFile(scriptName);
+
+//		SCOPED_TRACE("\n"+subject->code);
+		saveScript(baseName.string()+".lua");
+
+		const JsonNode actualState = runServer();
+
+		JsonComparer c(false);
+		c.compare(baseName.string(), actualState["ERM"], expectedState["ERM"]);
+
+		auto expectedMessages = expectedState["messages"].convertTo<std::vector<std::string>>();
+
+		EXPECT_THAT(actualMessages, Eq(expectedMessages));
+	}
 }
 
 }

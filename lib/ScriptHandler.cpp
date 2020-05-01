@@ -79,7 +79,7 @@ void ScriptImpl::performRegistration(::Services * services) const
 	}
 }
 
-void ScriptImpl::serializeJson(JsonSerializeFormat & handler)
+void ScriptImpl::serializeJson(vstd::CLoggerBase * logger, JsonSerializeFormat & handler)
 {
 	handler.serializeString("source", sourcePath);
 	handler.serializeEnum("implements", implements, Implements::ANYTHING, IMPLEMENTS_MAP);
@@ -94,7 +94,7 @@ void ScriptImpl::serializeJson(JsonSerializeFormat & handler)
 
 		sourceText = std::string((char *)rawData.first.get(), rawData.second);
 
-		compile(logMod);
+		compile(logger);
 	}
 }
 
@@ -206,19 +206,19 @@ std::vector<JsonNode> ScriptHandler::loadLegacyData(size_t dataSize)
 	return std::vector<JsonNode>();
 }
 
-ScriptPtr ScriptHandler::loadFromJson(const std::string & scope, const JsonNode & json, const std::string & identifier) const
+ScriptPtr ScriptHandler::loadFromJson(vstd::CLoggerBase * logger, const std::string & scope, const JsonNode & json, const std::string & identifier) const
 {
 	ScriptPtr ret = std::make_shared<ScriptImpl>(this);
 
 	JsonDeserializer handler(nullptr, json);
 	ret->identifier = identifier;
-	ret->serializeJson(handler);
+	ret->serializeJson(logger, handler);
 	return ret;
 }
 
 void ScriptHandler::loadObject(std::string scope, std::string name, const JsonNode & data)
 {
-	auto object = loadFromJson(scope, data, normalizeIdentifier(scope, "core", name));
+	auto object = loadFromJson(logMod, scope, data, normalizeIdentifier(scope, "core", name));
 	objects[object->identifier] = object;
 }
 

@@ -33,7 +33,6 @@ public:
 	static const std::vector<typename Wrapper::CustomRegType> REGISTER_CUSTOM;
 };
 
-
 template <typename EventProxy>
 class SubscriptionRegistryProxy
 {

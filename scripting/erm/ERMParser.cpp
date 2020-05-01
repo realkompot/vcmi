@@ -34,16 +34,16 @@ namespace phoenix = boost::phoenix;
 CERMPreprocessor::CERMPreprocessor(const std::string & source)
 	: sourceStream(source),
 	lineNo(0),
-	version(INVALID)
+	version(Version::INVALID)
 {
 	//check header
 	std::string header;
 	getline(header);
 
 	if(header == "ZVSE")
-		version = ERM;
+		version = Version::ERM;
 	else if(header == "VERM")
-		version = VERM;
+		version = Version::VERM;
 	else
 	{
 		logGlobal->error("File %s has wrong header", fname);

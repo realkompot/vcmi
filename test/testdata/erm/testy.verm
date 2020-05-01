@@ -17,3 +17,6 @@ ZVSE
 
 	!!VRz10:S^Composed hello ^;
 	!!IF:M^%Z10%%world%%, v2777=%V2777, v2778=%V2778!^;
+
+!?PI;
+	!!FU42:P0;

@@ -165,9 +165,20 @@ namespace ERMConverter
 			: out(out_)
 		{}
 	protected:
+
+		void put(const std::string & text) const
+		{
+			(*out) << text;
+		}
+
 		void putLine(const std::string & line) const
 		{
 			(*out) << line << std::endl;
+		}
+
+		void endLine() const
+		{
+			(*out) << std::endl;
 		}
 	};
 
@@ -677,8 +688,10 @@ namespace ERMConverter
 						throw EScriptExecError("VR:S option takes exactly 1 parameter!");
 
 					std::string opt = boost::apply_visitor(VR_S(), trig.params[0]);
-
-					(*out) << var  << " = " << opt << std::endl;
+					put(var);
+					put(" = ");
+					put(opt);
+					endLine();
 				}
 				break;
 			case 'T': //random variables
@@ -770,10 +783,10 @@ namespace ERMConverter
 				auto increment = boost::apply_visitor(LVL1Iexp(), tid[3]);
 
 				(*out) << "for __iter = " << startVal <<", " << stopVal << "-1, " << increment << " do " << std::endl;
-				(*out) << "local x = x or {}" << std::endl;
-				(*out) << "x['16'] = __iter" << std::endl;
-				(*out) << "FU" << funNum << "(x)" << std::endl;
-				(*out) << "__iter = x['16']" << std::endl;
+				(*out) << "\tlocal x = x or {}" << std::endl;
+				(*out) << "\tx['16'] = __iter" << std::endl;
+				(*out) << "\tFU" << funNum << "(x)" << std::endl;
+				(*out) << "\t__iter = x['16']" << std::endl;
 				(*out) << "end" << std::endl;
 			}
 			else if(name == "MC")
@@ -835,17 +848,17 @@ namespace ERMConverter
 			switch (op)
 			{
 			case '&':
-				(*out) << " and ";
+				put(" and ");
 				break;
 			case '|':
-				(*out) << " or ";
+				put(" or ");
 				break;
 			default:
 				throw EInterpreterProblem(std::string("Wrong condition connection (") + cond.ctype + ") !");
 				break;
 			}
 
-			(*out) << lhs;
+			put(lhs);
 
 			if(cond.rhs.is_initialized())
 			{
@@ -867,8 +880,8 @@ namespace ERMConverter
 		{
 			//&c1/c2/c3|c4/c5/c6 -> (c1  & c2  & c3)  | c4  |  c5  | c6
 			std::string lhs = boost::apply_visitor(Condition(), cond.cond);
-
-			(*out) << " if " << lhs;
+			put("if ");
+			put(lhs);
 
 			if(cond.rhs.is_initialized())
 			{
@@ -956,7 +969,8 @@ namespace ERMConverter
 		}
 		void operator()(const std::string & comment) const
 		{
-			(*out) << "-- " << comment << std::endl;
+			(*out) << "-- " << comment;
+			endLine();
 		}
 
 		void operator()(spirit::unused_type const &) const
@@ -969,7 +983,7 @@ namespace ERMConverter
 
 		std::string operator()(char const & val)
 		{
-			return std::to_string(val);
+			return "'"+ std::to_string(val) +"'";
 		}
 		std::string operator()(double const & val)
 		{
@@ -987,59 +1001,41 @@ namespace ERMConverter
 
 	struct VOptionEval : public Converter
 	{
-		bool discardResult;
-
-		VOptionEval(std::ostream * out_, bool discardResult_ = false)
-			: Converter(out_),
-			discardResult(discardResult_)
+		VOptionEval(std::ostream * out_)
+			: Converter(out_)
 		{}
 
 		void operator()(VNIL const & opt) const
 		{
-			if(!discardResult)
-			{
-				(*out) << "return ";
-			}
-			(*out) << "nil";
+			(*out) << "{}";
 		}
 		void operator()(VNode const & opt) const;
 
 		void operator()(VSymbol const & opt) const
 		{
-			if(!discardResult)
-			{
-				(*out) << "return ";
-			}
-			(*out) << opt.text;
+			(*out) << "'" << opt.text << "'";
 		}
 		void operator()(TLiteral const & opt) const
 		{
-			if(!discardResult)
-			{
-				(*out) << "return ";
-			}
-
 			TLiteralEval tmp;
-
 			(*out) << boost::apply_visitor(tmp, opt);
 		}
 		void operator()(ERM::Tcommand const & opt) const
 		{
 			//this is how FP works, evaluation == producing side effects
 			//TODO: can we evaluate to smth more useful?
-			boost::apply_visitor(ERMExp(out), opt.cmd);
+			//???
+			throw EVermScriptExecError("Using ERM options in VERM expression is not (yet) allowed");
+//			boost::apply_visitor(ERMExp(out), opt.cmd);
 		}
 	};
 
 	struct VOptionNodeEval : public Converter
 	{
-		bool discardResult;
-
 		VNode & exp;
 
-		VOptionNodeEval(std::ostream * out_, VNode & exp_, bool discardResult_ = false)
+		VOptionNodeEval(std::ostream * out_, VNode & exp_)
 			: Converter(out_),
-			discardResult(discardResult_),
 			exp(exp_)
 		{}
 
@@ -1052,319 +1048,38 @@ namespace ERMConverter
 		{
 			VNode tmpn(exp);
 
-			(*out) << "local fu = ";
+			(*out) << "{";
 
-			VOptionEval tmp(out, true);
+			VOptionEval tmp(out);
 			tmp(opt);
-
-			(*out) << std::endl;
-
-			if(!discardResult)
-				(*out) << "return ";
-
-			(*out) << "fu(";
 
 			VOptionList args = tmpn.children.cdr().getAsList();
 
 			for(int g=0; g<args.size(); ++g)
 			{
-				if(g == 0)
-				{
-					boost::apply_visitor(VOptionEval(out, true), args[g]);
-				}
-				else
-				{
-					(*out) << ", ";
-					boost::apply_visitor(VOptionEval(out, true), args[g]);
-				}
+				(*out) << ", ";
+				boost::apply_visitor(VOptionEval(out), args[g]);
 			}
 
-			(*out) << ")";
+			(*out) << "}";
 		}
 
 		void operator()(VSymbol const & opt) const
 		{
-			std::map<std::string, std::string> symToOperator =
-			{
-				{"<", "<"},
-				{"<=", "<="},
-				{">", ">"},
-				{">=", ">="},
-				{"=", "=="},
-				{"+", "+"},
-				{"-", "-"},
-				{"*", "*"},
-				{"/", "/"},
-				{"%", "%"}
-			};
+			VNode tmpn(exp);
 
-			if(false)
+			(*out) << "{" << "'"<< opt.text << "'";
+
+			VOptionList args = tmpn.children.cdr().getAsList();
+
+			for(int g=0; g<args.size(); ++g)
 			{
+				(*out) << ", ";
+				boost::apply_visitor(VOptionEval(out), args[g]);
 
 			}
-//			//check keywords
-//			else if(opt.text == "quote")
-//			{
-//				if(exp.children.size() == 2)
-//					return exp.children[1];
-//				else
-//					throw EVermScriptExecError("quote special form takes only one argument");
-//			}
-//			else if(opt.text == "backquote")
-//			{
-//				if(exp.children.size() == 2)
-//					return boost::apply_visitor(_SbackquoteEval(interp), exp.children[1]);
-//				else
-//					throw EVermScriptExecError("backquote special form takes only one argument");
-//
-//			}
-//			else if(opt.text == "car")
-//			{
-//				if(exp.children.size() != 2)
-//					throw EVermScriptExecError("car special form takes only one argument");
-//
-//				auto & arg = exp.children[1];
-//				VOption evaluated = interp->eval(arg);
-//
-//				return boost::apply_visitor(CarEval(interp), evaluated);
-//			}
-//			else if(opt.text == "cdr")
-//			{
-//				if(exp.children.size() != 2)
-//					throw EVermScriptExecError("cdr special form takes only one argument");
-//
-//				auto & arg = exp.children[1];
-//				VOption evaluated = interp->eval(arg);
-//
-//				return boost::apply_visitor(CdrEval(interp), evaluated);
-//			}
-			else if(opt.text == "if")
-			{
-				if(exp.children.size() > 4 || exp.children.size() < 3)
-					throw EVermScriptExecError("if special form takes two or three arguments");
 
-				(*out) << "if ";
-
-				boost::apply_visitor(VOptionEval(out, true),  exp.children[1]);
-
-				(*out) << " then" << std::endl;
-
-				boost::apply_visitor(VOptionEval(out, discardResult),  exp.children[2]);
-
-				if(exp.children.size() == 4)
-				{
-					(*out) << std::endl << "else" << std::endl;
-
-					boost::apply_visitor(VOptionEval(out, discardResult),  exp.children[3]);
-				}
-
-				(*out)<< std::endl << "end" << std::endl;
-			}
-			else if(opt.text == "lambda")
-			{
-				if(exp.children.size() <= 2)
-				{
-					throw EVermScriptExecError("Too few arguments for lambda special form");
-				}
-
-				(*out) << " function(";
-
-				VNode arglist = getAs<VNode>(exp.children[1]);
-
-				for(int g=0; g<arglist.children.size(); ++g)
-				{
-					std::string argName = getAs<VSymbol>(arglist.children[g]).text;
-
-					if(g == 0)
-						(*out) << argName;
-					else
-						(*out) << ", " <<argName;
-				}
-
-				(*out) << ")" << std::endl;
-
-				VOptionList body = exp.children.cdr().getAsCDR().getAsList();
-
-				for(int g=0; g<body.size(); ++g)
-				{
-					if(g < body.size()-1)
-						boost::apply_visitor(VOptionEval(out, true), body[g]);
-					else
-						boost::apply_visitor(VOptionEval(out, false), body[g]);
-				}
-
-				(*out)<< std::endl << "end";
-			}
-			else if(opt.text == "setq")
-			{
-				if(exp.children.size() != 3 && exp.children.size() != 4)
-					throw EVermScriptExecError("setq special form takes 2 or 3 arguments");
-
-				std::string name = getAs<VSymbol>(exp.children[1]).text;
-
-				size_t valIndex = 2;
-
-				if(exp.children.size() == 4)
-				{
-					TLiteral varIndexLit = getAs<TLiteral>(exp.children[2]);
-
-					int varIndex = getAs<int>(varIndexLit);
-
-					boost::format fmt("%s['%d']");
-					fmt % name % varIndex;
-
-					name = fmt.str();
-
-					valIndex = 3;
-				}
-
-				(*out) << name << " = ";
-
-				boost::apply_visitor(VOptionEval(out, true), exp.children[valIndex]);
-
-				(*out) << std::endl;
-
-				if(!discardResult)
-					(*out) << "return " << name << std::endl;
-			}
-			else if(opt.text == ERMInterpreter::defunSymbol)
-			{
-				if(exp.children.size() < 4)
-				{
-					throw EVermScriptExecError("defun special form takes at least 3 arguments");
-				}
-
-				std::string name = getAs<VSymbol>(exp.children[1]).text;
-
-				(*out) << std::endl << "local function " << name << " (";
-
-				VNode arglist = getAs<VNode>(exp.children[2]);
-
-				for(int g=0; g<arglist.children.size(); ++g)
-				{
-					std::string argName = getAs<VSymbol>(arglist.children[g]).text;
-
-					if(g == 0)
-						(*out) << argName;
-					else
-						(*out) << ", " <<argName;
-				}
-
-				(*out) << ")" << std::endl;
-
-				VOptionList body = exp.children.cdr().getAsCDR().getAsCDR().getAsList();
-
-				for(int g=0; g<body.size(); ++g)
-				{
-					if(g < body.size()-1)
-						boost::apply_visitor(VOptionEval(out, true), body[g]);
-					else
-						boost::apply_visitor(VOptionEval(out, false), body[g]);
-				}
-
-				(*out)<< std::endl << "end";
-
-				if(!discardResult)
-				{
-					(*out)  << std::endl << "return " << name;
-				}
-
-			}
-			else if(opt.text == "defmacro")
-			{
-//				if(exp.children.size() < 4)
-//				{
-//					throw EVermScriptExecError("defmacro special form takes at least 3 arguments");
-//				}
-//				VFunc f(exp.children.cdr().getAsCDR().getAsCDR().getAsList(), true);
-//				VNode arglist = getAs<VNode>(exp.children[2]);
-//				for(int g=0; g<arglist.children.size(); ++g)
-//				{
-//					f.args.push_back(getAs<VSymbol>(arglist.children[g]));
-//				}
-//				env.localBind(getAs<VSymbol>(exp.children[1]).text, f);
-//				return f;
-			}
-			else if(opt.text == "progn")
-			{
-				(*out)<< std::endl << "do" << std::endl;
-
-				for(int g=1; g<exp.children.size(); ++g)
-				{
-					if(g < exp.children.size()-1)
-						boost::apply_visitor(VOptionEval(out, true),  exp.children[g]);
-					else
-						boost::apply_visitor(VOptionEval(out, discardResult),  exp.children[g]);
-				}
-				(*out) << std::endl << "end" << std::endl;
-			}
-			else if(opt.text == "do") //evaluates second argument as long first evaluates to non-nil
-			{
-				if(exp.children.size() != 3)
-				{
-					throw EVermScriptExecError("do special form takes exactly 2 arguments");
-				}
-
-				(*out) << std::endl << "while ";
-
-				boost::apply_visitor(VOptionEval(out, true), exp.children[1]);
-
-				(*out) << " do" << std::endl;
-
-				boost::apply_visitor(VOptionEval(out, true), exp.children[2]);
-
-				(*out) << std::endl << "end" << std::endl;
-
-			}
-			//"apply" part of eval, a bit blurred in this implementation but this way it looks good too
-			else if(symToOperator.find(opt.text) != symToOperator.end())
-			{
-				if(!discardResult)
-					(*out) << "return ";
-
-				std::string _operator = symToOperator[opt.text];
-
-				VOptionList opts = exp.children.cdr().getAsList();
-
-				for(int g=0; g<opts.size(); ++g)
-				{
-					if(g == 0)
-					{
-						boost::apply_visitor(VOptionEval(out, true), opts[g]);
-					}
-					else
-					{
-						(*out) << " " << _operator << " ";
-						boost::apply_visitor(VOptionEval(out, true), opts[g]);
-					}
-				}
-			}
-			else
-			{
-				//assume callable
-				if(!discardResult)
-					(*out) << "return ";
-
-				(*out) << opt.text << "(";
-
-				VOptionList opts = exp.children.cdr().getAsList();
-
-				for(int g=0; g<opts.size(); ++g)
-				{
-					if(g == 0)
-					{
-						boost::apply_visitor(VOptionEval(out, true), opts[g]);
-					}
-					else
-					{
-						(*out) << ", ";
-						boost::apply_visitor(VOptionEval(out, true), opts[g]);
-					}
-				}
-
-				(*out) << ")";
-			}
-
+			(*out) << "}";
 		}
 		void operator()(TLiteral const & opt) const
 		{
@@ -1382,7 +1097,7 @@ namespace ERMConverter
 		{
 			VOption & car = const_cast<VNode&>(opt).children.car().getAsItem();
 
-			boost::apply_visitor(VOptionNodeEval(out, const_cast<VNode&>(opt), discardResult), car);
+			boost::apply_visitor(VOptionNodeEval(out, const_cast<VNode&>(opt)), car);
 		}
 	}
 
@@ -1394,13 +1109,15 @@ namespace ERMConverter
 
 		void operator()(TVExp const & cmd) const
 		{
-			//TODO:
+			put("VERM:eval");
+
 			VNode line(cmd);
 
-			VOptionEval eval(out, true);
+			VOptionEval eval(out);
 			eval(line);
 
-			(*out) << std::endl;
+
+			endLine();
 		}
 		void operator()(TERMline const & cmd) const
 		{
@@ -1491,8 +1208,8 @@ namespace ERMConverter
 			//TODO: condition
 
 			out << "ERM:addTrigger({" << std::endl;
-			out << "\tname = '" << trig.name << "'," << std::endl;
-			out << "\tfn = function ()" << std::endl;
+			out << "name = '" << trig.name << "'," << std::endl;
+			out << "fn = function ()" << std::endl;
 
 			out << "local y = ERM.getY('" << trig.name  << "')" << std::endl;
 			LinePointer lp = trigger.line;
@@ -1674,9 +1391,11 @@ const std::string ERMInterpreter::triggerSymbol = "trigger";
 const std::string ERMInterpreter::postTriggerSymbol = "postTrigger";
 const std::string ERMInterpreter::defunSymbol = "defun";
 
-void ERMInterpreter::loadScript(const std::string & name, const std::string & source)
+std::string ERMInterpreter::loadScript(const std::string & name, const std::string & source)
 {
 	CERMPreprocessor preproc(source);
+
+	const bool isVERM = preproc.version == CERMPreprocessor::Version::VERM;
 
 	ERMParser ep;
 
@@ -1684,16 +1403,18 @@ void ERMInterpreter::loadScript(const std::string & name, const std::string & so
 
 	for(int g=0; g<buf.size(); ++g)
 		scripts[LinePointer(static_cast<int>(buf.size()), g, buf[g].realLineNum)] = buf[g].tl;
-}
 
-std::string ERMInterpreter::convert()
-{
 	for(auto p : scripts)
 		boost::apply_visitor(ScriptScanner(this, p.first), p.second);
 
 	std::stringstream out;
 
 	out << "local ERM = require(\"core:erm\")" << std::endl;
+
+	if(isVERM)
+	{
+		out << "local VERM = require(\"core:verm\")" << std::endl;
+	}
 
 	out << "local v = ERM.v" << std::endl;
 	out << "local z = ERM.z" << std::endl;

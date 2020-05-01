@@ -10,7 +10,6 @@
 #include "StdInc.h"
 
 #include "../scripting/ScriptFixture.h"
-#include "../JsonComparer.h"
 
 #include "../../lib/NetPacks.h"
 #include "../../lib/serializer/Cast.h"

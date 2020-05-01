@@ -11,7 +11,6 @@
 #include "StdInc.h"
 
 #include "../scripting/ScriptFixture.h"
-#include "../JsonComparer.h"
 
 #include  "../mock/mock_events_ApplyDamage.h"
 

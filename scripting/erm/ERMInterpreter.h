@@ -331,7 +331,5 @@ public:
 	ERMInterpreter(vstd::CLoggerBase * logger_);
 	virtual ~ERMInterpreter();
 
-	void loadScript(const std::string & name, const std::string & source);
-
-	std::string convert();
+	std::string loadScript(const std::string & name, const std::string & source);
 };

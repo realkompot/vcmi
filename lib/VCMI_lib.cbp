@@ -170,6 +170,7 @@
 		<Unit filename="../scripts/lib/erm/ReceiverBase.lua" />
 		<Unit filename="../scripts/lib/erm/TriggerBase.lua" />
 		<Unit filename="../scripts/lib/erm/VR.lua" />
+		<Unit filename="../scripts/lib/verm.lua" />
 		<Unit filename="AI_Base.h" />
 		<Unit filename="CArtHandler.cpp" />
 		<Unit filename="CArtHandler.h" />
