@@ -74,7 +74,7 @@ local function createEnv(parent, current)
 
 					local m = getmetatable(t)
 
-					if not m then rawset(t, k, v); return true end --assume top
+					if not m then return false end --assume top
 
 					local p = m.__parent
 
@@ -85,14 +85,16 @@ local function createEnv(parent, current)
 					end
 				end
 
-				setOnFirstHit(t, k, v)
+				if not setOnFirstHit(t, k, v) then
+					rawset(t, k, v)
+				end
 			end
 		}
 	)
 end
 
 local function isNIL(v)
-	return type(v) == "table" and next(v) == nil
+	return (type(v) == "table") and (next(v) == nil)
 end
 
 local function prognForm(e, ...)
@@ -109,7 +111,7 @@ local function prognForm(e, ...)
 	return VERM:eval(select(argc,...), e)
 end
 
-local function lambdaForm(e, args, ...)
+local function lambdaOrMacro(e, isMacro, args, ...)
 
 	--TODO: get rid of pack-unpack
 	local body = {...}
@@ -124,19 +126,62 @@ local function lambdaForm(e, args, ...)
 
 		for i, v in ipairs(args) do
 			local p = select(i,...)
-			newEnv[v] = VERM:evalValue(p, e)
+			if isMacro then
+				newEnv[v] = p
+			else
+				newEnv[v] = VERM:evalValue(p, e)
+			end
+		end
+		if isMacro then
+			local buffer = {}
+			for _, v in ipairs(body) do
+				table.insert(buffer, (VERM:eval(v, newEnv)))
+			end
+			return prognForm(newEnv, unpack(buffer))
+		else
+			return prognForm(newEnv, unpack(body))
 		end
 
-		return prognForm(newEnv, unpack(body))
 	end
 
 	return ret
 end
 
+local function lambdaForm(e, args, ...)
+	return lambdaOrMacro(e, false, args,  ...)
+end
+
 local function defunForm(e, name, args, ...)
-	local ret = lambdaForm(e, args, ...)
+	local ret = lambdaOrMacro(e, false, args, ...)
 	e[name] = ret
 	return ret
+end
+
+local function defmacroForm(e, name, args, ...)
+	local ret = lambdaOrMacro(e, true, args, ...)
+	e[name] = ret
+	return ret
+end
+
+local function backquoteEval(e, v)
+	if isNIL(v) then
+		return v
+	elseif type(v) == "table" then
+		local car = v[1]
+
+		if car == "comma" then
+			return VERM:evalValue(v[2], e)
+		else
+			local ret = {}
+
+			for _, v in ipairs(v) do
+				table.insert(ret, (backquoteEval(e, v)))
+			end
+			return ret
+		end
+	else
+		return v
+	end
 end
 
 local specialForms =
@@ -219,11 +264,15 @@ local specialForms =
 		return lhs % rhs
 	end,
 
-	["comma-unlist"] = function(e, ...) end,
-	["backquote"] = function(e, ...) end,
-	["comma"] = function(e, ...) end,
-	["get-func"] = function(e, ...) end,
-	["quote"] = function(e, ...) end,
+--	["comma-unlist"] = function(e, ...) end,
+	["backquote"] = function(e, v)
+		return backquoteEval(e, v)
+	end,
+--	["comma"] = function(e, ...) end,
+--	["get-func"] = function(e, ...) end,
+	["quote"] = function(e, v)
+		return v
+	end,
 	["if"] = function(e, cond, v1, v2)
 		cond = VERM:evalValue(cond, e)
 
@@ -236,13 +285,23 @@ local specialForms =
 --	["set"] = function(e, ...) end,
 --	["setf"] = function(e, ...) end,
 	["setq"] = function(e, name, value)
-		e[VERM:evalValue(name, e)] = VERM:evalValue(value, e)
+		e[name] = VERM:evalValue(value, e)
 	end,
 	["lambda"] = lambdaForm,
 	["defun"] = defunForm,
 	["progn"] = prognForm,
-	["defmacro"] = function(e, ...) end,
-	["do"] = function(e, ...) end,
+	["defmacro"] = defmacroForm,
+	["do"] = function(e, cond, body)
+		local c = VERM:eval(cond, e)
+
+		while not isNIL(c) do
+
+			VERM:eval(body, e)
+			c = VERM:eval(cond, e)
+
+		end
+		return {}
+	end,
 	["car"] = function(e, ...) end,
 	["cdr"] = function(e, ...) end,
 

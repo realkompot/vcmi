@@ -252,9 +252,7 @@ namespace VERMInterpreter
 		VermTreeIterator & operator=(const std::vector<VOption> & opt);
 		VermTreeIterator & operator=(const VOptionList & opt);
 		VOption & getAsItem();
-		VermTreeIterator getAsCDR();
 		VOptionList getAsList();
-		VOption & getIth(int i);
 		size_t size() const;
 
 		VermTreeIterator& operator=(const VermTreeIterator & rhs)
@@ -278,7 +276,6 @@ namespace VERMInterpreter
 	public:
 		VermTreeIterator car();
 		VermTreeIterator cdr();
-		bool isNil() const;
 	};
 
 	struct OptionConverterVisitor : boost::static_visitor<VOption>
@@ -316,9 +313,6 @@ class ERMInterpreter
 	TtriggerListType triggers;
 	TtriggerListType postTriggers;
 	std::vector<VERMInterpreter::LinePointer> instructions;
-
-
-	static const std::string triggerSymbol, postTriggerSymbol, defunSymbol;
 
 	static bool isCMDATrigger(const ERM::Tcommand & cmd);
 	static bool isATrigger(const ERM::TLine & line);

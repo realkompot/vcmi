@@ -11,6 +11,20 @@ VERM
 ; example 2 --- simple arithmetics
 ![setq-erm z 2 [add 2 3]]
 
+
+![progn
+	[setq i 30]
+	[setq doCounter 0]
+	[setq doMax 4]
+	[do [< doCounter doMax]
+		[progn
+			[setq doCounter [+ doCounter 1]]
+			[setq-erm z i ^Test^]
+			[setq i [+ i 1]]
+		]
+	]
+]
+
 ; example 3 --- semantic macros
 ![defmacro doNTimes [times body]
 	`[progn
@@ -25,11 +39,15 @@ VERM
 	]
 ]
 
-;![doNTimes 4
-;	[progn
-;		[print ^tekst\n^]
-;	]
-;]
+![progn
+	[setq i 40]
+	[doNTimes 4
+		[progn
+			[setq-erm z i ^Test^]
+			[setq i [+ i 1]]
+		]
+	]
+]
 
 ; example 4 --- conditional expression
 ![if [> 2 1] [setq-erm z 3 ^2>1^] [setq-erm z 3 ^2<=1^]]

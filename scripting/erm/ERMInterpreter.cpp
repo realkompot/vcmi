@@ -1096,7 +1096,6 @@ namespace ERMConverter
 		if(!opt.children.empty())
 		{
 			VOption & car = const_cast<VNode&>(opt).children.car().getAsItem();
-
 			boost::apply_visitor(VOptionNodeEval(out, const_cast<VNode&>(opt)), car);
 		}
 	}
@@ -1301,12 +1300,7 @@ bool ERMInterpreter::isATrigger( const ERM::TLine & line )
 			switch (getExpType(vexp.children[0]))
 			{
 			case SYMBOL:
-				{
-					//TODO: what about sym modifiers?
-					//TOOD: macros?
-					ERM::TSymbol sym = boost::get<ERM::TSymbol>(vexp.children[0]);
-					return sym.sym == triggerSymbol || sym.sym == postTriggerSymbol;
-				}
+				return false;
 				break;
 			case TCMD:
 				return isCMDATrigger( boost::get<ERM::Tcommand>(vexp.children[0]) );
@@ -1387,10 +1381,6 @@ ERM::TTriggerBase & ERMInterpreter::retrieveTrigger(ERM::TLine & line)
 	throw ELineProblem("Given line is not an ERM trigger!");
 }
 
-const std::string ERMInterpreter::triggerSymbol = "trigger";
-const std::string ERMInterpreter::postTriggerSymbol = "postTrigger";
-const std::string ERMInterpreter::defunSymbol = "defun";
-
 std::string ERMInterpreter::loadScript(const std::string & name, const std::string & source)
 {
 	CERMPreprocessor preproc(source);
@@ -1445,54 +1435,6 @@ std::string ERMInterpreter::loadScript(const std::string & name, const std::stri
 
 	return out.str();
 }
-
-//struct _SbackquoteEval : boost::static_visitor<VOption>
-//{
-//	ERMInterpreter * interp;
-//
-//	_SbackquoteEval(ERMInterpreter * interp_)
-//		: interp(interp_)
-//	{}
-//
-//	VOption operator()(VNIL const& opt) const
-//	{
-//		return opt;
-//	}
-//	VOption operator()(VNode const& opt) const
-//	{
-//		VNode ret = opt;
-//		if(opt.children.size() == 2)
-//		{
-//			VOption fo = opt.children[0];
-//			if(isA<VSymbol>(fo))
-//			{
-//				if(getAs<VSymbol>(fo).text == "comma")
-//				{
-//					return interp->eval(opt.children[1]);
-//				}
-//			}
-//		}
-//		for(int g=0; g<opt.children.size(); ++g)
-//		{
-//			ret.children[g] = boost::apply_visitor(_SbackquoteEval(interp), ret.children[g]);
-//		}
-//		return ret;
-//	}
-//	VOption operator()(VSymbol const& opt) const
-//	{
-//		return opt;
-//	}
-//	VOption operator()(TLiteral const& opt) const
-//	{
-//		return opt;
-//	}
-//	VOption operator()(ERM::Tcommand const& opt) const
-//	{
-//		return opt;
-//	}
-
-//};
-
 
 namespace VERMInterpreter
 {
@@ -1619,16 +1561,7 @@ namespace VERMInterpreter
 		else
 			throw EInterpreterError("iterator is not in car state, cannot get as list");
 	}
-	VermTreeIterator VermTreeIterator::getAsCDR()
-	{
-		VermTreeIterator ret = *this;
-		ret.basePos++;
-		return ret;
-	}
-	VOption & VermTreeIterator::getIth( int i )
-	{
-		return (*parent)[basePos + i];
-	}
+
 	size_t VermTreeIterator::size() const
 	{
 		return parent->size() - basePos;
@@ -1674,11 +1607,6 @@ namespace VERMInterpreter
 	VOption OptionConverterVisitor::operator()( ERM::TStringConstant const& cmd ) const
 	{
 		return TLiteral(cmd.str);
-	}
-
-	bool VOptionList::isNil() const
-	{
-		return size() == 0;
 	}
 
 	VermTreeIterator VOptionList::cdr()
