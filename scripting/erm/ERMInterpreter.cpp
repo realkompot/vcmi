@@ -983,7 +983,7 @@ namespace ERMConverter
 
 		std::string operator()(char const & val)
 		{
-			return "{'quote','"+ std::to_string(val) +"'}";
+			return "{\"'\",'"+ std::to_string(val) +"'}";
 		}
 		std::string operator()(double const & val)
 		{
@@ -995,7 +995,7 @@ namespace ERMConverter
 		}
 		std::string operator()(const std::string & val)
 		{
-			return "{'quote',[===[" + val + "]===]}";
+			return "{\"'\",[===[" + val + "]===]}";
 		}
 	};
 
@@ -1013,7 +1013,7 @@ namespace ERMConverter
 
 		void operator()(VSymbol const & opt) const
 		{
-			(*out) << "'" << opt.text << "'";
+			(*out) << "\"" << opt.text << "\"";
 		}
 		void operator()(TLiteral const & opt) const
 		{
@@ -1435,7 +1435,7 @@ namespace VERMInterpreter
 
 			if(modifierList[g] == "`")
 			{
-				children.car() = VSymbol("backquote");
+				children.car() = VSymbol("`");
 			}
 			else if(modifierList[g] == ",!")
 			{
@@ -1443,7 +1443,7 @@ namespace VERMInterpreter
 			}
 			else if(modifierList[g] == ",")
 			{
-				children.car() = VSymbol("comma");
+				children.car() = VSymbol(",");
 			}
 			else if(modifierList[g] == "#'")
 			{
@@ -1451,7 +1451,7 @@ namespace VERMInterpreter
 			}
 			else if(modifierList[g] == "'")
 			{
-				children.car() = VSymbol("quote");
+				children.car() = VSymbol("'");
 			}
 			else
 				throw EInterpreterError("Incorrect value of modifier!");

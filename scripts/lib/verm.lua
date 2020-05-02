@@ -169,7 +169,7 @@ local function backquoteEval(e, v)
 	elseif type(v) == "table" then
 		local car = v[1]
 
-		if car == "comma" then
+		if car == "," then
 			return VERM:evalValue(e, v[2])
 		else
 			local ret = {}
@@ -263,10 +263,9 @@ local specialForms =
 		return lhs % rhs
 	end,
 --	["comma-unlist"] = function(e, ...) end,
-	["backquote"] = backquoteEval,
---	["comma"] = function(e, ...) end,
+	["`"] = backquoteEval,
 --	["get-func"] = function(e, ...) end,
-	["quote"] = function(e, v)
+	["'"] = function(e, v)
 		return v
 	end,
 	["if"] = function(e, cond, v1, v2)
@@ -296,12 +295,20 @@ local specialForms =
 		return {}
 	end,
 	["car"] = function(e, list)
-		local v = VERM:eval(e, list)
-		return v[1] or {}
+		list = VERM:eval(e, list)
+		return list[1] or {}
 	end,
---	["cdr"] = function(e, list)
---		return {}
---	end,
+	["cdr"] = function(e, list)
+		list = VERM:eval(e, list)
+		local ret = {}
+		for i, v in ipairs(list) do
+			if i > 1 then
+				table.insert(ret, v)
+			end
+		end
+
+		return ret
+	end,
 	["list"] = function(e, ...)
 		local ret = {}
 		for n=1,select('#',...) do
@@ -337,8 +344,6 @@ function VERM:eval(e, t)
 		logError("Not valid form: ".. to_string(t))
 		return {}
 	end
-
-	e = e or self.topEnv
 
 	local car = t[1]
 	local origCar = car
