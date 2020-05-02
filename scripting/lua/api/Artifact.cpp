@@ -39,7 +39,7 @@ const std::vector<ArtifactProxy::RegType> ArtifactProxy::REGISTER =
 
 const std::vector<ArtifactProxy::CustomRegType> ArtifactProxy::REGISTER_CUSTOM =
 {
-
+//	{"getPrice", LuaMethodWrapper<Artifact, uint32_t, &Artifact::getPrice>::invoke, false},
 };
 
 

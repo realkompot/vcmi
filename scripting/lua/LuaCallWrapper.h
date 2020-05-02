@@ -10,14 +10,76 @@
 
 #pragma once
 
+#include "api/Registry.h"
 #include "LuaStack.h"
 #include "LuaFunctor.h"
 
 namespace scripting
 {
 
-//TODO: all of these should be variadic, once design settle down
+//TODO: this should be the only one wrapper type
+//
+template <typename T, typename M, M m>
+class LuaMethodWrapper
+{
 
+};
+
+template <typename T, typename R, R(T:: * method)()const>
+class LuaMethodWrapper <T, R(T:: *)()const, method>
+{
+public:
+	static int invoke(lua_State * L)
+	{
+		using UDataType = const T *; //TODO: use 'traits'
+
+		static auto KEY = api::TypeRegistry::get()->getKey<UDataType>();
+		static auto functor = std::mem_fn(method);
+
+		LuaStack S(L);
+
+		void * raw = luaL_checkudata(L, 1, KEY);
+
+		if(!raw)
+			return S.retVoid();
+
+		auto obj = *(static_cast<UDataType *>(raw));
+
+		S.clear();
+		S.push(functor(obj));
+		return 1;
+	}
+};
+
+template <typename T, void(T:: * method)()const>
+class LuaMethodWrapper <T, void(T:: *)()const, method>
+{
+public:
+	static int invoke(lua_State * L)
+	{
+		using UDataType = const T *; //TODO: use 'traits'
+
+		static auto KEY = api::TypeRegistry::get()->getKey<UDataType>();
+		static auto functor = std::mem_fn(method);
+
+		LuaStack S(L);
+
+		void * raw = luaL_checkudata(L, 1, KEY);
+
+		if(!raw)
+			return S.retVoid();
+
+		lua_remove(L, 1);
+
+		auto obj = *(static_cast<UDataType *>(raw));
+
+		functor(obj);
+
+		return S.retVoid();
+	}
+};
+
+//deprecated, should use LuaMethodWrapper instead, once implemented
 template <typename T>
 class LuaCallWrapper
 {

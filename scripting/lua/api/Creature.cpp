@@ -25,33 +25,7 @@ VCMI_REGISTER_CORE_SCRIPT_API(CreatureProxy, "Creature");
 
 const std::vector<CreatureProxy::RegType> CreatureProxy::REGISTER =
 {
-	{"getIconIndex", LuaCallWrapper<const Entity>::createFunctor(&Entity::getIconIndex)},
-	{"getIndex", LuaCallWrapper<const Entity>::createFunctor(&Entity::getIndex)},
-	{"getJsonKey", LuaCallWrapper<const Entity>::createFunctor(&Entity::getJsonKey)},
-	{"getName", LuaCallWrapper<const Entity>::createFunctor(&Entity::getName)},
 	{"accessBonuses", LuaCallWrapper<const EntityWithBonuses<CreatureID>>::createFunctor(&EntityWithBonuses<CreatureID>::accessBonuses)},
-
-	{"getMaxHealth", LuaCallWrapper<const Creature>::createFunctor(&Creature::getMaxHealth)},
-	{"getPluralName", LuaCallWrapper<const Creature>::createFunctor(&Creature::getPluralName)},
-	{"getSingularName", LuaCallWrapper<const Creature>::createFunctor(&Creature::getSingularName)},
-
-	{"getAdvMapAmountMin", LuaCallWrapper<const Creature>::createFunctor(&Creature::getAdvMapAmountMin)},
-	{"getAdvMapAmountMax", LuaCallWrapper<const Creature>::createFunctor(&Creature::getAdvMapAmountMax)},
-	{"getAIValue", LuaCallWrapper<const Creature>::createFunctor(&Creature::getAIValue)},
-	{"getFightValue", LuaCallWrapper<const Creature>::createFunctor(&Creature::getFightValue)},
-	{"getLevel", LuaCallWrapper<const Creature>::createFunctor(&Creature::getLevel)},
-	{"getGrowth", LuaCallWrapper<const Creature>::createFunctor(&Creature::getGrowth)},
-	{"getHorde", LuaCallWrapper<const Creature>::createFunctor(&Creature::getHorde)},
-	{"getFactionIndex", LuaCallWrapper<const Creature>::createFunctor(&Creature::getFactionIndex)},
-
-	{"getBaseAttack", LuaCallWrapper<const Creature>::createFunctor(&Creature::getBaseAttack)},
-	{"getBaseDefense", LuaCallWrapper<const Creature>::createFunctor(&Creature::getBaseDefense)},
-	{"getBaseDamageMin", LuaCallWrapper<const Creature>::createFunctor(&Creature::getBaseDamageMin)},
-	{"getBaseDamageMax", LuaCallWrapper<const Creature>::createFunctor(&Creature::getBaseDamageMax)},
-	{"getBaseHitPoints", LuaCallWrapper<const Creature>::createFunctor(&Creature::getBaseHitPoints)},
-	{"getBaseSpellPoints", LuaCallWrapper<const Creature>::createFunctor(&Creature::getBaseSpellPoints)},
-	{"getBaseSpeed", LuaCallWrapper<const Creature>::createFunctor(&Creature::getBaseSpeed)},
-	{"getBaseShots", LuaCallWrapper<const Creature>::createFunctor(&Creature::getBaseShots)},
 
 	{"getCost", LuaCallWrapper<const Creature>::createFunctor(&Creature::getCost)},
 	{"isDoubleWide", LuaCallWrapper<const Creature>::createFunctor(&Creature::isDoubleWide)},
@@ -59,7 +33,32 @@ const std::vector<CreatureProxy::RegType> CreatureProxy::REGISTER =
 
 const std::vector<CreatureProxy::CustomRegType> CreatureProxy::REGISTER_CUSTOM =
 {
+	{"getIconIndex", LuaMethodWrapper<Entity, int32_t(Entity:: *)()const, &Entity::getIconIndex>::invoke, false},
+	{"getIndex", LuaMethodWrapper<Entity, int32_t(Entity:: *)()const, &Entity::getIndex>::invoke, false},
+	{"getJsonKey", LuaMethodWrapper<Entity, const std::string &(Entity:: *)()const, &Entity::getJsonKey>::invoke, false},
+	{"getName", LuaMethodWrapper<Entity, const std::string &(Entity:: *)()const, &Entity::getName>::invoke, false},
 
+	{"getMaxHealth", LuaMethodWrapper<Creature, uint32_t(Creature:: *)()const, &Creature::getMaxHealth>::invoke, false},
+	{"getPluralName", LuaMethodWrapper<Creature, const std::string &(Creature:: *)()const, &Creature::getPluralName>::invoke, false},
+	{"getSingularName", LuaMethodWrapper<Creature, const std::string &(Creature:: *)()const, &Creature::getSingularName>::invoke, false},
+
+	{"getAdvMapAmountMin", LuaMethodWrapper<Creature, int32_t(Creature:: *)()const, &Creature::getAdvMapAmountMin>::invoke, false},
+	{"getAdvMapAmountMax", LuaMethodWrapper<Creature, int32_t(Creature:: *)()const, &Creature::getAdvMapAmountMax>::invoke, false},
+	{"getAIValue", LuaMethodWrapper<Creature, int32_t(Creature:: *)()const, &Creature::getAIValue>::invoke, false},
+	{"getFightValue", LuaMethodWrapper<Creature, int32_t(Creature:: *)()const, &Creature::getFightValue>::invoke, false},
+	{"getLevel", LuaMethodWrapper<Creature, int32_t(Creature:: *)()const, &Creature::getLevel>::invoke, false},
+	{"getGrowth", LuaMethodWrapper<Creature, int32_t(Creature:: *)()const, &Creature::getGrowth>::invoke, false},
+	{"getHorde", LuaMethodWrapper<Creature, int32_t(Creature:: *)()const, &Creature::getHorde>::invoke, false},
+	{"getFactionIndex", LuaMethodWrapper<Creature, int32_t(Creature:: *)()const, &Creature::getFactionIndex>::invoke, false},
+
+	{"getBaseAttack", LuaMethodWrapper<Creature, int32_t(Creature:: *)()const, &Creature::getBaseAttack>::invoke, false},
+	{"getBaseDefense", LuaMethodWrapper<Creature, int32_t(Creature:: *)()const, &Creature::getBaseDefense>::invoke, false},
+	{"getBaseDamageMin", LuaMethodWrapper<Creature, int32_t(Creature:: *)()const, &Creature::getBaseDamageMin>::invoke, false},
+	{"getBaseDamageMax", LuaMethodWrapper<Creature, int32_t(Creature:: *)()const, &Creature::getBaseDamageMax>::invoke, false},
+	{"getBaseHitPoints", LuaMethodWrapper<Creature, int32_t(Creature:: *)()const, &Creature::getBaseHitPoints>::invoke, false},
+	{"getBaseSpellPoints", LuaMethodWrapper<Creature, int32_t(Creature:: *)()const, &Creature::getBaseSpellPoints>::invoke, false},
+	{"getBaseSpeed", LuaMethodWrapper<Creature, int32_t(Creature:: *)()const, &Creature::getBaseSpeed>::invoke, false},
+	{"getBaseShots", LuaMethodWrapper<Creature, int32_t(Creature:: *)()const, &Creature::getBaseShots>::invoke, false},
 };
 
 }

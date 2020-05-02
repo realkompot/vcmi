@@ -166,7 +166,6 @@ int BonusListProxy::index(lua_State * L)
 	return S.retNil();
 }
 
-
 void BonusListProxy::adjustMetatable(lua_State * L) const
 {
 	lua_pushstring(L, "__index");
