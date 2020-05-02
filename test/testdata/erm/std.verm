@@ -11,7 +11,6 @@ VERM
 ; example 2 --- simple arithmetics
 ![setq-erm z 2 [add 2 3]]
 
-
 ![progn
 	[setq i 30]
 	[setq doCounter 0]

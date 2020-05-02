@@ -206,6 +206,8 @@
 		<Unit filename="testdata/TerrainTest/objects.json" />
 		<Unit filename="testdata/TerrainTest/surface_terrain.json" />
 		<Unit filename="testdata/TerrainTest/underground_terrain.json" />
+		<Unit filename="testdata/erm/list-manipulation.json" />
+		<Unit filename="testdata/erm/list-manipulation.verm" />
 		<Unit filename="testdata/erm/std.json" />
 		<Unit filename="testdata/erm/std.verm" />
 		<Unit filename="testdata/erm/testy.json" />

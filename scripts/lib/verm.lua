@@ -105,10 +105,10 @@ local function prognForm(e, ...)
 	if argc == 0 then return {}	end
 
 	for n = 1, argc - 1 do
-		VERM:eval(select(n,...), e)
+		VERM:eval(e, (select(n,...)))
 	end
 
-	return VERM:eval(select(argc,...), e)
+	return VERM:eval(e, (select(argc,...)))
 end
 
 local function lambdaOrMacro(e, isMacro, args, ...)
@@ -129,13 +129,13 @@ local function lambdaOrMacro(e, isMacro, args, ...)
 			if isMacro then
 				newEnv[v] = p
 			else
-				newEnv[v] = VERM:evalValue(p, e)
+				newEnv[v] = VERM:evalValue(e, p)
 			end
 		end
 		if isMacro then
 			local buffer = {}
 			for _, v in ipairs(body) do
-				table.insert(buffer, (VERM:eval(v, newEnv)))
+				table.insert(buffer, (VERM:eval(newEnv, v)))
 			end
 			return prognForm(newEnv, unpack(buffer))
 		else
@@ -170,7 +170,7 @@ local function backquoteEval(e, v)
 		local car = v[1]
 
 		if car == "comma" then
-			return VERM:evalValue(v[2], e)
+			return VERM:evalValue(e, v[2])
 		else
 			local ret = {}
 
@@ -187,9 +187,8 @@ end
 local specialForms =
 {
 	["<"] = function(e, lhs, rhs)
-		lhs = VERM:evalValue(lhs, e)
-		rhs = VERM:evalValue(rhs, e)
-
+		lhs = VERM:evalValue(e, lhs)
+		rhs = VERM:evalValue(e, rhs)
 		if lhs < rhs then
 			return lhs
 		else
@@ -197,8 +196,8 @@ local specialForms =
 		end
 	end,
 	["<="] = function(e, lhs, rhs)
-		lhs = VERM:evalValue(lhs, e)
-		rhs = VERM:evalValue(rhs, e)
+		lhs = VERM:evalValue(e, lhs)
+		rhs = VERM:evalValue(e, rhs)
 		if lhs <= rhs then
 			return lhs
 		else
@@ -206,8 +205,8 @@ local specialForms =
 		end
 	end,
 	[">"] = function(e, lhs, rhs)
-		lhs = VERM:evalValue(lhs, e)
-		rhs = VERM:evalValue(rhs, e)
+		lhs = VERM:evalValue(e, lhs)
+		rhs = VERM:evalValue(e, rhs)
 		if lhs > rhs then
 			return lhs
 		else
@@ -215,8 +214,8 @@ local specialForms =
 		end
 	end,
 	[">="] = function(e, lhs, rhs)
-		lhs = VERM:evalValue(lhs, e)
-		rhs = VERM:evalValue(rhs, e)
+		lhs = VERM:evalValue(e, lhs)
+		rhs = VERM:evalValue(e, rhs)
 		if lhs >= rhs then
 			return lhs
 		else
@@ -224,8 +223,8 @@ local specialForms =
 		end
 	end,
 	["="] = function(e, lhs, rhs)
-		lhs = VERM:evalValue(lhs, e)
-		rhs = VERM:evalValue(rhs, e)
+		lhs = VERM:evalValue(e, lhs)
+		rhs = VERM:evalValue(e, rhs)
 		if lhs == rhs then
 			return lhs
 		else
@@ -235,7 +234,7 @@ local specialForms =
 	["+"] = function(e, ...)
 		local ret = 0
 		for n=1,select('#',...) do
-			local v = VERM:evalValue((select(n,...)), e)
+			local v = VERM:evalValue(e, (select(n,...)))
 			ret = ret + v
 		end
 		return ret
@@ -243,80 +242,89 @@ local specialForms =
 	["*"] = function(e, ...)
 		local ret = 1
 		for n=1,select('#',...) do
-			local v = VERM:evalValue((select(n,...)), e)
+			local v = VERM:evalValue(e, (select(n,...)))
 			ret = ret * v
 		end
 		return ret
 	end,
 	["-"] = function(e, lhs, rhs)
-		lhs = VERM:evalValue(lhs, e)
-		rhs = VERM:evalValue(rhs, e)
+		lhs = VERM:evalValue(e, lhs)
+		rhs = VERM:evalValue(e, rhs)
 		return lhs - rhs
 	end,
 	["/"] = function(e, lhs, rhs)
-		lhs = VERM:evalValue(lhs, e)
-		rhs = VERM:evalValue(rhs, e)
+		lhs = VERM:evalValue(e, lhs)
+		rhs = VERM:evalValue(e, rhs)
 		return lhs / rhs
 	end,
 	["%"] = function(e, lhs, rhs)
-		lhs = VERM:evalValue(lhs, e)
-		rhs = VERM:evalValue(rhs, e)
+		lhs = VERM:evalValue(e, lhs)
+		rhs = VERM:evalValue(e, rhs)
 		return lhs % rhs
 	end,
-
 --	["comma-unlist"] = function(e, ...) end,
-	["backquote"] = function(e, v)
-		return backquoteEval(e, v)
-	end,
+	["backquote"] = backquoteEval,
 --	["comma"] = function(e, ...) end,
 --	["get-func"] = function(e, ...) end,
 	["quote"] = function(e, v)
 		return v
 	end,
 	["if"] = function(e, cond, v1, v2)
-		cond = VERM:evalValue(cond, e)
+		cond = VERM:evalValue(e, cond)
 
 		if isNIL(cond) then
-			return VERM:evalValue(v2, e)
+			return VERM:evalValue(e, v2)
 		else
-			return VERM:evalValue(v1, e)
+			return VERM:evalValue(e, v1)
 		end
 	end,
 --	["set"] = function(e, ...) end,
 --	["setf"] = function(e, ...) end,
 	["setq"] = function(e, name, value)
-		e[name] = VERM:evalValue(value, e)
+		e[name] = VERM:evalValue(e, value)
 	end,
 	["lambda"] = lambdaForm,
 	["defun"] = defunForm,
 	["progn"] = prognForm,
 	["defmacro"] = defmacroForm,
 	["do"] = function(e, cond, body)
-		local c = VERM:eval(cond, e)
-
+		local c = VERM:eval(e, cond)
 		while not isNIL(c) do
-
-			VERM:eval(body, e)
-			c = VERM:eval(cond, e)
-
+			VERM:eval(e, body)
+			c = VERM:eval(e, cond)
 		end
 		return {}
 	end,
-	["car"] = function(e, ...) end,
-	["cdr"] = function(e, ...) end,
+	["car"] = function(e, list)
+		local v = VERM:eval(e, list)
+		return v[1] or {}
+	end,
+--	["cdr"] = function(e, list)
+--		return {}
+--	end,
+	["list"] = function(e, ...)
+		local ret = {}
+		for n=1,select('#',...) do
+			local v = VERM:evalValue(e, (select(n,...)))
+			table.insert(ret, v)
+		end
 
+		return ret
+	end,
 	["setq-erm"] = function(e, var, varIndex, value)
-		DATA.ERM[VERM:evalValue(var, e)][tostring(VERM:evalValue(varIndex, e))] = VERM:evalValue(value, e)
+		local v = VERM:evalValue(e, value)
+		DATA.ERM[var][tostring(VERM:evalValue(e, varIndex))] = v
+		return v
 	end,
 }
 
-function VERM:evalValue(v, e)
+function VERM:evalValue(e, v)
 	if isNIL(v) then
 		return v
 	elseif type(v) == "table" then
-		return self:eval(v, e)
+		return self:eval(e, v)
 	elseif type(v) == "string" then
-		return e[v] or v
+		return e[v]
 	elseif type(v) == "function" then
 		error("evalValue do not accept functions")
 	else
@@ -324,7 +332,7 @@ function VERM:evalValue(v, e)
     end
 end
 
-function VERM:eval(t, e)
+function VERM:eval(e, t)
 	if type(t) ~= "table" then
 		logError("Not valid form: ".. to_string(t))
 		return {}
@@ -340,7 +348,7 @@ function VERM:eval(t, e)
 	end
 
 	if type(car) == "table" then
-		car = self:eval(car, e)
+		car = self:eval(e, car)
 	end
 
 	if type(car) == "function" then
@@ -350,6 +358,10 @@ function VERM:eval(t, e)
 		logError("Env:"..to_string(e))
 		return {}
 	end
+end
+
+function VERM:E(line)
+	self:eval(self.topEnv, line)
 end
 
 VERM.topEnv = createEnv(specialForms)

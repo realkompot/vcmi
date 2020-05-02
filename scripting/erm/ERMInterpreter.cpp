@@ -983,7 +983,7 @@ namespace ERMConverter
 
 		std::string operator()(char const & val)
 		{
-			return "'"+ std::to_string(val) +"'";
+			return "{'quote','"+ std::to_string(val) +"'}";
 		}
 		std::string operator()(double const & val)
 		{
@@ -995,7 +995,7 @@ namespace ERMConverter
 		}
 		std::string operator()(const std::string & val)
 		{
-			return "[===[" + val + "]===]";
+			return "{'quote',[===[" + val + "]===]}";
 		}
 	};
 
@@ -1030,74 +1030,18 @@ namespace ERMConverter
 		}
 	};
 
-	struct VOptionNodeEval : public Converter
-	{
-		VNode & exp;
-
-		VOptionNodeEval(std::ostream * out_, VNode & exp_)
-			: Converter(out_),
-			exp(exp_)
-		{}
-
-		void operator()(VNIL const & opt) const
-		{
-			throw EVermScriptExecError("Nil does not evaluate to a function");
-		}
-
-		void operator()(VNode const & opt) const
-		{
-			VNode tmpn(exp);
-
-			(*out) << "{";
-
-			VOptionEval tmp(out);
-			tmp(opt);
-
-			VOptionList args = tmpn.children.cdr().getAsList();
-
-			for(int g=0; g<args.size(); ++g)
-			{
-				(*out) << ", ";
-				boost::apply_visitor(VOptionEval(out), args[g]);
-			}
-
-			(*out) << "}";
-		}
-
-		void operator()(VSymbol const & opt) const
-		{
-			VNode tmpn(exp);
-
-			(*out) << "{" << "'"<< opt.text << "'";
-
-			VOptionList args = tmpn.children.cdr().getAsList();
-
-			for(int g=0; g<args.size(); ++g)
-			{
-				(*out) << ", ";
-				boost::apply_visitor(VOptionEval(out), args[g]);
-
-			}
-
-			(*out) << "}";
-		}
-		void operator()(TLiteral const & opt) const
-		{
-			throw EVermScriptExecError("Literal does not evaluate to a function: "+boost::to_string(opt));
-		}
-		void operator()(ERM::Tcommand const & opt) const
-		{
-			throw EVermScriptExecError("ERM command does not evaluate to a function");
-		}
-	};
-
 	void VOptionEval::operator()(VNode const& opt) const
 	{
-		if(!opt.children.empty())
+		VNode tmpn(opt);
+
+		(*out) << "{";
+
+		for(VOption & op : tmpn.children)
 		{
-			VOption & car = const_cast<VNode&>(opt).children.car().getAsItem();
-			boost::apply_visitor(VOptionNodeEval(out, const_cast<VNode&>(opt)), car);
+			boost::apply_visitor(VOptionEval(out), op);
+			(*out) << ",";
 		}
+		(*out) << "}";
 	}
 
 	struct Line : public Converter
@@ -1108,7 +1052,7 @@ namespace ERMConverter
 
 		void operator()(TVExp const & cmd) const
 		{
-			put("VERM:eval");
+			put("VERM:E");
 
 			VNode line(cmd);
 
@@ -1223,7 +1167,7 @@ namespace ERMConverter
 				boost::apply_visitor(lineConverter, curLine);
 			}
 
-			out << "\tend," << std::endl;
+			out << "end," << std::endl;
 			out << "})" << std::endl;
 		}
 	}
