@@ -33,11 +33,6 @@ CApplyDamage::CApplyDamage(const Environment * env_, BattleStackAttacked * pack_
 	initalDamage = pack->damageAmount;
 }
 
-void CApplyDamage::execute()
-{
-	//TODO: move CStack::prepareAttacked code here, except REBIRTH
-}
-
 int64_t CApplyDamage::getInitalDamage() const
 {
 	return initalDamage;

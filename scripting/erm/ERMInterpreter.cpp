@@ -1147,10 +1147,23 @@ namespace ERMConverter
 
 			const ERM::TTriggerBase & trig = ERMInterpreter::retrieveTrigger(firstLine);
 
-			//TODO: identifier
 			//TODO: condition
 
 			out << "ERM:addTrigger({" << std::endl;
+
+			std::vector<std::string> identifiers;
+
+			if(trig.identifier.is_initialized())
+			{
+				for(const auto & id : trig.identifier.get())
+					identifiers.push_back(boost::apply_visitor(LVL1Iexp(), id));
+			}
+
+			out << "id = {";
+			for(const auto & id : identifiers)
+				out << "'" << id << "',";
+			out << "}," << std::endl;
+
 			out << "name = '" << trig.name << "'," << std::endl;
 			out << "fn = function ()" << std::endl;
 

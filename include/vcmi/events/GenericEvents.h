@@ -1,5 +1,5 @@
 /*
- * Event.h, part of VCMI engine
+ * GenericEvents.h, part of VCMI engine
  *
  * Authors: listed in file AUTHORS in main folder
  *
@@ -10,17 +10,6 @@
 
 #pragma once
 
-namespace events
-{
-
-class EventBus;
-
-template <typename T>
-class SubscriptionRegistry;
-
-class DLL_LINKAGE Event
-{
-};
-
-}
-
+#include "GameResumed.h"
+#include "PlayerGotTurn.h"
+#include "TurnStarted.h"

@@ -1,5 +1,5 @@
 /*
- * Event.h, part of VCMI engine
+ * GameResumed.h, part of VCMI engine
  *
  * Authors: listed in file AUTHORS in main folder
  *
@@ -10,17 +10,15 @@
 
 #pragma once
 
+#include <vcmi/events/GameResumed.h>
+
 namespace events
 {
 
-class EventBus;
-
-template <typename T>
-class SubscriptionRegistry;
-
-class DLL_LINKAGE Event
+class DLL_LINKAGE CGameResumed : public GameResumed
 {
+public:
+	CGameResumed();
 };
 
 }
-

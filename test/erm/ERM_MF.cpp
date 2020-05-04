@@ -30,7 +30,6 @@ public:
 
 	void setDefaultExpectations()
 	{
-		EXPECT_CALL(event, execute());
 	}
 
 protected:

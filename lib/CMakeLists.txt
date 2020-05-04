@@ -22,6 +22,9 @@ set(lib_SRCS
 		battle/Unit.cpp
 
 		events/ApplyDamage.cpp
+		events/GameResumed.cpp
+		events/PlayerGotTurn.cpp
+		events/TurnStarted.cpp
 
 		filesystem/AdapterLoaders.cpp
 		filesystem/CArchiveLoader.cpp

@@ -12,6 +12,7 @@ set(lib_SRCS
 
 		api/events/BattleEvents.cpp
 		api/events/EventBusProxy.cpp
+		api/events/GenericEvents.cpp
 		api/events/SubscriptionRegistryProxy.cpp
 
 		api/netpacks/BattleLogMessage.cpp

@@ -35,10 +35,10 @@ public:
 	}
 
 	template <typename E>
-	void executeEvent(E & event) const
+	void executeEvent(E & event, const typename E::ExecHandler & execHandler = typename E::ExecHandler()) const
 	{
 		auto registry = E::getRegistry();
-		registry->executeEvent(this, event);
+		registry->executeEvent(this, event, execHandler);
 	}
 };
 }

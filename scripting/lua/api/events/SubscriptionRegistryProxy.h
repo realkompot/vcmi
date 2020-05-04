@@ -53,7 +53,10 @@ public:
 		::events::EventBus * eventBus = nullptr;
 
 		if(!S.tryGet(1, eventBus))
-			return S.retNil();
+		{
+			S.push("No event bus");
+			return 1;
+		}
 
 		S.clear();
 
@@ -82,8 +85,42 @@ public:
 
 	static int subscribeAfter(lua_State * L)
 	{
-		// subscription = subscribeAfter(eventBus, callback)
-		return 0;
+		LuaStack S(L);
+
+		//TODO: use capture by move from c++14
+		auto callbackRef = std::make_shared<LuaReference>(L);
+
+		::events::EventBus * eventBus = nullptr;
+
+		if(!S.tryGet(1, eventBus))
+		{
+			S.push("No event bus");
+			return 1;
+		}
+
+		S.clear();
+
+		RegistryType * registry = EventType::getRegistry();
+
+		typename EventType::PostHandler callback = [=](const EventType & event)
+		{
+			LuaStack S(L);
+			callbackRef->push();
+			S.push(const_cast<EventType *>(&event)); //FIXME:
+
+			if(lua_pcall(L, 1, 0, 0) != 0)
+			{
+				std::string msg;
+				S.tryGet(1, msg);
+				logMod->error("Script callback error: %s", msg);
+			}
+
+			S.clear();
+		};
+
+		std::unique_ptr<::events::EventSubscription> subscription = registry->subscribeAfter(eventBus, std::move(callback));
+		S.push(std::move(subscription));
+		return 1;
 	}
 };
 

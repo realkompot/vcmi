@@ -20,8 +20,6 @@ class DLL_LINKAGE CApplyDamage : public ApplyDamage
 public:
 	CApplyDamage(const Environment * env_, BattleStackAttacked * pack_, std::shared_ptr<battle::Unit> target_);
 
-	void execute() override;
-
 	int64_t getInitalDamage() const override;
 	int64_t getDamage() const override;
 	void setDamage(int64_t value) override;

@@ -22,7 +22,6 @@ public:
 	MOCK_CONST_METHOD0(getInitalDamage, int64_t());
 	MOCK_CONST_METHOD0(getDamage, int64_t());
 	MOCK_METHOD1(setDamage, void(int64_t));
-	MOCK_METHOD0(execute, void());
 	MOCK_CONST_METHOD0(getTarget, const battle::Unit *());
 };
 

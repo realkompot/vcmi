@@ -112,6 +112,8 @@
 		<Unit filename="api/events/BattleEvents.h" />
 		<Unit filename="api/events/EventBusProxy.cpp" />
 		<Unit filename="api/events/EventBusProxy.h" />
+		<Unit filename="api/events/GenericEvents.cpp" />
+		<Unit filename="api/events/GenericEvents.h" />
 		<Unit filename="api/events/SubscriptionRegistryProxy.cpp" />
 		<Unit filename="api/events/SubscriptionRegistryProxy.h" />
 		<Unit filename="api/netpacks/BattleLogMessage.cpp" />

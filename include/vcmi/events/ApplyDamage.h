@@ -28,6 +28,7 @@ class DLL_LINKAGE ApplyDamage : public Event
 public:
 	using PreHandler = SubscriptionRegistry<ApplyDamage>::PreHandler;
 	using PostHandler = SubscriptionRegistry<ApplyDamage>::PostHandler;
+	using ExecHandler = SubscriptionRegistry<ApplyDamage>::ExecHandler;
 	using BusTag = SubscriptionRegistry<ApplyDamage>::BusTag;
 
 	static SubscriptionRegistry<ApplyDamage> * getRegistry();

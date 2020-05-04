@@ -79,6 +79,60 @@ public:
 	}
 };
 
+template <typename T, typename R, typename P1, R(T:: * method)(P1)const>
+class LuaMethodWrapper <T, R(T:: *)(P1)const, method>
+{
+public:
+	static int invoke(lua_State * L)
+	{
+		using UDataType = const T *;
+
+		static auto KEY = api::TypeRegistry::get()->getKey<UDataType>();
+		static auto functor = std::mem_fn(method);
+
+		LuaStack S(L);
+
+		void * raw = luaL_checkudata(L, 1, KEY);
+
+		if(!raw)
+			return S.retVoid();
+
+		auto obj = *(static_cast<UDataType *>(raw));
+
+		S.clear();
+		S.push(functor(obj));
+		return 1;
+	}
+};
+
+template <typename T, typename P1, void(T:: * method)(P1)const>
+class LuaMethodWrapper <T, void(T:: *)(P1)const, method>
+{
+public:
+	static int invoke(lua_State * L)
+	{
+		using UDataType = const T *;
+
+		static auto KEY = api::TypeRegistry::get()->getKey<UDataType>();
+		static auto functor = std::mem_fn(method);
+
+		LuaStack S(L);
+
+		void * raw = luaL_checkudata(L, 1, KEY);
+
+		if(!raw)
+			return S.retVoid();
+
+		lua_remove(L, 1);
+
+		auto obj = *(static_cast<UDataType *>(raw));
+
+		functor(obj);
+
+		return S.retVoid();
+	}
+};
+
 //deprecated, should use LuaMethodWrapper instead, once implemented
 template <typename T>
 class LuaCallWrapper

@@ -50,7 +50,7 @@
 #include "../lib/serializer/JsonSerializer.h"
 #include "../lib/ScriptHandler.h"
 #include <vcmi/events/EventBus.h>
-
+#include <vcmi/events/GenericEvents.h>
 
 #ifndef _MSC_VER
 #include <boost/thread/xtime.hpp>
@@ -2102,11 +2102,18 @@ void CGameHandler::run(bool resume)
 		logGlobal->info(sbuffer.str());
 	}
 
+	if(resume)
+		events::GameResumed::defaultExecute(serverEventBus.get());
+
 	auto playerTurnOrder = generatePlayerTurnOrder();
 
 	while(lobby->state == EServerState::GAMEPLAY)
 	{
-		if (!resume) newTurn();
+		if(!resume)
+		{
+			newTurn();
+			events::TurnStarted::defaultExecute(serverEventBus.get());
+		}
 
 		std::list<PlayerColor>::iterator it;
 		if (resume)
@@ -2119,40 +2126,48 @@ void CGameHandler::run(bool resume)
 		}
 
 		resume = false;
-		for (; it != playerTurnOrder.end(); it++)
+		for (; (it != playerTurnOrder.end()) && (lobby->state == EServerState::GAMEPLAY) ; it++)
 		{
 			auto playerColor = *it;
 
-			PlayerState * playerState = &gs->players[playerColor]; //can't copy CBonusSystemNode by value
-			if (playerState->status == EPlayerStatus::INGAME)
+			auto onGetTurn = [&](events::PlayerGotTurn & event)
 			{
 				//if player runs out of time, he shouldn't get the turn (especially AI)
+				//pre-trigger may change anything, should check before each player
+				//TODO: is it enough to check only one player?
 				checkVictoryLossConditionsForAll();
 
-				if (gs->players[playerColor].status != EPlayerStatus::INGAME)
-				{ //player lost at the beginning of his turn
-					continue;
-				}
-				else //give normal turn
+				auto player = event.getPlayer();
+
+				const PlayerState * playerState = &gs->players[player];
+
+				if(playerState->status != EPlayerStatus::INGAME)
 				{
-					states.setFlag(playerColor, &PlayerStatus::makingTurn, true);
+					event.setPlayer(PlayerColor::CANNOT_DETERMINE);
+				}
+				else
+				{
+					states.setFlag(player, &PlayerStatus::makingTurn, true);
 
 					YourTurn yt;
-					yt.player = playerColor;
+					yt.player = player;
 					//Change local daysWithoutCastle counter for local interface message //TODO: needed?
 					yt.daysWithoutCastle = playerState->daysWithoutCastle;
 					applyAndSend(&yt);
-
-					//wait till turn is done
-					boost::unique_lock<boost::mutex> lock(states.mx);
-					while(states.players.at(playerColor).makingTurn && lobby->state == EServerState::GAMEPLAY)
-					{
-						static time_duration p = milliseconds(100);
-						states.cv.timed_wait(lock, p);
-					}
 				}
-				if(lobby->state != EServerState::GAMEPLAY)
-					break;
+			};
+
+			events::PlayerGotTurn::defaultExecute(serverEventBus.get(), onGetTurn, playerColor);
+
+			if(playerColor != PlayerColor::CANNOT_DETERMINE)
+			{
+				//wait till turn is done
+				boost::unique_lock<boost::mutex> lock(states.mx);
+				while(states.players.at(playerColor).makingTurn && lobby->state == EServerState::GAMEPLAY)
+				{
+					static time_duration p = milliseconds(100);
+					states.cv.timed_wait(lock, p);
+				}
 			}
 		}
 		//additional check that game is not finished

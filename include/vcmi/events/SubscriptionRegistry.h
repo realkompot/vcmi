@@ -28,6 +28,7 @@ class SubscriptionRegistry : public boost::noncopyable
 {
 public:
 	using PreHandler = std::function<void(E &)>;
+	using ExecHandler = std::function<void(E &)>;
 	using PostHandler = std::function<void(const E &)>;
 	using BusTag = const void *;
 
@@ -49,7 +50,7 @@ public:
 		return make_unique<PostSubscription>(tag, storage);
 	}
 
-	void executeEvent(const EventBus * bus, E & event)
+	void executeEvent(const EventBus * bus, E & event, const ExecHandler & execHandler)
 	{
 		boost::shared_lock<boost::shared_mutex> lock(mutex);
 		{
@@ -62,7 +63,8 @@ public:
 			}
 		}
 
-		event.execute();
+		if(execHandler)
+			execHandler(event);
 
 		{
 			auto it = postHandlers.find(bus);

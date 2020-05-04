@@ -1,5 +1,5 @@
 /*
- * Event.h, part of VCMI engine
+ * TurnStarted.h, part of VCMI engine
  *
  * Authors: listed in file AUTHORS in main folder
  *
@@ -10,17 +10,17 @@
 
 #pragma once
 
+#include <vcmi/events/TurnStarted.h>
+
 namespace events
 {
 
-class EventBus;
-
-template <typename T>
-class SubscriptionRegistry;
-
-class DLL_LINKAGE Event
+class DLL_LINKAGE CTurnStarted : public TurnStarted
 {
+public:
+	CTurnStarted();
+
+	static void defaultExecute(const EventBus * bus);
 };
 
 }
-

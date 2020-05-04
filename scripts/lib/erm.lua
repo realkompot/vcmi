@@ -108,10 +108,18 @@ ERM.VR = createReceiverLoader("VR")
 local Triggers = {}
 
 local function createTriggerLoader(name)
-	local loader = function(...)
-		Triggers[name] = Triggers[name] or require("core:erm."..name.."_T")
-		Triggers[name].ERM = ERM
-		return Triggers[name]
+	local loader = function(id_list, id_key)
+
+		local t = Triggers[id_key]
+
+		if not t then
+			t = require("core:erm."..name.."_T")
+			t.ERM = ERM
+			t:setId(id_list)
+			Triggers[id_key] = t
+		end
+
+		return t
 	end
 	return loader
 end
@@ -126,7 +134,6 @@ end
 !?CO
 !?DL client only?
 !?GE
-!?GM
 !?HE
 !?HL
 !?HM
@@ -145,29 +152,30 @@ end
 local TriggerLoaders = {}
 
 TriggerLoaders.PI = createTriggerLoader("PI")
+TriggerLoaders.GM = createTriggerLoader("GM")
 TriggerLoaders.MF = createTriggerLoader("MF")
-
 
 function ERM:addTrigger(t)
 	local name = t.name
 	local fn = t.fn
+	local id_list = t.id or {}
 
-	local trigger = TriggerLoaders[name]()
+	local id_key = name .. table.concat(id_list, "|")
 
-	table.insert(trigger.fn, fn)
+	local trigger = TriggerLoaders[name](id_list, id_key)
+
+	trigger:addHandler(fn)
 end
 
 function ERM:callInstructions(cb)
 	if not DATA.ERM.instructionsCalled then
 		cb()
-		self:callTrigger("PI")
+		local pi = Triggers["PI"]
+		if pi then
+			pi:call()
+		end
 		DATA.ERM.instructionsCalled = true
 	end
-end
-
-function ERM:callTrigger(name)
-	local trigger = TriggerLoaders[name]()
-	trigger:call()
 end
 
 return ERM

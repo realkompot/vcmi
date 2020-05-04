@@ -1,5 +1,5 @@
 /*
- * Event.h, part of VCMI engine
+ * AdventureEvents.h, part of VCMI engine
  *
  * Authors: listed in file AUTHORS in main folder
  *
@@ -7,20 +7,4 @@
  * Full text of license available in license.txt file, in main folder
  *
  */
-
 #pragma once
-
-namespace events
-{
-
-class EventBus;
-
-template <typename T>
-class SubscriptionRegistry;
-
-class DLL_LINKAGE Event
-{
-};
-
-}
-

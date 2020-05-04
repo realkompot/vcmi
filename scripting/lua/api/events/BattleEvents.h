@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include <vcmi/events/ApplyDamage.h>
+#include <vcmi/events/BattleEvents.h>
 
 #include "../../LuaWrapper.h"
 

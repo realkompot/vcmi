@@ -33,7 +33,10 @@ set(test_SRCS
 
 		erm/ERM_BM.cpp
 		erm/ERM_BU.cpp
+		erm/ERM_FU.cpp
+		erm/ERM_GM_T.cpp
 		erm/ERM_MA.cpp
+		erm/ERM_MC.cpp
 		erm/ERM_MF.cpp
 		erm/ERM_VR.cpp
 		erm/ERMPersistenceTest.cpp

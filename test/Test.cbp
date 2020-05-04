@@ -107,6 +107,7 @@
 		<Unit filename="erm/ERM_BM.cpp" />
 		<Unit filename="erm/ERM_BU.cpp" />
 		<Unit filename="erm/ERM_FU.cpp" />
+		<Unit filename="erm/ERM_GM_T.cpp" />
 		<Unit filename="erm/ERM_MA.cpp" />
 		<Unit filename="erm/ERM_MC.cpp" />
 		<Unit filename="erm/ERM_MF.cpp" />
