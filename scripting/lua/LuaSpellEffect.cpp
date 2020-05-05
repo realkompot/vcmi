@@ -171,8 +171,7 @@ void LuaSpellEffect::serializeJsonEffect(JsonSerializeFormat & handler)
 
 std::shared_ptr<Context> LuaSpellEffect::resolveScript(const Mechanics * m) const
 {
-	auto context = m->battle()->getScriptingContext(script);
-	return context;
+	return m->battle()->getContextPool()->getContext(script);
 }
 
 void LuaSpellEffect::setContextVariables(const Mechanics * m, std::shared_ptr<Context> context) const

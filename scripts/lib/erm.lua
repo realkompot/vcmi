@@ -99,7 +99,6 @@ CO
 EA
 EX
 GE
-HE
 HL
 HO
 HT
@@ -108,18 +107,16 @@ MO
 MR
 MW
 OB
-OW
 PM
 PO
 QW
 SS
 TL
 TR
-UN
 
 ]]
 
-local supportedReceivers = {"BM", "BU", "IF", "MA", "MF", "TM", "VR"}
+local supportedReceivers = {"BM", "BU", "HE", "IF", "MA", "MF", "OW", "TM", "UN", "VR"}
 
 for _, v in pairs(supportedReceivers) do ERM[v] = createReceiverLoader(v) end
 

@@ -24,9 +24,16 @@ namespace battle
 	using UnitFilter = std::function<bool(const Unit *)>;
 }
 
+namespace scripting
+{
+	class Pool;
+}
+
 class DLL_LINKAGE IBattleInfoCallback
 {
 public:
+	virtual scripting::Pool * getContextPool() const = 0;
+
 	virtual ETerrainType battleTerrainType() const = 0;
 	virtual BFieldType battleGetBattlefieldType() const = 0;
 

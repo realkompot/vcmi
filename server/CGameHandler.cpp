@@ -1645,7 +1645,7 @@ CGameHandler::~CGameHandler()
 void CGameHandler::reinitScripting()
 {
 	serverEventBus = make_unique<events::EventBus>();
-	serverScripts.reset(new scripting::PoolImpl(this));
+	serverScripts.reset(new scripting::PoolImpl(this, spellEnv));
 }
 
 void CGameHandler::init(StartInfo *si)
@@ -2101,6 +2101,8 @@ void CGameHandler::run(bool resume)
 		}
 		logGlobal->info(sbuffer.str());
 	}
+
+	services()->scripts()->run(serverScripts);
 
 	if(resume)
 		events::GameResumed::defaultExecute(serverEventBus.get());

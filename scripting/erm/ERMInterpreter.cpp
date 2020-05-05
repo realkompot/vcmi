@@ -133,7 +133,7 @@ namespace ERMConverter
 				{"=>", ">="},
 				{"<=", "<="},
 				{"=<", "<="},
-				{"==", "=="},
+				{"=", "=="},
 				{"<>", "~="},
 				{"><", "~="},
 			};
@@ -154,8 +154,10 @@ namespace ERMConverter
 
 	struct ParamIO
 	{
-		std::string name;
-		bool isInput;
+		ParamIO() = default;
+		std::string name = "";
+		bool isInput = false;
+		bool semi = false;
 	};
 
 	struct Converter : public boost::static_visitor<>
@@ -225,7 +227,7 @@ namespace ERMConverter
 	{
 		ParamIO operator()(const TVarConcatString & cmp) const
 		{
-			throw EScriptExecError("String concatenation not allowed in this receiver");
+			throw EScriptExecError(std::string("String concatenation not allowed in this receiver|")+cmp.string.str+"|");
 		}
 
 		ParamIO operator()(const TStringConstant & cmp) const
@@ -246,7 +248,18 @@ namespace ERMConverter
 
 		ParamIO operator()(const TSemiCompare & cmp) const
 		{
-			throw EScriptExecError("Semi comparison not allowed in this receiver");
+			if(cmp.compSign == "=")
+			{
+				ParamIO ret;
+				ret.isInput = true;
+				ret.semi = true;
+				ret.name = boost::apply_visitor(LVL1Iexp(), cmp.rhs);
+				return ret;
+			}
+			else
+			{
+				throw EScriptExecError("Semi compare not allowed in this receiver");
+			}
 		}
 
 		ParamIO operator()(const TMacroDef & cmp) const
@@ -372,6 +385,93 @@ namespace ERMConverter
 			callFormat % inParams;
 
 			putLine(callFormat.str());
+		}
+	};
+
+	struct DO : public Receiver
+	{
+		std::string funNum;
+		std::string startVal;
+		std::string stopVal;
+		std::string increment;
+
+		DO(std::ostream * out_, const ERM::Tidentifier & tid)
+			: Receiver(out_)
+		{
+			funNum = boost::apply_visitor(LVL1Iexp(), tid.at(0));
+			startVal = boost::apply_visitor(LVL1Iexp(), tid.at(1));
+			stopVal = boost::apply_visitor(LVL1Iexp(), tid.at(2));
+			increment = boost::apply_visitor(LVL1Iexp(), tid.at(3));
+		}
+
+		using Receiver::operator();
+
+		void operator()(const TNormalBodyOption & trig) const override
+		{
+			switch(trig.optionCode)
+			{
+			case 'P':
+				{
+					putLine("do");
+					std::vector<ParamIO> optionParams;
+
+					for(auto & p : trig.params)
+					{
+						optionParams.push_back(boost::apply_visitor(BodyOption(), p));
+					}
+
+					putLine("  local newx = {}");
+
+					auto index = 1;
+					for(auto & p : optionParams)
+					{
+						if(p.isInput && p.semi)
+						{
+							boost::format fmt("  newx['%d'] = %s");
+							fmt % index % p.name;
+							putLine(fmt.str());
+						}
+
+						index++;
+					}
+
+					(*out) << "  for __iter = " << startVal <<", " << stopVal << ", " << increment << " do " << std::endl;
+
+					index = 1;
+					for(auto & p : optionParams)
+					{
+						if(p.isInput && !p.semi)
+						{
+							boost::format fmt("    newx['%d'] = %s");
+							fmt % index % p.name;
+							putLine(fmt.str());
+						}
+						index++;
+					}
+					(*out) << "    newx['16'] = __iter" << std::endl;
+					(*out) << "    FU" << funNum << "(newx)" << std::endl;
+					(*out) << "    __iter = newx['16']" << std::endl;
+					(*out) << "  end" << std::endl;
+
+					index = 1;
+					for(auto & p : optionParams)
+					{
+						if(!p.isInput)
+						{
+							boost::format fmt("  %s = newx['%d']");
+							fmt % p.name % index;
+							putLine(fmt.str());
+						}
+
+						index++;
+					}
+					putLine("end");
+				}
+				break;
+			default:
+				throw EInterpreterError("Unknown opcode in DO receiver");
+				break;
+			}
 		}
 	};
 
@@ -645,15 +745,10 @@ namespace ERMConverter
 					for(auto & p : optionParams)
 					{
 						boost::format fmt;
-
 						if(p.isInput)
-						{
 							fmt.parse("%s['%d'] = %s") % v.name % index % p.name;
-						}
 						else
-						{
 							fmt.parse("%s = %s['%d']") % p.name % v.name % index;
-						}
 						putLine(fmt.str());
 						index++;
 					}
@@ -731,7 +826,7 @@ namespace ERMConverter
 		{
 			if(body.is_initialized())
 			{
-				ERM::Tbody bo = body.get();
+				const ERM::Tbody & bo = body.get();
 				for(int g=0; g<bo.size(); ++g)
 				{
 					boost::apply_visitor(visitor, bo[g]);
@@ -757,7 +852,6 @@ namespace ERMConverter
 				if(identifier.is_initialized())
 				{
 					ERM::Tidentifier tid = identifier.get();
-
 					if(tid.size() > 0)
 						performBody(body, FU(out, tid[0]));
 				}
@@ -768,26 +862,14 @@ namespace ERMConverter
 			}
 			else if(name == "DO")
 			{
-				//TODO: use P body option
-				//TODO: pass|return parameters
 				if(!identifier.is_initialized())
 					throw EScriptExecError("DO receiver requires arguments");
 
-				ERM::Tidentifier tid = identifier.get();
+				const ERM::Tidentifier & tid = identifier.get();
 				if(tid.size() != 4)
 					throw EScriptExecError("DO receiver takes exactly 4 arguments");
 
-				auto funNum = boost::apply_visitor(LVL1Iexp(), tid[0]);
-				auto startVal = boost::apply_visitor(LVL1Iexp(), tid[1]);
-				auto stopVal = boost::apply_visitor(LVL1Iexp(), tid[2]);
-				auto increment = boost::apply_visitor(LVL1Iexp(), tid[3]);
-
-				(*out) << "for __iter = " << startVal <<", " << stopVal << "-1, " << increment << " do " << std::endl;
-				(*out) << "\tlocal x = x or {}" << std::endl;
-				(*out) << "\tx['16'] = __iter" << std::endl;
-				(*out) << "\tFU" << funNum << "(x)" << std::endl;
-				(*out) << "\t__iter = x['16']" << std::endl;
-				(*out) << "end" << std::endl;
+				performBody(body, DO(out, tid));
 			}
 			else if(name == "MC")
 			{
@@ -814,8 +896,6 @@ namespace ERMConverter
 						identifiers.push_back(boost::apply_visitor(LVL1Iexp(), id));
 				}
 
-				putLine("do");
-
 				std::string params;
 
 				for(auto iter = std::begin(identifiers); iter != std::end(identifiers); ++iter)
@@ -825,16 +905,39 @@ namespace ERMConverter
 					params += *iter;
 				}
 
-				boost::format fmt("local %s = ERM.%s(%s)");
-				fmt % name;
-				fmt % name;
-				fmt % params;
+				if(body.is_initialized())
+				{
+					const ERM::Tbody & bo = body.get();
+					if(bo.size() == 1)
+					{
+						boost::format fmt("ERM.%s(%s)");
+						fmt % name;
+						fmt % params;
 
-				putLine(fmt.str());
+						boost::apply_visitor(GenericReceiver(out, fmt.str()), bo[0]);
+					}
+					else
+					{
+						putLine("do");
+						boost::format fmt("local %s = ERM.%s(%s)");
+						fmt % name;
+						fmt % name;
+						fmt % params;
 
-				performBody(body, GenericReceiver(out, name));
+						putLine(fmt.str());
 
-				putLine("end");
+						performBody(body, GenericReceiver(out, name));
+
+						putLine("end");
+					}
+				}
+				else
+				{
+					//is it an error?
+					logMod->warn("ERM receiver '%s %s' w/o body", name, params);
+				}
+
+
 			}
 		}
 
@@ -1071,6 +1174,7 @@ namespace ERMConverter
 	void convertInstructions(std::ostream & out, ERMInterpreter * owner)
 	{
 		out << "local function instructions()" << std::endl;
+		out << "local e, x, y = {}, {}, {}" << std::endl;
 
 		Line lineConverter(&out);
 
@@ -1117,6 +1221,7 @@ namespace ERMConverter
 			std::string name = "FU"+p.first;
 
 			out << name << " = function(x)" << std::endl;
+			out << "local e, y = {}, {}" << std::endl;
 
 			LinePointer lp = p.second;
 

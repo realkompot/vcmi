@@ -4,7 +4,7 @@ ZVSE
 	!!VRv2778:Sx16%2;
 	!!IF&x16>3:M^Hello world number %X16! (1)^;
 	!!if&x16<=3:;
-		!!if&v2778==0:;
+		!!if&v2778=0:;
 			!!IF:M^Hello world number %X16! (2)^;
 		!!el:;
 			!!IF:M^Hello world number %X16! (3)^;

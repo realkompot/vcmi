@@ -791,7 +791,41 @@ void CGameState::init(const IMapService * mapService, StartInfo * si, bool allow
 
 void CGameState::updateEntity(Metatype metatype, int32_t index, const JsonNode & data)
 {
-	services->updateEntity(metatype, index, data);
+	switch(metatype)
+	{
+	case Metatype::ARTIFACT_INSTANCE:
+		logGlobal->error("Artifact instance update is not implemented");
+		break;
+	case Metatype::CREATURE_INSTANCE:
+		logGlobal->error("Creature instance update is not implemented");
+		break;
+	case Metatype::HERO_INSTANCE:
+		//index is hero type
+		if(index >= 0 && index < map->allHeroes.size())
+		{
+			CGHeroInstance * hero = map->allHeroes.at(index);
+			hero->updateFrom(data);
+		}
+		else
+		{
+			logGlobal->error("Update entity: hero index %s is out of range [%d,%d]", index, 0,  map->allHeroes.size());
+		}
+		break;
+	case Metatype::MAP_OBJECT_INSTANCE:
+		if(index >= 0 && index < map->objects.size())
+		{
+			CGObjectInstance * obj = getObjInstance(ObjectInstanceID(index));
+			obj->updateFrom(data);
+		}
+		else
+		{
+			logGlobal->error("Update entity: object index %s is out of range [%d,%d]", index, 0,  map->objects.size());
+		}
+		break;
+	default:
+		services->updateEntity(metatype, index, data);
+		break;
+	}
 }
 
 void CGameState::updateOnLoad(StartInfo * si)

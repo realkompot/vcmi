@@ -1390,6 +1390,11 @@ void CGHeroInstance::setHeroTypeName(const std::string & identifier)
 	}
 }
 
+void CGHeroInstance::updateFrom(const JsonNode & data)
+{
+	CGObjectInstance::updateFrom(data);
+}
+
 void CGHeroInstance::serializeCommonOptions(JsonSerializeFormat & handler)
 {
 	handler.serializeString("biography", biography);

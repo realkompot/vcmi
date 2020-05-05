@@ -210,9 +210,9 @@ HypotheticBattle::HypotheticBattle(const Environment * ENV, Subject realBattle)
 	eventBus.reset(new events::EventBus());
 
 	localEnvironment.reset(new HypotheticEnvironment(this, env));
-
-	pool.reset(new scripting::PoolImpl(localEnvironment.get()));
 	serverCallback.reset(new HypotheticServerCallback(this));
+
+	pool.reset(new scripting::PoolImpl(localEnvironment.get(), serverCallback.get()));
 }
 
 bool HypotheticBattle::unitHasAmmoCart(const battle::Unit * unit) const

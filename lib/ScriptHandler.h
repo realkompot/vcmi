@@ -38,6 +38,8 @@ public:
 		//todo: adventure effect, map object(unified with building), server query, client query(with gui), may be smth else
 	};
 
+	Implements implements;
+
 	std::string identifier;
 	std::string sourcePath;
 	std::string sourceText;
@@ -61,7 +63,6 @@ public:
 	void performRegistration(::Services * services) const;
 private:
 	const ScriptHandler * owner;
-	Implements implements;
 
 	void resolveHost();
 };
@@ -70,6 +71,7 @@ class DLL_LINKAGE PoolImpl : public Pool
 {
 public:
 	PoolImpl(const Environment * ENV);
+	PoolImpl(const Environment * ENV, ServerCallback * SRV);
 	std::shared_ptr<Context> getContext(const Script * script) override;
 
 	void serializeState(const bool saving, JsonNode & data) override;
@@ -79,11 +81,14 @@ private:
 	JsonNode state;
 
 	const Environment * env;
+	ServerCallback * srv;
 };
 
 class DLL_LINKAGE ScriptHandler : public ::IHandlerBase, public Service
 {
 public:
+	ScriptMap objects;
+
 	ScriptHandler();
 	virtual ~ScriptHandler();
 
@@ -98,6 +103,8 @@ public:
 	void loadObject(std::string scope, std::string name, const JsonNode & data, size_t index) override;
 
 	void performRegistration(Services * services) const override;
+
+	void run(std::shared_ptr<Pool> pool) const override;
 
 	template <typename Handler> void serialize(Handler & h, const int version)
 	{
@@ -118,8 +125,6 @@ protected:
 
 private:
 	friend class ScriptImpl;
-
-	ScriptMap objects;
 
 	void loadState(const JsonNode & state);
 	void saveState(JsonNode & state);

@@ -12,6 +12,7 @@
 #include "ScriptHandler.h"
 
 #include <vcmi/Services.h>
+#include <vcmi/Environment.h>
 
 #include "CGameInterface.h"
 #include "CScriptingModule.h"
@@ -124,7 +125,14 @@ void ScriptImpl::resolveHost()
 }
 
 PoolImpl::PoolImpl(const Environment * ENV)
-	: env(ENV)
+	: env(ENV),
+	srv(nullptr)
+{
+}
+
+PoolImpl::PoolImpl(const Environment * ENV, ServerCallback * SRV)
+	: env(ENV),
+	srv(SRV)
 {
 }
 
@@ -140,7 +148,10 @@ std::shared_ptr<Context> PoolImpl::getContext(const Script * script)
 		auto & key = script->getName();
 		const JsonNode & scriptState = state[key];
 
-		context->run(scriptState);
+		if(srv)
+			context->run(srv, scriptState);
+		else
+			context->run(scriptState);
 
 		return context;
 	}
@@ -233,6 +244,20 @@ void ScriptHandler::performRegistration(Services * services) const
 	{
 		auto script = keyValue.second;
 		script->performRegistration(services);
+	}
+}
+
+void ScriptHandler::run(std::shared_ptr<Pool> pool) const
+{
+	for(auto & keyValue : objects)
+	{
+		auto script = keyValue.second;
+
+		if(script->implements == ScriptImpl::Implements::ANYTHING)
+		{
+			auto context = pool->getContext(script.get());
+			//todo: consider explicit run for generic scripts
+		}
 	}
 }
 

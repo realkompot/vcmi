@@ -117,11 +117,6 @@ static BattleHex WallPartToHex(EWallPart::EWallPart part)
 
 using namespace SiegeStuffThatShouldBeMovedToHandlers;
 
-std::shared_ptr<scripting::Context> CBattleInfoCallback::getScriptingContext(const scripting::Script * script) const
-{
-	return getContextPool()->getContext(script);
-}
-
 ESpellCastProblem::ESpellCastProblem CBattleInfoCallback::battleCanCastSpell(const spells::Caster * caster, spells::Mode mode) const
 {
 	RETURN_IF_NOT_BATTLE(ESpellCastProblem::INVALID);

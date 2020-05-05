@@ -57,14 +57,6 @@ public:
 	virtual std::shared_ptr<Context> createContext(const Environment * env) const = 0;
 };
 
-class DLL_LINKAGE Service
-{
-public:
-	virtual ~Service() = default;
-
-	virtual void performRegistration(Services * services) const = 0;
-};
-
 class DLL_LINKAGE Pool
 {
 public:
@@ -74,5 +66,15 @@ public:
 
 	virtual std::shared_ptr<Context> getContext(const Script * script) = 0;
 };
+
+class DLL_LINKAGE Service
+{
+public:
+	virtual ~Service() = default;
+
+	virtual void performRegistration(Services * services) const = 0;
+	virtual void run(std::shared_ptr<Pool> pool) const = 0;
+};
+
 
 }

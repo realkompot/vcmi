@@ -346,6 +346,11 @@ bool CGObjectInstance::passableFor(PlayerColor color) const
 	return false;
 }
 
+void CGObjectInstance::updateFrom(const JsonNode & data)
+{
+
+}
+
 void CGObjectInstance::serializeJson(JsonSerializeFormat & handler)
 {
 	//only save here, loading is handled by map loader

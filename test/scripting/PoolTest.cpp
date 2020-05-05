@@ -12,6 +12,7 @@
 #include "../../lib/ScriptHandler.h"
 
 #include "../mock/mock_Environment.h"
+#include "../mock/mock_ServerCallback.h"
 #include "../mock/mock_scripting_Context.h"
 #include "../mock/mock_scripting_Script.h"
 
@@ -32,6 +33,7 @@ public:
 
 	StrictMock<ScriptMock> script;
 	std::shared_ptr<PoolImpl> subject;
+	StrictMock<ServerCallbackMock> server;
 
 	void setDefaultExpectations()
 	{

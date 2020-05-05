@@ -48,6 +48,7 @@
 #include "../lib/NetPacks.h"
 #include "CMessage.h"
 #include "../lib/CModHandler.h"
+#include "../lib/ScriptHandler.h"
 #include "../lib/CTownHandler.h"
 #include "../lib/CArtHandler.h"
 #include "../lib/GameConstants.h"
@@ -701,6 +702,28 @@ void processCommand(const std::string &message)
 			}
 		}
 
+		std::cout << "\rExtracting done :)\n";
+		std::cout << " Extracted files can be found in " << outPath << " directory\n";
+	}
+	else if(message=="get scripts")
+	{
+		std::cout << "Command accepted.\t";
+
+		const bfs::path outPath =
+			VCMIDirs::get().userCachePath() / "extracted" / "scripts";
+
+		bfs::create_directories(outPath);
+
+		for(auto & kv : VLC->scriptHandler->objects)
+		{
+			std::string name = kv.first;
+			boost::algorithm::replace_all(name,":","_");
+
+			const scripting::ScriptImpl * script = kv.second.get();
+			bfs::path filePath = outPath / (name + ".lua");
+			bfs::ofstream file(filePath);
+			file << script->getSource();
+		}
 		std::cout << "\rExtracting done :)\n";
 		std::cout << " Extracted files can be found in " << outPath << " directory\n";
 	}

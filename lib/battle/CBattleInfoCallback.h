@@ -72,8 +72,6 @@ public:
 		RANDOM_GENIE, RANDOM_AIMED
 	};
 
-	std::shared_ptr<scripting::Context> getScriptingContext(const scripting::Script * script) const;
-
 	boost::optional<int> battleIsFinished() const override; //return none if battle is ongoing; otherwise the victorious side (0/1) or 2 if it is a draw
 
 	std::vector<std::shared_ptr<const CObstacleInstance>> battleGetAllObstaclesOnPos(BattleHex tile, bool onlyBlocking = true) const override;
@@ -156,6 +154,4 @@ protected:
 	ReachabilityInfo getFlyingReachability(const ReachabilityInfo::Parameters & params) const;
 	ReachabilityInfo makeBFS(const AccessibilityInfo & accessibility, const ReachabilityInfo::Parameters & params) const;
 	std::set<BattleHex> getStoppers(BattlePerspective::BattlePerspective whichSidePerspective) const; //get hexes with stopping obstacles (quicksands)
-
-	virtual scripting::Pool * getContextPool() const = 0;
 };

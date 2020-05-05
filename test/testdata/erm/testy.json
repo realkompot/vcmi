@@ -6,7 +6,7 @@
 		"Q":{},
 		"v":{
 			"2777": 4,
-			"2778": 0
+			"2778": 1
 		},
 		"z":{
 			"10": "Composed hello "
@@ -20,7 +20,8 @@
 		"Hello world number 2! (2)",
 		"Hello world number 3! (3)",
 		"Hello world number 4! (1)",
-		"Composed hello %world%, v2777=4, v2778=0!"
+		"Hello world number 5! (1)",
+		"Composed hello %world%, v2777=4, v2778=1!"
 	]
 
 }
