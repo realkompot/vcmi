@@ -31,19 +31,13 @@ class LuaMethodWrapper <T, R(T:: *)()const, method>
 public:
 	static int invoke(lua_State * L)
 	{
-		using UDataType = const T *; //TODO: use 'traits'
-
-		static auto KEY = api::TypeRegistry::get()->getKey<UDataType>();
-		static auto functor = std::mem_fn(method);
-
 		LuaStack S(L);
+		const T * obj = nullptr;
 
-		void * raw = luaL_checkudata(L, 1, KEY);
-
-		if(!raw)
+		if(!S.tryGet(1,obj))
 			return S.retVoid();
 
-		auto obj = *(static_cast<UDataType *>(raw));
+		static auto functor = std::mem_fn(method);
 
 		S.clear();
 		S.push(functor(obj));
@@ -57,24 +51,14 @@ class LuaMethodWrapper <T, void(T:: *)()const, method>
 public:
 	static int invoke(lua_State * L)
 	{
-		using UDataType = const T *; //TODO: use 'traits'
-
-		static auto KEY = api::TypeRegistry::get()->getKey<UDataType>();
-		static auto functor = std::mem_fn(method);
-
 		LuaStack S(L);
+		const T * obj = nullptr;
 
-		void * raw = luaL_checkudata(L, 1, KEY);
-
-		if(!raw)
+		if(!S.tryGet(1,obj))
 			return S.retVoid();
 
-		lua_remove(L, 1);
-
-		auto obj = *(static_cast<UDataType *>(raw));
-
+		static auto functor = std::mem_fn(method);
 		functor(obj);
-
 		return S.retVoid();
 	}
 };
@@ -85,22 +69,19 @@ class LuaMethodWrapper <T, R(T:: *)(P1)const, method>
 public:
 	static int invoke(lua_State * L)
 	{
-		using UDataType = const T *;
-
-		static auto KEY = api::TypeRegistry::get()->getKey<UDataType>();
-		static auto functor = std::mem_fn(method);
-
 		LuaStack S(L);
+		const T * obj = nullptr;
 
-		void * raw = luaL_checkudata(L, 1, KEY);
-
-		if(!raw)
+		if(!S.tryGet(1,obj))
 			return S.retVoid();
 
-		auto obj = *(static_cast<UDataType *>(raw));
+		P1 p1;
+		if(!S.tryGet(2, p1))
+			return S.retVoid();
 
+		static auto functor = std::mem_fn(method);
 		S.clear();
-		S.push(functor(obj));
+		S.push(functor(obj, p1));
 		return 1;
 	}
 };
@@ -111,24 +92,18 @@ class LuaMethodWrapper <T, void(T:: *)(P1)const, method>
 public:
 	static int invoke(lua_State * L)
 	{
-		using UDataType = const T *;
-
-		static auto KEY = api::TypeRegistry::get()->getKey<UDataType>();
-		static auto functor = std::mem_fn(method);
-
 		LuaStack S(L);
+		const T * obj = nullptr;
 
-		void * raw = luaL_checkudata(L, 1, KEY);
-
-		if(!raw)
+		if(!S.tryGet(1,obj))
 			return S.retVoid();
 
-		lua_remove(L, 1);
+		P1 p1;
+		if(!S.tryGet(2, p1))
+			return S.retVoid();
 
-		auto obj = *(static_cast<UDataType *>(raw));
-
-		functor(obj);
-
+		static auto functor = std::mem_fn(method);
+		functor(obj, p1);
 		return S.retVoid();
 	}
 };

@@ -13,6 +13,7 @@
 				<Option object_output="obj/Debug/x86/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
+				<Option parameters="--gtest_filter=*TM_T*" />
 				<Compiler>
 					<Add option="-Og" />
 					<Add option="-Wextra" />
@@ -111,6 +112,7 @@
 		<Unit filename="erm/ERM_MA.cpp" />
 		<Unit filename="erm/ERM_MC.cpp" />
 		<Unit filename="erm/ERM_MF.cpp" />
+		<Unit filename="erm/ERM_TM_T.cpp" />
 		<Unit filename="erm/ERM_VR.cpp" />
 		<Unit filename="erm/ExamplesTest.cpp" />
 		<Unit filename="events/ApplyDamageTest.cpp" />

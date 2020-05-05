@@ -11,6 +11,8 @@
 
 #include "GameCb.h"
 
+#include "../LuaCallWrapper.h"
+
 namespace scripting
 {
 namespace api
@@ -25,7 +27,7 @@ const std::vector<GameCbProxy::RegType> GameCbProxy::REGISTER =
 
 const std::vector<GameCbProxy::CustomRegType> GameCbProxy::REGISTER_CUSTOM =
 {
-
+	{"getDate", LuaMethodWrapper<GameCb, int32_t(GameCb:: *)(Date::EDateType)const, &GameCb::getDate>::invoke, false},
 };
 
 }

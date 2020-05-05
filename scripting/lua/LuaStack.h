@@ -55,22 +55,35 @@ public:
 	}
 
 	template<typename T, typename std::enable_if< std::is_class<T>::value, int>::type = 0>
-	void push(const T * value)
-	{
-		pushObject<const T>(value);
-	}
-
-	template<typename T, typename std::enable_if< std::is_class<T>::value, int>::type = 0>
 	void push(T * value)
 	{
-		pushObject<T>(value);
+		using UData = T *;
+		static auto KEY = api::TypeRegistry::get()->getKey<UData>();
+
+		if(!value)
+		{
+			pushNil();
+			return;
+		}
+
+		void * raw = lua_newuserdata(L, sizeof(UData));
+		if(!raw)
+		{
+			pushNil();
+			return;
+		}
+
+		UData * ptr = static_cast<UData *>(raw);
+		*ptr = value;
+
+		luaL_getmetatable(L, KEY);
+		lua_setmetatable(L, -2);
 	}
 
 	template<typename T, typename std::enable_if< std::is_class<T>::value, int>::type = 0>
 	void push(std::shared_ptr<T> value)
 	{
 		using UData = std::shared_ptr<T>;
-
 		static auto KEY = api::TypeRegistry::get()->getKey<UData>();
 
 		if(!value)
@@ -97,7 +110,6 @@ public:
 	void push(std::unique_ptr<T> && value)
 	{
 		using UData = std::unique_ptr<T>;
-
 		static auto KEY = api::TypeRegistry::get()->getKey<UData>();
 
 		if(!value)
@@ -139,34 +151,48 @@ public:
 		}
 	}
 
+	template<typename T, typename std::enable_if< std::is_enum<T>::value, int>::type = 0>
+	bool tryGet(int position, T & value)
+	{
+		lua_Integer temp;
+		if(tryGetInteger(position, temp))
+		{
+			value = static_cast<T>(temp);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+
 	bool tryGet(int position, double & value);
 	bool tryGet(int position, std::string & value);
 
 	template<typename T, typename std::enable_if< std::is_class<T>::value, int>::type = 0>
 	bool tryGet(int position, T * & value)
 	{
-		static auto KEY = api::TypeRegistry::get()->getKey<T *>();
-
-		void * raw = luaL_checkudata(L, position, KEY);
-
-		if(!raw)
-			return false;
-
-		value = *(static_cast<T **>(raw));
-		return true;
+		return tryGetUData(position, value);
 	}
 
-	template<typename T>
+	template<typename T, typename std::enable_if< std::is_class<T>::value, int>::type = 0>
 	bool tryGet(int position, std::shared_ptr<T> & value)
 	{
-		static auto KEY = api::TypeRegistry::get()->getKey<std::shared_ptr<T>>();
+		return tryGetUData(position, value);
+	}
+
+	template<typename U>
+	bool tryGetUData(int position, U & value)
+	{
+		static auto KEY = api::TypeRegistry::get()->getKey<U>();
 
 		void * raw = luaL_checkudata(L, position, KEY);
 
 		if(!raw)
 			return false;
 
-		value = *(static_cast<std::shared_ptr<T> *>(raw));
+		value = *(static_cast<U *>(raw));
 		return true;
 	}
 
@@ -204,27 +230,6 @@ public:
 private:
 	lua_State * L;
 	int initialTop;
-
-	template<typename Object>
-	void pushObject(Object * value)
-	{
-		using UData = Object *;
-		static auto KEY = api::TypeRegistry::get()->getKey<UData>();
-
-		if(!value)
-		{
-			pushNil();
-			return;
-		}
-
-		void * raw = lua_newuserdata(L, sizeof(UData));
-
-		UData * ptr = static_cast<UData *>(raw);
-		*ptr = value;
-
-		luaL_getmetatable(L, KEY);
-		lua_setmetatable(L, -2);
-	}
 };
 
 }

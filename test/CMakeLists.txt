@@ -38,6 +38,7 @@ set(test_SRCS
 		erm/ERM_MA.cpp
 		erm/ERM_MC.cpp
 		erm/ERM_MF.cpp
+		erm/ERM_TM_T.cpp
 		erm/ERM_VR.cpp
 		erm/ERMPersistenceTest.cpp
 		erm/ExamplesTest.cpp

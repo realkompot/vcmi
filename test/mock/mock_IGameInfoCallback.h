@@ -15,6 +15,8 @@
 class IGameInfoCallbackMock : public IGameInfoCallback
 {
 public:
+	//various
+	MOCK_CONST_METHOD1(getDate, int(Date::EDateType));
 	//player
 	MOCK_CONST_METHOD0(getLocalPlayer, PlayerColor());
 

@@ -65,6 +65,7 @@ public:
 	void loadScriptFromFile(const std::string & path);
 	void loadScript(const JsonNode & scriptConfig);
 	void loadScript(ModulePtr module, const std::string & scriptSource);
+	void loadScript(ModulePtr module, const std::vector<std::string> & scriptSource);
 
 	JsonNode runClientServer(const JsonNode & scriptState = JsonNode());
 	JsonNode runServer(const JsonNode & scriptState = JsonNode());

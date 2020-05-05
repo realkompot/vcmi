@@ -3,23 +3,19 @@ local GameResumed = require("events.GameResumed")
 
 local trigger = TriggerBase:new()
 
-local sub
+function trigger:new(o)
+	o = TriggerBase.new(self, o)
 
-local afterGameResumed = function(event)
-	trigger:call(event)
-end
-
-function trigger:setId(id)
-	TriggerBase.setId(self, id)
-
-	local id1 = self.id[1]
+	local id1 = o.id[1]
 
 	if id1 == 0 or id1 == "0" then
-		sub = GameResumed.subscribeAfter(EVENT_BUS, afterGameResumed)
-		self:checkSub(sub, "GameResumed")
+		o.sub = GameResumed.subscribeAfter(EVENT_BUS, function(event)
+			o:call(event)
+		end)
 	else
-		error ("Identifier "..id1 .. " not supported by !?GM")
+		error ("Identifier "..tostring(id1) .. " not supported by !?GM")
 	end
+	return o
 end
 
 return trigger

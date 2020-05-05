@@ -1122,8 +1122,6 @@ namespace ERMConverter
 
 			++lp;
 
-			out << "local y = ERM.getY('" << name << "')" << std::endl;
-
 			for(; lp.isValid(); ++lp)
 			{
 				ERM::TLine curLine = owner->retrieveLine(lp);
@@ -1165,9 +1163,8 @@ namespace ERMConverter
 			out << "}," << std::endl;
 
 			out << "name = '" << trig.name << "'," << std::endl;
-			out << "fn = function ()" << std::endl;
+			out << "fn = function (e, y)" << std::endl;
 
-			out << "local y = ERM.getY('" << trig.name  << "')" << std::endl;
 			LinePointer lp = trigger.line;
 			++lp;
 

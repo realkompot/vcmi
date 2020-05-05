@@ -52,6 +52,13 @@ void ScriptFixture::loadScript(ModulePtr module, const std::string & scriptSourc
 	EXPECT_CALL(*pool, getContext(Eq(subject.get()))).WillRepeatedly(Return(context));
 }
 
+void ScriptFixture::loadScript(ModulePtr module, const std::vector<std::string> & scriptSource)
+{
+	std::string source = boost::algorithm::join(scriptSource, "\n");
+
+	loadScript(module, source);
+}
+
 void ScriptFixture::setUp()
 {
 	pool = std::make_shared<PoolMock>();

@@ -1,5 +1,8 @@
 DATA = DATA or {}
 local DATA = DATA
+local GAME = GAME
+
+local TurnStarted = require("events.TurnStarted")
 
 DATA.ERM = DATA.ERM or {}
 
@@ -9,9 +12,29 @@ DATA.ERM.Q = DATA.ERM.Q or {}
 DATA.ERM.v = DATA.ERM.v or {}
 DATA.ERM.z = DATA.ERM.z or {}
 
+local INT_MT =
+{
+	__index = function(t, key)
+		return rawget(t, key) or 0
+	end
+}
+
+
+local STR_MT =
+{
+	__index = function(t, key)
+		return rawget(t, key) or ""
+	end
+}
+
+setmetatable(DATA.ERM.Q, INT_MT)
+setmetatable(DATA.ERM.v, INT_MT)
+setmetatable(DATA.ERM.z, STR_MT)
+
 local ERM =
 {
-	M = {}
+	M = {},
+	subs = {}
 }
 
 local ERM_MT =
@@ -42,12 +65,11 @@ function ERM:addMacro(name, varName, varIndex)
 	rawset(self.MDATA, name, {name = varName, index = varIndex})
 end
 
-local y = {}
-
-ERM.getY = function(key)
-	y[key] = y[key] or {}
-	return y[key]
+local function dailyUpdate(event)
+	ERM.Q.c = GAME:getDate(0)
 end
+
+table.insert(ERM.subs, TurnStarted.subscribeAfter(EVENT_BUS, dailyUpdate))
 
 local Receivers = {}
 
@@ -92,18 +114,14 @@ PO
 QW
 SS
 TL
-TM
 TR
 UN
 
 ]]
 
-ERM.BM = createReceiverLoader("BM")
-ERM.BU = createReceiverLoader("BU")
-ERM.IF = createReceiverLoader("IF")
-ERM.MA = createReceiverLoader("MA")
-ERM.MF = createReceiverLoader("MF")
-ERM.VR = createReceiverLoader("VR")
+local supportedReceivers = {"BM", "BU", "IF", "MA", "MF", "TM", "VR"}
+
+for _, v in pairs(supportedReceivers) do ERM[v] = createReceiverLoader(v) end
 
 local Triggers = {}
 
@@ -113,9 +131,8 @@ local function createTriggerLoader(name)
 		local t = Triggers[id_key]
 
 		if not t then
-			t = require("core:erm."..name.."_T")
-			t.ERM = ERM
-			t:setId(id_list)
+			local p = require("core:erm."..name.."_T")
+			t = p:new{ERM=ERM, id=id_list}
 			Triggers[id_key] = t
 		end
 
@@ -144,16 +161,16 @@ end
 !?MW
 !?OB (!$OB)
 !?SN client only?
+!?SN (ERA)
 !?TH client only?
 !?TL client only? depends on time limit feature
-!?TM
 ]]
+
+local supportedTriggers = {"PI", "GM", "MF", "TM"}
 
 local TriggerLoaders = {}
 
-TriggerLoaders.PI = createTriggerLoader("PI")
-TriggerLoaders.GM = createTriggerLoader("GM")
-TriggerLoaders.MF = createTriggerLoader("MF")
+for _, v in pairs(supportedTriggers) do TriggerLoaders[v] = createTriggerLoader(v) end
 
 function ERM:addTrigger(t)
 	local name = t.name

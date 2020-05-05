@@ -46,7 +46,7 @@ public:
 	//TODO: all other public methods of CGameInfoCallback
 
 //	//various
-//	int getDate(Date::EDateType mode=Date::DAY)const; //mode=0 - total days in game, mode=1 - day of week, mode=2 - current week, mode=3 - current month
+	virtual int getDate(Date::EDateType mode=Date::DAY) const = 0; //mode=0 - total days in game, mode=1 - day of week, mode=2 - current week, mode=3 - current month
 //	const StartInfo * getStartInfo(bool beforeRandomization = false)const;
 //	bool isAllowed(int32_t type, int32_t id); //type: 0 - spell; 1- artifact; 2 - secondary skill
 
@@ -138,7 +138,7 @@ protected:
 
 public:
 	//various
-	virtual int getDate(Date::EDateType mode=Date::DAY)const; //mode=0 - total days in game, mode=1 - day of week, mode=2 - current week, mode=3 - current month
+	int getDate(Date::EDateType mode=Date::DAY)const override; //mode=0 - total days in game, mode=1 - day of week, mode=2 - current week, mode=3 - current month
 	virtual const StartInfo * getStartInfo(bool beforeRandomization = false)const;
 	virtual bool isAllowed(int32_t type, int32_t id); //type: 0 - spell; 1- artifact; 2 - secondary skill
 

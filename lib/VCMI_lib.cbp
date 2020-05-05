@@ -175,6 +175,8 @@
 		<Unit filename="../scripts/lib/erm/MF_T.lua" />
 		<Unit filename="../scripts/lib/erm/PI_T.lua" />
 		<Unit filename="../scripts/lib/erm/ReceiverBase.lua" />
+		<Unit filename="../scripts/lib/erm/TM.lua" />
+		<Unit filename="../scripts/lib/erm/TM_T.lua" />
 		<Unit filename="../scripts/lib/erm/TriggerBase.lua" />
 		<Unit filename="../scripts/lib/erm/VR.lua" />
 		<Unit filename="../scripts/lib/verm.lua" />
