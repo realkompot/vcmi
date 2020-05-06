@@ -20,6 +20,7 @@ set(lib_SRCS
 		api/netpacks/BattleUnitsChanged.cpp
 		api/netpacks/EntitiesChanged.cpp
 		api/netpacks/InfoWindow.cpp
+		api/netpacks/SetResources.cpp
 
 		api/Artifact.cpp
 		api/BattleCb.cpp
@@ -28,12 +29,14 @@ set(lib_SRCS
 		api/Faction.cpp
 		api/GameCb.cpp
 		api/HeroClass.cpp
+		api/HeroInstance.cpp
 		api/HeroType.cpp
 		api/Registry.cpp
 		api/ServerCb.cpp
 		api/Services.cpp
 		api/Skill.cpp
 		api/Spell.cpp
+		api/StackInstance.cpp
 )
 
 add_library(vcmiLua SHARED ${lib_SRCS})

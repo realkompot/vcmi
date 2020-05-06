@@ -2,7 +2,7 @@ local ReceiverBase = require("core:erm.ReceiverBase")
 
 local HE = ReceiverBase:new()
 
-function HE:new(p1, p2, p3)
+function HE:new(ERM, p1, p2, p3)
 	assert(p1 ~= nil, "!!HE requires hero identifier")
 
 	if p2 and p3 then
@@ -10,19 +10,102 @@ function HE:new(p1, p2, p3)
 		error("!!HEx/y/l: form is not implemented")
 	else
 		-- assume p1 is identifier
-		return ReceiverBase.new(self, {id=p1})
+		local hero = GAME:getHeroWithSubid(p1)
+
+		if not hero then
+			logError("Hero with id ".. tostring(p1) .. " not found")
+		end
+
+		return ReceiverBase.new(self,
+		{
+			id=p1,
+			ERM=ERM,
+			hero=hero
+		})
 	end
 end
 
 function HE:A(x, ...)
+	--artifacts
 	logError("!!HE:A is not implemented")
 end
-function HE:B(x, ...)
+
+HE:p1Dispatcher("B")
+
+function HE:B0(x, ...)
+	--name
 	logError("!!HE:B is not implemented")
 end
-function HE:C(x, ...)
-	logError("!!HE:A is not implemented")
+
+function HE:B1(x, ...)
+	--bio
+	logError("!!HE:B is not implemented")
 end
+
+function HE:B2(x, ...)
+	--class
+	logError("!!HE:B is not implemented")
+end
+
+function HE:B3(x, _)
+	--get default bio
+	logError("!!HE:B is not implemented")
+end
+
+function HE:C(x, ...)
+
+	local argc = select("#", ...)
+
+	if argc == 14 then
+		return self:C14(x, ...)
+	elseif argc == 4 then
+		local N = select(1, ...)
+
+		return nil, self["C"..tostring(N)](self, x, select(2, ...))
+	else
+		logError("!!HE:C extended form is not implemented")
+	end
+end
+
+function HE:C0(x, slot, typ, count)
+	--change creatures by slot
+
+	if typ~=nil or count ~=nil then
+		logError("!!HE:C0 set is not implemented")
+		return
+	end
+
+	local stack = self.hero:getStack(slot)
+
+	if not stack then
+		return nil, -1, 0
+	else
+		return nil, stack:getType():getIndex(), stack:getCount()
+	end
+
+end
+
+function HE:C1(x, ...)
+	--change creatures by type
+end
+
+function HE:C05(x, ...)
+	--change creatures by slot adv
+end
+
+function HE:C15(x, ...)
+	--change creatures by type adv
+end
+
+
+function HE:C2(x, ...)
+	--add creatures
+end
+
+function HE:C14(x, ...)
+	-- change creatures with Query
+end
+
 function HE:D(x, ...)
 	logError("!!HE:D not implemented")
 end
@@ -53,9 +136,19 @@ end
 function HE:N(x, ...)
 	logError("!!HE:N is not implemented")
 end
-function HE:O(x, ...)
-	logError("!!HE:O is not implemented")
+
+function HE:O(x, owner)
+	if owner~=nil then
+		logError("!!HE:O set is not implemented")
+		return
+	else
+		if not self.hero then
+			return 255
+		end
+		return self.hero:getOwner()
+	end
 end
+
 function HE:P(x, ...)
 	logError("!!HE:P is not implemented")
 end

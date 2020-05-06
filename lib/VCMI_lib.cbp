@@ -115,7 +115,7 @@
 			<Add option="-DBOOST_ALL_DYN_LINK" />
 			<Add option="-DBOOST_SYSTEM_NO_DEPRECATED" />
 			<Add option="-DBOOST_UUID_RANDOM_PROVIDER_FORCE_WINCRYPT" />
-			<Add option="-D_WIN32_WINNT=0x0501" />
+			<Add option="-D_WIN32_WINNT=0x0600" />
 			<Add option="-D_WIN32" />
 			<Add option="-DVCMI_NO_EXTRA_VERSION" />
 			<Add directory="." />
@@ -142,10 +142,12 @@
 		<Unit filename="../include/vcmi/HeroType.h" />
 		<Unit filename="../include/vcmi/HeroTypeService.h" />
 		<Unit filename="../include/vcmi/Metatype.h" />
+		<Unit filename="../include/vcmi/Player.h" />
 		<Unit filename="../include/vcmi/ServerCallback.h" />
 		<Unit filename="../include/vcmi/Services.h" />
 		<Unit filename="../include/vcmi/Skill.h" />
 		<Unit filename="../include/vcmi/SkillService.h" />
+		<Unit filename="../include/vcmi/Team.h" />
 		<Unit filename="../include/vcmi/events/AdventureEvents.h" />
 		<Unit filename="../include/vcmi/events/ApplyDamage.h" />
 		<Unit filename="../include/vcmi/events/BattleEvents.h" />
@@ -165,9 +167,13 @@
 		<Unit filename="../include/vstd/ContainerUtils.h" />
 		<Unit filename="../include/vstd/RNG.h" />
 		<Unit filename="../include/vstd/StringUtils.h" />
+		<Unit filename="../scripts/lib/Metatype.lua" />
 		<Unit filename="../scripts/lib/erm.lua" />
 		<Unit filename="../scripts/lib/erm/BM.lua" />
 		<Unit filename="../scripts/lib/erm/BU.lua" />
+		<Unit filename="../scripts/lib/erm/DO.lua" />
+		<Unit filename="../scripts/lib/erm/FU.lua" />
+		<Unit filename="../scripts/lib/erm/FU_T.lua" />
 		<Unit filename="../scripts/lib/erm/GM_T.lua" />
 		<Unit filename="../scripts/lib/erm/HE.lua" />
 		<Unit filename="../scripts/lib/erm/IF.lua" />
@@ -214,6 +220,7 @@
 		<Unit filename="CModHandler.h" />
 		<Unit filename="CPathfinder.cpp" />
 		<Unit filename="CPathfinder.h" />
+		<Unit filename="CPlayerState.cpp" />
 		<Unit filename="CPlayerState.h" />
 		<Unit filename="CRandomGenerator.cpp" />
 		<Unit filename="CRandomGenerator.h" />
@@ -509,9 +516,6 @@
 		<Unit filename="vcmi_endian.h" />
 		<Unit filename="vstd/StringUtils.cpp" />
 		<Extensions>
-			<code_completion />
-			<envvars />
-			<debugger />
 			<lib_finder disable_auto="1" />
 		</Extensions>
 	</Project>

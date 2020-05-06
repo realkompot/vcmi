@@ -144,6 +144,7 @@ set(lib_SRCS
 		CHeroHandler.cpp
 		CModHandler.cpp
 		CPathfinder.cpp
+		CPlayerState.cpp
 		CRandomGenerator.cpp
 		CScriptingModule.cpp
 		CSkillHandler.cpp

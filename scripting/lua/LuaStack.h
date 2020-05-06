@@ -11,11 +11,27 @@
 #pragma once
 
 #include "api/Registry.h"
+#include "../../lib/GameConstants.h"
 
 class JsonNode;
 
 namespace scripting
 {
+
+namespace detail
+{
+	template<typename T>
+	struct IsRegularClass
+	{
+		static constexpr auto value = std::is_class<T>::value && !std::is_base_of<IdTag, T>::value;
+	};
+
+	template<typename T>
+	struct IsIdClass
+	{
+		static constexpr auto value = std::is_class<T>::value && std::is_base_of<IdTag, T>::value;
+	};
+}
 
 class LuaStack
 {
@@ -54,7 +70,13 @@ public:
 		pushInteger(static_cast<lua_Integer>(value));
 	}
 
-	template<typename T, typename std::enable_if< std::is_class<T>::value, int>::type = 0>
+	template<typename T, typename std::enable_if< detail::IsIdClass<T>::value, int>::type = 0>
+	void push(const T & value)
+	{
+		pushInteger(static_cast<lua_Integer>(value.toEnum()));
+	}
+
+	template<typename T, typename std::enable_if<detail::IsRegularClass<T>::value, int>::type = 0>
 	void push(T * value)
 	{
 		using UData = T *;
@@ -80,7 +102,7 @@ public:
 		lua_setmetatable(L, -2);
 	}
 
-	template<typename T, typename std::enable_if< std::is_class<T>::value, int>::type = 0>
+	template<typename T, typename std::enable_if<detail::IsRegularClass<T>::value, int>::type = 0>
 	void push(std::shared_ptr<T> value)
 	{
 		using UData = std::shared_ptr<T>;
@@ -106,7 +128,7 @@ public:
 		lua_setmetatable(L, -2);
 	}
 
-	template<typename T, typename std::enable_if< std::is_class<T>::value, int>::type = 0>
+	template<typename T, typename std::enable_if<detail::IsRegularClass<T>::value, int>::type = 0>
 	void push(std::unique_ptr<T> && value)
 	{
 		using UData = std::unique_ptr<T>;
@@ -151,6 +173,21 @@ public:
 		}
 	}
 
+	template<typename T, typename std::enable_if<detail::IsIdClass<T>::value, int>::type = 0>
+	bool tryGet(int position, T & value)
+	{
+		lua_Integer temp;
+		if(tryGetInteger(position, temp))
+		{
+			value = T(temp);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
 	template<typename T, typename std::enable_if< std::is_enum<T>::value, int>::type = 0>
 	bool tryGet(int position, T & value)
 	{
@@ -170,13 +207,13 @@ public:
 	bool tryGet(int position, double & value);
 	bool tryGet(int position, std::string & value);
 
-	template<typename T, typename std::enable_if< std::is_class<T>::value, int>::type = 0>
+	template<typename T, typename std::enable_if<detail::IsRegularClass<T>::value, int>::type = 0>
 	bool tryGet(int position, T * & value)
 	{
 		return tryGetUData(position, value);
 	}
 
-	template<typename T, typename std::enable_if< std::is_class<T>::value, int>::type = 0>
+	template<typename T, typename std::enable_if<detail::IsRegularClass<T>::value, int>::type = 0>
 	bool tryGet(int position, std::shared_ptr<T> & value)
 	{
 		return tryGetUData(position, value);
@@ -200,7 +237,12 @@ public:
 
 	int retNil();
 	int retVoid();
-	int retPushed();
+
+	STRONG_INLINE
+	int retPushed()
+	{
+		return lua_gettop(L);
+	}
 
 	inline bool isFunction(int position)
 	{
@@ -210,6 +252,13 @@ public:
 	inline bool isNumber(int position)
 	{
 		return lua_isnumber(L, position);
+	}
+
+	static int quickRetBool(lua_State * L, bool value)
+	{
+		lua_settop(L, 0);
+		lua_pushboolean(L, value);
+		return 1;
 	}
 
 	template<typename T>

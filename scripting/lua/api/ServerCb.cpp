@@ -14,7 +14,7 @@
 #include "Registry.h"
 
 #include "../LuaStack.h"
-
+#include "../../../lib/NetPacks.h"
 namespace scripting
 {
 namespace api

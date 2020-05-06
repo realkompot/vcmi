@@ -28,6 +28,25 @@ protected:
 	}
 };
 
+TEST_F(ERM_FU, P)
+{
+	std::stringstream source;
+	source << "VERM" << std::endl;
+	source << "!?PI;" << std::endl;
+	source << "!!FU1:P;" << std::endl;
+	source << "!?FU1;" << std::endl;
+	source << "!!VRv1:S30;" << std::endl;
+
+	JsonNode actualState = runScript(VLC->scriptHandler->erm, source.str());
+
+	SCOPED_TRACE("\n" + subject->code);
+
+	const JsonNode & v = actualState["ERM"]["v"];
+
+	EXPECT_EQ(v["1"], JsonUtils::floatNode(30)) << actualState.toJson(true);
+}
+
+
 TEST_F(ERM_FU, E)
 {
 	std::stringstream source;

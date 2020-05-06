@@ -122,14 +122,14 @@ namespace ERM
 		TStringConstant string;
 	};
 
-	typedef boost::variant<TVarConcatString, TStringConstant, TCurriedString, TSemiCompare, TMacroDef, TIexp, TVarpExp, boost::spirit::unused_type> TBodyOptionItem;
+	typedef boost::variant<TVarConcatString, TStringConstant, TCurriedString, TSemiCompare, TMacroDef, TIexp, TVarpExp> TBodyOptionItem;
 
 	typedef std::vector<TBodyOptionItem> TNormalBodyOptionList;
 
 	struct TNormalBodyOption
 	{
 		char optionCode;
-		TNormalBodyOptionList params;
+		boost::optional<TNormalBodyOptionList> params;
 	};
 	typedef boost::variant<TVRLogic, TVRArithmetic, TNormalBodyOption> TBodyOption;
 
@@ -272,8 +272,6 @@ public:
 private:
 	void repairEncoding(char * str, int len) const; //removes nonstandard ascii characters from string
 	void repairEncoding(std::string & str) const; //removes nonstandard ascii characters from string
-	enum ELineType{COMMAND_FULL, COMMENT, UNFINISHED, END_OF};
-	int countHatsBeforeSemicolon(const std::string & line) const;
 	ERM::TLine parseLine(const std::string & line, int realLineNo);
 	ERM::TLine parseLine(const std::string & line);
 };

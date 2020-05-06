@@ -81,7 +81,6 @@ const char * TypeRegistry::getKeyForType(const std::type_info & type)
 	{
 		return iter->second.c_str();
 	}
-
 }
 
 

@@ -6,11 +6,13 @@ local TurnStarted = require("events.TurnStarted")
 
 DATA.ERM = DATA.ERM or {}
 
-DATA.ERM.F = DATA.ERM.F or {}
-DATA.ERM.MDATA = DATA.ERM.MDATA or {}
-DATA.ERM.Q = DATA.ERM.Q or {}
-DATA.ERM.v = DATA.ERM.v or {}
-DATA.ERM.z = DATA.ERM.z or {}
+local ERM_D = DATA.ERM
+
+ERM_D.F = ERM_D.F or {}
+ERM_D.MDATA = ERM_D.MDATA or {}
+ERM_D.Q = ERM_D.Q or {}
+ERM_D.v = ERM_D.v or {}
+ERM_D.z = ERM_D.z or {}
 
 local INT_MT =
 {
@@ -18,7 +20,6 @@ local INT_MT =
 		return rawget(t, key) or 0
 	end
 }
-
 
 local STR_MT =
 {
@@ -33,6 +34,7 @@ setmetatable(DATA.ERM.z, STR_MT)
 
 local ERM =
 {
+	w = {},
 	M = {},
 	subs = {}
 }
@@ -65,6 +67,43 @@ function ERM:addMacro(name, varName, varIndex)
 	rawset(self.MDATA, name, {name = varName, index = varIndex})
 end
 
+function ERM:getZVar(p1)
+	if type(p1) == "number" then
+		return self.z[tostring(p1)]
+	else
+		return p1
+	end
+end
+
+local HERO_VAR_MT =
+{
+	__index = function(t, key)
+		ERM_D.WDATA = ERM_D.WDATA or {}
+		local wKey = ERM_D.wKey
+
+		if not wKey then
+			error("Hero variable set is not selected")
+		end
+
+		ERM_D.WDATA[wKey] = ERM_D.WDATA[wKey] or {}
+
+		return ERM_D.WDATA[wKey][key] or 0
+	end,
+	__newindex = function(t, key, value)
+		ERM_D.WDATA = ERM_D.WDATA or {}
+		local wKey = ERM_D.wKey
+
+		if not wKey then
+			error("Hero variable set is not selected")
+		end
+
+		ERM_D.WDATA[wKey] = ERM_D.WDATA[wKey] or {}
+		ERM_D.WDATA[wKey][key] = value
+	end
+}
+
+setmetatable(ERM.w, HERO_VAR_MT)
+
 local function dailyUpdate(event)
 	ERM.Q.c = GAME:getDate(0)
 end
@@ -76,9 +115,7 @@ local Receivers = {}
 local function createReceiverLoader(name)
 	local loader = function(...)
 		Receivers[name] = Receivers[name] or require("core:erm."..name)
-		local o = Receivers[name]:new(...)
-		o.ERM = ERM
-		return o
+		return Receivers[name]:new(ERM, ...)
 	end
 	return loader
 end
@@ -116,7 +153,7 @@ TR
 
 ]]
 
-local supportedReceivers = {"BM", "BU", "HE", "IF", "MA", "MF", "OW", "TM", "UN", "VR"}
+local supportedReceivers = {"BM", "BU", "DO", "FU", "HE", "IF", "DO", "MA", "MF", "OW", "TM", "UN", "VR"}
 
 for _, v in pairs(supportedReceivers) do ERM[v] = createReceiverLoader(v) end
 
@@ -163,28 +200,48 @@ end
 !?TL client only? depends on time limit feature
 ]]
 
-local supportedTriggers = {"PI", "GM", "MF", "TM"}
+local supportedTriggers = {"PI", "FU", "GM", "MF", "TM"}
 
 local TriggerLoaders = {}
 
 for _, v in pairs(supportedTriggers) do TriggerLoaders[v] = createTriggerLoader(v) end
+
+local function makeIdKey(name, id_list)
+	if id_list == nil then
+		id_list = {}
+	elseif type(id_list) ~= "table" then
+		id_list = {id_list}
+	end
+
+	return name .. table.concat(id_list, "|")
+end
 
 function ERM:addTrigger(t)
 	local name = t.name
 	local fn = t.fn
 	local id_list = t.id or {}
 
-	local id_key = name .. table.concat(id_list, "|")
+	local id_key = makeIdKey(name, id_list)
 
 	local trigger = TriggerLoaders[name](id_list, id_key)
 
 	trigger:addHandler(fn)
 end
 
+function ERM:callFunction(id, x)
+	local id_key = makeIdKey("FU", id)
+
+	local t = Triggers[id_key]
+	if t then
+		t:call({}, x)
+	end
+end
+
 function ERM:callInstructions(cb)
 	if not DATA.ERM.instructionsCalled then
 		cb()
-		local pi = Triggers["PI"]
+		local id_key = makeIdKey("PI")
+		local pi = Triggers[id_key]
 		if pi then
 			pi:call()
 		end

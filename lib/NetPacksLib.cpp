@@ -33,14 +33,14 @@ DLL_LINKAGE void SetResources::applyGs(CGameState *gs)
 {
 	assert(player < PlayerColor::PLAYER_LIMIT);
 	if(abs)
-		gs->getPlayer(player)->resources = res;
+		gs->getPlayerState(player)->resources = res;
 	else
-		gs->getPlayer(player)->resources += res;
+		gs->getPlayerState(player)->resources += res;
 
 	//just ensure that player resources are not negative
 	//server is responsible to check if player can afford deal
 	//but events on server side are allowed to take more than player have
-	gs->getPlayer(player)->resources.positive();
+	gs->getPlayerState(player)->resources.positive();
 }
 
 DLL_LINKAGE void SetPrimSkill::applyGs(CGameState *gs)
@@ -206,7 +206,7 @@ DLL_LINKAGE void FoWChange::applyGs(CGameState *gs)
 
 DLL_LINKAGE void SetAvailableHeroes::applyGs(CGameState *gs)
 {
-	PlayerState *p = gs->getPlayer(player);
+	PlayerState *p = gs->getPlayerState(player);
 	p->availableHeroes.clear();
 
 	for (int i = 0; i < GameConstants::AVAILABLE_HEROES_PER_PLAYER; i++)
@@ -227,7 +227,7 @@ DLL_LINKAGE void GiveBonus::applyGs(CGameState *gs)
 		cbsn = gs->getHero(ObjectInstanceID(id));
 		break;
 	case PLAYER:
-		cbsn = gs->getPlayer(PlayerColor(id));
+		cbsn = gs->getPlayerState(PlayerColor(id));
 		break;
 	case TOWN:
 		cbsn = gs->getTown(ObjectInstanceID(id));
@@ -277,14 +277,14 @@ DLL_LINKAGE void ChangeObjectVisitors::applyGs(CGameState *gs)
 	switch (mode) {
 		case VISITOR_ADD:
 			gs->getHero(hero)->visitedObjects.insert(object);
-			gs->getPlayer(gs->getHero(hero)->tempOwner)->visitedObjects.insert(object);
+			gs->getPlayerState(gs->getHero(hero)->tempOwner)->visitedObjects.insert(object);
 			break;
 		case VISITOR_ADD_TEAM:
 			{
 				TeamState *ts = gs->getPlayerTeam(gs->getHero(hero)->tempOwner);
 				for (auto & color : ts->players)
 				{
-					gs->getPlayer(color)->visitedObjects.insert(object);
+					gs->getPlayerState(color)->visitedObjects.insert(object);
 				}
 			}
 			break;
@@ -311,7 +311,7 @@ DLL_LINKAGE void ChangeObjectVisitors::applyGs(CGameState *gs)
 
 DLL_LINKAGE void PlayerEndsGame::applyGs(CGameState *gs)
 {
-	PlayerState *p = gs->getPlayer(player);
+	PlayerState *p = gs->getPlayerState(player);
 	if(victoryLossCheckResult.victory())
 	{
 		p->status = EPlayerStatus::WINNER;
@@ -357,7 +357,7 @@ DLL_LINKAGE void RemoveBonus::applyGs(CGameState *gs)
 	if (who == HERO)
 		node = gs->getHero(ObjectInstanceID(whoID));
 	else
-		node = gs->getPlayer(PlayerColor(whoID));
+		node = gs->getPlayerState(PlayerColor(whoID));
 
 	BonusList &bonuses = node->getExportedBonusList();
 
@@ -384,7 +384,7 @@ DLL_LINKAGE void RemoveObject::applyGs(CGameState *gs)
 	if(obj->ID==Obj::HERO)
 	{
 		CGHeroInstance *h = static_cast<CGHeroInstance*>(obj);
-		PlayerState *p = gs->getPlayer(h->tempOwner);
+		PlayerState *p = gs->getPlayerState(h->tempOwner);
 		gs->map->heroesOnMap -= h;
 		p->heroes -= h;
 		h->detachFrom(h->whereShouldBeAttached(gs));
@@ -620,7 +620,7 @@ DLL_LINKAGE void HeroRecruited::applyGs(CGameState *gs)
 	assert(vstd::contains(gs->hpool.heroesPool, hid));
 	CGHeroInstance *h = gs->hpool.heroesPool[hid];
 	CGTownInstance *t = gs->getTown(tid);
-	PlayerState *p = gs->getPlayer(player);
+	PlayerState *p = gs->getPlayerState(player);
 
 	assert(!h->boat);
 
@@ -662,14 +662,14 @@ DLL_LINKAGE void GiveHero::applyGs(CGameState *gs)
 
 	//bonus system
 	h->detachFrom(&gs->globalEffects);
-	h->attachTo(gs->getPlayer(player));
+	h->attachTo(gs->getPlayerState(player));
 	h->appearance = VLC->objtypeh->getHandlerFor(Obj::HERO, h->type->heroClass->getIndex())->getTemplates().front();
 
 	gs->map->removeBlockVisTiles(h,true);
 	h->setOwner(player);
 	h->movement =  h->maxMovePoints(true);
 	gs->map->heroesOnMap.push_back(h);
-	gs->getPlayer(h->getOwner())->heroes.push_back(h);
+	gs->getPlayerState(h->getOwner())->heroes.push_back(h);
 	gs->map->addBlockVisTiles(h);
 	h->inTownGarrison = false;
 }
@@ -1166,7 +1166,7 @@ DLL_LINKAGE void NewTurn::applyGs(CGameState *gs)
 	for(auto i = res.cbegin(); i != res.cend(); i++)
 	{
 		assert(i->first < PlayerColor::PLAYER_LIMIT);
-		gs->getPlayer(i->first)->resources = i->second;
+		gs->getPlayerState(i->first)->resources = i->second;
 	}
 
 	for(auto creatureSet : cres) //set available creatures in towns
@@ -1215,10 +1215,10 @@ DLL_LINKAGE void SetObjectProperty::applyGs(CGameState *gs)
 		{
 			CGTownInstance *t = static_cast<CGTownInstance*>(obj);
 			if(t->tempOwner < PlayerColor::PLAYER_LIMIT)
-				gs->getPlayer(t->tempOwner)->towns -= t;
+				gs->getPlayerState(t->tempOwner)->towns -= t;
 			if(val < PlayerColor::PLAYER_LIMIT_I)
 			{
-				PlayerState * p = gs->getPlayer(PlayerColor(val));
+				PlayerState * p = gs->getPlayerState(PlayerColor(val));
 				p->towns.push_back(t);
 
 				//reset counter before NewTurn to avoid no town message if game loaded at turn when one already captured
@@ -1635,8 +1635,8 @@ DLL_LINKAGE void PlayerCheated::applyGs(CGameState *gs)
 	if(!player.isValidPlayer())
 		return;
 
-	gs->getPlayer(player)->enteredLosingCheatCode = losingCheatCode;
-	gs->getPlayer(player)->enteredWinningCheatCode = winningCheatCode;
+	gs->getPlayerState(player)->enteredLosingCheatCode = losingCheatCode;
+	gs->getPlayerState(player)->enteredWinningCheatCode = winningCheatCode;
 }
 
 DLL_LINKAGE void YourTurn::applyGs(CGameState *gs)

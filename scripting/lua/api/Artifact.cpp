@@ -15,6 +15,7 @@
 
 #include "../LuaStack.h"
 #include "../LuaCallWrapper.h"
+#include "../../../lib/HeroBonus.h"
 
 namespace scripting
 {
@@ -23,23 +24,23 @@ namespace api
 
 VCMI_REGISTER_CORE_SCRIPT_API(ArtifactProxy, "Artifact");
 
-const std::vector<ArtifactProxy::RegType> ArtifactProxy::REGISTER =
-{
-	{"getIconIndex", LuaCallWrapper<const Entity>::createFunctor(&Entity::getIconIndex)},
-	{"getIndex", LuaCallWrapper<const Entity>::createFunctor(&Entity::getIndex)},
-	{"getJsonKey", LuaCallWrapper<const Entity>::createFunctor(&Entity::getJsonKey)},
-	{"getName", LuaCallWrapper<const Entity>::createFunctor(&Entity::getName)},
-	{"accessBonuses", LuaCallWrapper<const EntityWithBonuses<ArtifactID>>::createFunctor(&EntityWithBonuses<ArtifactID>::accessBonuses)},
-	{"getDescription", LuaCallWrapper<const Artifact>::createFunctor(&Artifact::getDescription)},
-	{"getEventText", LuaCallWrapper<const Artifact>::createFunctor(&Artifact::getEventText)},
-	{"isBig", LuaCallWrapper<const Artifact>::createFunctor(&Artifact::isBig)},
-	{"isTradable", LuaCallWrapper<const Artifact>::createFunctor(&Artifact::isTradable)},
-	{"getPrice", LuaCallWrapper<const Artifact>::createFunctor(&Artifact::getPrice)},
-};
+const std::vector<ArtifactProxy::RegType> ArtifactProxy::REGISTER = {};
 
 const std::vector<ArtifactProxy::CustomRegType> ArtifactProxy::REGISTER_CUSTOM =
 {
-//	{"getPrice", LuaMethodWrapper<Artifact, uint32_t, &Artifact::getPrice>::invoke, false},
+	{"getIconIndex", LuaMethodWrapper<Artifact, int32_t(Entity:: *)()const, &Entity::getIconIndex>::invoke, false},
+	{"getIndex", LuaMethodWrapper<Artifact, int32_t(Entity:: *)()const, &Entity::getIndex>::invoke, false},
+	{"getJsonKey", LuaMethodWrapper<Artifact, const std::string &(Entity:: *)()const, &Entity::getJsonKey>::invoke, false},
+	{"getName", LuaMethodWrapper<Artifact, const std::string &(Entity:: *)()const, &Entity::getName>::invoke, false},
+
+	{"getId", LuaMethodWrapper<Artifact, ArtifactID(EntityT<ArtifactID>::*)()const, &EntityT<ArtifactID>::getId>::invoke, false},
+	{"accessBonuses", LuaMethodWrapper<Artifact, const IBonusBearer *(EntityWithBonuses<ArtifactID>:: *)()const, &EntityWithBonuses<ArtifactID>::accessBonuses>::invoke, false},
+
+	{"getDescription", LuaMethodWrapper<Artifact, const std::string &(Artifact:: *)()const, &Artifact::getDescription>::invoke, false},
+	{"getEventText", LuaMethodWrapper<Artifact, const std::string &(Artifact:: *)()const, &Artifact::getEventText>::invoke, false},
+	{"isBig", LuaMethodWrapper<Artifact, bool(Artifact:: *)()const, &Artifact::isBig>::invoke, false},
+	{"isTradable", LuaMethodWrapper<Artifact, bool(Artifact:: *)()const, &Artifact::isTradable>::invoke, false},
+	{"getPrice", LuaMethodWrapper<Artifact, uint32_t(Artifact:: *)()const, &Artifact::getPrice>::invoke, false},
 };
 
 

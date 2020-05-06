@@ -2,18 +2,17 @@ local logError = logError
 local bit = bit
 
 local ReceiverBase = require("core:erm.ReceiverBase")
+local Metatype = require ("core:Metatype")
 local EntitiesChanged = require("netpacks.EntitiesChanged")
 local Bonus = require("Bonus")
 local BonusBearer = require("BonusBearer")
 local BonusList = require("BonusList")
 
-
-local CREATURE = 3
-
 local RES = {[0] = "wood", [1] = "mercury", [2] = "ore", [3] = "sulfur", [4] = "crystal", [5] = "gems", [6] = "gold", [7] = "mithril"}
 
 local SERVICES = SERVICES
 local creatures = SERVICES:creatures()
+local SERVER = SERVER
 
 local getCreatureByIndex = creatures.getByIndex
 local function creatureByIndex(index)
@@ -22,13 +21,15 @@ end
 
 local function sendChanges(creatureIndex, data)
 	local pack = EntitiesChanged.new()
-
-	pack:update(CREATURE, creatureIndex, data)
-
+	pack:update(Metatype.CREATURE, creatureIndex, data)
 	SERVER:commitPackage(pack)
 end
 
 local MA = ReceiverBase:new()
+
+function MA:new(ERM)
+	return ReceiverBase.new(self,{ERM = ERM})
+end
 
 local function checkCreatureIndex(creatureIndex)
 	assert(creatureIndex ~= nil, "!!MA requires creature identifier")
@@ -42,7 +43,7 @@ end
 
 local function createModifier(scope, jsonKey, getterKey)
 
-	local f = function (Self, x, creatureIndex, p1)
+	local f = function (self, x, creatureIndex, p1)
 		local creatureIndex = checkCreatureIndex(creatureIndex)
 
 		if p1 == nil then

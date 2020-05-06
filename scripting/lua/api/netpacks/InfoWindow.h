@@ -28,6 +28,7 @@ public:
 
 	static int addReplacement(lua_State * L, std::shared_ptr<InfoWindow> object);
 	static int addText(lua_State * L, std::shared_ptr<InfoWindow> object);
+	static int setPlayer(lua_State * L, std::shared_ptr<InfoWindow> object);
 };
 
 }

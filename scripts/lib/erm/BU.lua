@@ -4,6 +4,10 @@ local ReceiverBase = require("core:erm.ReceiverBase")
 
 local BU = ReceiverBase:new()
 
+function BU:new(ERM)
+	return ReceiverBase.new(self,{ERM = ERM})
+end
+
 local BattleLogMessage = require("netpacks.BattleLogMessage")
 local BattleUnitsChanged = require("netpacks.BattleUnitsChanged")
 

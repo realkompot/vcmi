@@ -152,24 +152,37 @@ TEST_F(ERM_BU_G, Get)
 {
 	std::stringstream source;
 	source << "VERM" << std::endl;
-	source << "!?FU1;" << std::endl;
+	source << "!?PI;" << std::endl;
 	source << "!!BU:G?v1;" << std::endl;
-	source << "!?FU2;" << std::endl;
-	source << "!!BU:G?v2;" << std::endl;
-
-	loadScript(VLC->scriptHandler->erm, source.str());
-	runClientServer();
 
 	EXPECT_CALL(binfoMock, battleGetBattlefieldType()).WillOnce(Return(BFieldType::SNOW_TREES));
-	context->callGlobal("FU1", JsonNode());
 
-	EXPECT_CALL(binfoMock, battleGetBattlefieldType()).WillOnce(Return(BFieldType::EVIL_FOG));
-	context->callGlobal("FU2", JsonNode());
+
+	loadScript(VLC->scriptHandler->erm, source.str());
+	runServer();
 
 	JsonNode actualState = context->saveState();
 
 	EXPECT_EQ(actualState["ERM"]["v"]["1"], JsonUtils::floatNode(-1)) << actualState.toJson(true);
-	EXPECT_EQ(actualState["ERM"]["v"]["2"], JsonUtils::floatNode(4)) << actualState.toJson(true);
+
+}
+
+TEST_F(ERM_BU_G, Get2)
+{
+	std::stringstream source;
+	source << "VERM" << std::endl;
+	source << "!?PI;" << std::endl;
+	source << "!!BU:G?v1;" << std::endl;
+
+	EXPECT_CALL(binfoMock, battleGetBattlefieldType()).WillOnce(Return(BFieldType::EVIL_FOG));
+
+	loadScript(VLC->scriptHandler->erm, source.str());
+	runServer();
+
+	JsonNode actualState = context->saveState();
+
+
+	EXPECT_EQ(actualState["ERM"]["v"]["1"], JsonUtils::floatNode(4)) << actualState.toJson(true);
 }
 
 //TODO: ERM_BU_G Set
@@ -183,11 +196,8 @@ TEST_F(ERM_BU_M, Simple)
 {
 	std::stringstream source;
 	source << "VERM" << std::endl;
-	source << "!?FU1;" << std::endl;
+	source << "!?PI;" << std::endl;
 	source << "!!BU:M^Test 1^;" << std::endl;
-
-	loadScript(VLC->scriptHandler->erm, source.str());
-	runClientServer();
 
 	auto checkApply = [&](BattleLogMessage * pack)
 	{
@@ -201,7 +211,8 @@ TEST_F(ERM_BU_M, Simple)
 
 	EXPECT_CALL(serverMock, apply(Matcher<BattleLogMessage *>(_))).WillOnce(Invoke(checkApply));
 
-	context->callGlobal(&serverMock, "FU1", JsonNode());
+	loadScript(VLC->scriptHandler->erm, source.str());
+	runServer();
 }
 
 class ERM_BU_O : public ERM_BU
@@ -225,11 +236,10 @@ TEST_F(ERM_BU_S, Summon)
 
 	std::stringstream source;
 	source << "VERM" << std::endl;
-	source << "!?FU1;" << std::endl;
+	source << "!?PI;" << std::endl;
 	source << "!!BU:S^core:angel^/10/59/0/-1/0;" << std::endl;
 
 	loadScript(VLC->scriptHandler->erm, source.str());
-	runClientServer();
 
 	auto checkApply = [&](BattleUnitsChanged * pack)
 	{
@@ -257,7 +267,7 @@ TEST_F(ERM_BU_S, Summon)
 	EXPECT_CALL(binfoMock, battleNextUnitId()).WillOnce(Return(UNIT_ID));
 	EXPECT_CALL(serverMock, apply(Matcher<BattleUnitsChanged *>(_))).WillOnce(Invoke(checkApply));
 
-	context->callGlobal(&serverMock, "FU1", JsonNode());
+	runServer();
 }
 
 class ERM_BU_T : public ERM_BU

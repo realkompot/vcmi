@@ -111,7 +111,7 @@ public:
 class DLL_LINKAGE CNonConstInfoCallback : public CPrivilegedInfoCallback
 {
 public:
-	PlayerState *getPlayer(PlayerColor color, bool verbose = true);
+	PlayerState * getPlayerState(PlayerColor color, bool verbose = true);
 	TeamState *getTeam(TeamID teamID);//get team by team ID
 	TeamState *getPlayerTeam(PlayerColor color);// get team by player color
 	CGHeroInstance *getHero(ObjectInstanceID objid);

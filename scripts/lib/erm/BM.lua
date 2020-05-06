@@ -6,14 +6,9 @@ local ReceiverBase = require("core:erm.ReceiverBase")
 
 local BM = ReceiverBase:new()
 
-function BM:new(unitId)
-	local o = ReceiverBase.new(self)
-
+function BM:new(ERM, unitId)
 	assert(unitId ~= nil, "!!BM requires unit identifier")
-
-	o.unitId = unitId
-
-	return o
+	return ReceiverBase.new(self,{ERM = ERM, unitId = unitId})
 end
 
 function BM:A(x, p1)

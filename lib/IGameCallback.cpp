@@ -221,9 +221,9 @@ TeamState *CNonConstInfoCallback::getPlayerTeam(PlayerColor color)
 	return const_cast<TeamState*>(CGameInfoCallback::getPlayerTeam(color));
 }
 
-PlayerState * CNonConstInfoCallback::getPlayer( PlayerColor color, bool verbose )
+PlayerState * CNonConstInfoCallback::getPlayerState( PlayerColor color, bool verbose )
 {
-	return const_cast<PlayerState*>(CGameInfoCallback::getPlayer(color, verbose));
+	return const_cast<PlayerState*>(CGameInfoCallback::getPlayerState(color, verbose));
 }
 
 CArtifactInstance * CNonConstInfoCallback::getArtInstance( ArtifactInstanceID aid )

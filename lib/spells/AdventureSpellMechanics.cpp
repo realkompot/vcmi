@@ -544,7 +544,7 @@ std::vector <const CGTownInstance*> TownPortalMechanics::getPossibleTowns(SpellC
 
 	for(const auto & color : team->players)
 	{
-		for(auto currTown : env->getCb()->getPlayer(color)->towns)
+		for(auto currTown : env->getCb()->getPlayerState(color)->towns)
 		{
 			ret.push_back(currTown.get());
 		}

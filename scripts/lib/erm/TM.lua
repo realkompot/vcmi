@@ -26,12 +26,13 @@ local function getTimer(timerId)
 	return timers[timerId]
 end
 
-function TM:new(timerId)
+function TM:new(ERM, timerId)
 	assert(timerId ~= nil, "!!TM requires timer identifier")
 	return ReceiverBase.new(self,
 	{
 		timerId = timerId,
-		timer = getTimer(timerId)
+		timer = getTimer(timerId),
+		ERM = ERM
 	})
 end
 

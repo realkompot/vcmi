@@ -35,7 +35,7 @@ PlayerColor CGameInfoCallback::getOwner(ObjectInstanceID heroID) const
 
 int CGameInfoCallback::getResource(PlayerColor Player, Res::ERes which) const
 {
-	const PlayerState *p = getPlayer(Player);
+	const PlayerState *p = getPlayerState(Player);
 	ERROR_RET_VAL_IF(!p, "No player info!", -1);
 	ERROR_RET_VAL_IF(p->resources.size() <= which || which < 0, "No such resource!", -1);
 	return p->resources[which];
@@ -46,7 +46,7 @@ const PlayerSettings * CGameInfoCallback::getPlayerSettings(PlayerColor color) c
 	return &gs->scenarioOps->getIthPlayersSettings(color);
 }
 
-bool CGameInfoCallback::isAllowed(int32_t type, int32_t id)
+bool CGameInfoCallback::isAllowed(int32_t type, int32_t id) const
 {
 	switch(type)
 	{
@@ -61,7 +61,12 @@ bool CGameInfoCallback::isAllowed(int32_t type, int32_t id)
 	}
 }
 
-const PlayerState * CGameInfoCallback::getPlayer(PlayerColor color, bool verbose) const
+const Player * CGameInfoCallback::getPlayer(PlayerColor color) const
+{
+	return getPlayerState(color, false);
+}
+
+const PlayerState * CGameInfoCallback::getPlayerState(PlayerColor color, bool verbose) const
 {
 	//funtion written from scratch since it's accessed A LOT by AI
 
@@ -551,7 +556,7 @@ EBuildingState::EBuildingState CGameInfoCallback::canBuildStructure( const CGTow
 
 	if(ID == BuildingID::CAPITOL)
 	{
-		const PlayerState *ps = getPlayer(t->tempOwner, false);
+		const PlayerState *ps = getPlayerState(t->tempOwner, false);
 		if(ps)
 		{
 			for(const CGTownInstance *town : ps->towns)
@@ -583,7 +588,7 @@ EBuildingState::EBuildingState CGameInfoCallback::canBuildStructure( const CGTow
 		return EBuildingState::CANT_BUILD_TODAY; //building limit
 
 	//checking resources
-	if(!building->resources.canBeAfforded(getPlayer(t->tempOwner)->resources))
+	if(!building->resources.canBeAfforded(getPlayerState(t->tempOwner)->resources))
 		return EBuildingState::NO_RESOURCES; //lack of res
 
 	return EBuildingState::ALLOWED;
@@ -601,7 +606,7 @@ bool CGameInfoCallback::hasAccess(boost::optional<PlayerColor> playerId) const
 
 EPlayerStatus::EStatus CGameInfoCallback::getPlayerStatus(PlayerColor player, bool verbose) const
 {
-	const PlayerState *ps = gs->getPlayer(player, verbose);
+	const PlayerState *ps = gs->getPlayerState(player, verbose);
 	ERROR_VERBOSE_OR_NOT_RET_VAL_IF(!ps, verbose, "No such player!", EPlayerStatus::WRONG);
 
 	return ps->status;
@@ -650,7 +655,7 @@ bool CGameInfoCallback::canGetFullInfo(const CGObjectInstance *obj) const
 int CGameInfoCallback::getHeroCount( PlayerColor player, bool includeGarrisoned ) const
 {
 	int ret = 0;
-	const PlayerState *p = gs->getPlayer(player);
+	const PlayerState *p = gs->getPlayerState(player);
 	ERROR_RET_VAL_IF(!p, "No such player!", -1);
 
 	if(includeGarrisoned)
@@ -789,7 +794,7 @@ std::vector < const CGDwelling * > CPlayerSpecificInfoCallback::getMyDwellings()
 {
 	ASSERT_IF_CALLED_WITH_PLAYER
 	std::vector < const CGDwelling * > ret;
-	for(CGDwelling * dw : gs->getPlayer(*player)->dwellings)
+	for(CGDwelling * dw : gs->getPlayerState(*player)->dwellings)
 	{
 		ret.push_back(dw);
 	}
@@ -799,7 +804,7 @@ std::vector < const CGDwelling * > CPlayerSpecificInfoCallback::getMyDwellings()
 std::vector <QuestInfo> CPlayerSpecificInfoCallback::getMyQuests() const
 {
 	std::vector <QuestInfo> ret;
-	for (auto quest : gs->getPlayer(*player)->quests)
+	for (auto quest : gs->getPlayerState(*player)->quests)
 	{
 		ret.push_back (quest);
 	}
@@ -816,7 +821,7 @@ int CPlayerSpecificInfoCallback::howManyHeroes(bool includeGarrisoned) const
 const CGHeroInstance* CPlayerSpecificInfoCallback::getHeroBySerial(int serialId, bool includeGarrisoned) const
 {
 	ASSERT_IF_CALLED_WITH_PLAYER
-	const PlayerState *p = getPlayer(*player);
+	const PlayerState *p = getPlayerState(*player);
 	ERROR_RET_VAL_IF(!p, "No player info", nullptr);
 
 	if (!includeGarrisoned)
@@ -832,7 +837,7 @@ const CGHeroInstance* CPlayerSpecificInfoCallback::getHeroBySerial(int serialId,
 const CGTownInstance* CPlayerSpecificInfoCallback::getTownBySerial(int serialId) const
 {
 	ASSERT_IF_CALLED_WITH_PLAYER
-	const PlayerState *p = getPlayer(*player);
+	const PlayerState *p = getPlayerState(*player);
 	ERROR_RET_VAL_IF(!p, "No player info", nullptr);
 	ERROR_RET_VAL_IF(serialId < 0 || serialId >= p->towns.size(), "No player info", nullptr);
 	return p->towns[serialId];
@@ -893,13 +898,14 @@ const TeamState * CGameInfoCallback::getPlayerTeam( PlayerColor color ) const
 	}
 }
 
-const CGHeroInstance* CGameInfoCallback::getHeroWithSubid( int subid ) const
+const CGHeroInstance * CGameInfoCallback::getHeroWithSubid( int subid ) const
 {
-	for(const CGHeroInstance *h : gs->map->heroesOnMap)
-		if(h->subID == subid)
-			return h;
+	if(subid<0)
+		return nullptr;
+	if(subid>= gs->map->allHeroes.size())
+		return nullptr;
 
-	return nullptr;
+	return gs->map->allHeroes.at(subid).get();
 }
 
 PlayerColor CGameInfoCallback::getLocalPlayer() const

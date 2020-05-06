@@ -123,7 +123,7 @@ void CArmedInstance::armyChanged()
 CBonusSystemNode * CArmedInstance::whereShouldBeAttached(CGameState *gs)
 {
 	if(tempOwner < PlayerColor::PLAYER_LIMIT)
-		return gs->getPlayer(tempOwner);
+		return gs->getPlayerState(tempOwner);
 	else
 		return &gs->globalEffects;
 }

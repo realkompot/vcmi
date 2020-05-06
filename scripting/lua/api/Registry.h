@@ -88,12 +88,9 @@ class TypeRegistry : public boost::noncopyable
 {
 public:
 	template<typename T>
-	const char * getKey(const T * t = nullptr)
+	const char * getKey()
 	{
-		if(t)
-			return getKeyForType(typeid(*t));
-		else
-			return getKeyForType(typeid(T));
+		return getKeyForType(typeid(T));
 	}
 
 	static TypeRegistry * get();

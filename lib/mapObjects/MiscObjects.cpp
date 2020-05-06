@@ -70,14 +70,14 @@ void CTeamVisited::setPropertyDer(ui8 what, ui32 val)
 
 bool CTeamVisited::wasVisited(PlayerColor player) const
 {
-	return wasVisited(cb->getPlayer(player)->team);
+	return wasVisited(cb->getPlayerState(player)->team);
 }
 
 bool CTeamVisited::wasVisited(TeamID team) const
 {
 	for(auto i : players)
 	{
-		if(cb->getPlayer(i)->team == team)
+		if(cb->getPlayerState(i)->team == team)
 			return true;
 	}
 	return false;

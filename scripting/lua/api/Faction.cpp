@@ -23,18 +23,15 @@ namespace api
 
 VCMI_REGISTER_CORE_SCRIPT_API(FactionProxy, "Faction");
 
-const std::vector<FactionProxy::RegType> FactionProxy::REGISTER =
-{
-	{"getIconIndex", LuaCallWrapper<const Entity>::createFunctor(&Entity::getIconIndex)},
-	{"getIndex", LuaCallWrapper<const Entity>::createFunctor(&Entity::getIndex)},
-	{"getJsonKey", LuaCallWrapper<const Entity>::createFunctor(&Entity::getJsonKey)},
-	{"getName", LuaCallWrapper<const Entity>::createFunctor(&Entity::getName)},
-	{"hasTown", LuaCallWrapper<const Faction>::createFunctor(&Faction::hasTown)},
-};
+const std::vector<FactionProxy::RegType> FactionProxy::REGISTER = {};
 
 const std::vector<FactionProxy::CustomRegType> FactionProxy::REGISTER_CUSTOM =
 {
-
+	{"getIconIndex", LuaMethodWrapper<Faction, int32_t(Entity:: *)()const, &Entity::getIconIndex>::invoke, false},
+	{"getIndex", LuaMethodWrapper<Faction, int32_t(Entity:: *)()const, &Entity::getIndex>::invoke, false},
+	{"getJsonKey", LuaMethodWrapper<Faction, const std::string &(Entity:: *)()const, &Entity::getJsonKey>::invoke, false},
+	{"getName", LuaMethodWrapper<Faction, const std::string &(Entity:: *)()const, &Entity::getName>::invoke, false},
+	{"hasTown", LuaMethodWrapper<Faction, bool(Faction:: *)()const, &Faction::hasTown>::invoke, false},
 };
 
 }

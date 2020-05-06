@@ -893,7 +893,7 @@ void processCommand(const std::string &message)
 	{
 		YourTurn yt;
 		yt.player = player;
-		yt.daysWithoutCastle = CSH->client->getPlayer(player)->daysWithoutCastle;
+		yt.daysWithoutCastle = CSH->client->getPlayerState(player)->daysWithoutCastle;
 		yt.applyCl(CSH->client);
 	};
 

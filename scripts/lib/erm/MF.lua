@@ -4,6 +4,10 @@ local ReceiverBase = require("core:erm.ReceiverBase")
 
 local MF = ReceiverBase:new()
 
+function MF:new(ERM)
+	return ReceiverBase.new(self,{ERM = ERM})
+end
+
 function MF:D(x)
 	return self.ERM.activeEvent:getInitalDamage()
 end

@@ -199,7 +199,7 @@ void CGuiHandler::handleEvents()
 		// This prevents freezes when every motion event takes longer to handle than interval at which
 		// the events arrive (like dragging on the minimap in world view, with redraw at every event)
 		// so that the events would start piling up faster than they can be processed.
-		if ((ev.type == SDL_MOUSEMOTION) && !events.empty() && (events.front().type == SDL_MOUSEMOTION))
+		if ((ev.type == SDL_MOUSEMOTION) && !SDLEventsQueue.empty() && (SDLEventsQueue.front().type == SDL_MOUSEMOTION))
 			continue;
 
 		handleCurrentEvent();

@@ -877,6 +877,17 @@ CStackBasicDescriptor::CStackBasicDescriptor(const CCreature *c, TQuantity Count
 {
 }
 
+const Creature * CStackBasicDescriptor::getType() const
+{
+	return type;
+}
+
+TQuantity CStackBasicDescriptor::getCount() const
+{
+	return count;
+}
+
+
 void CStackBasicDescriptor::setType(const CCreature * c)
 {
 	type = c;

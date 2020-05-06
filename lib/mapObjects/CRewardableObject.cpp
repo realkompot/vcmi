@@ -41,7 +41,7 @@ bool CRewardLimiter::heroAllowed(const CGHeroInstance * hero) const
 			return false;
 	}
 
-	if(!IObjectInterface::cb->getPlayer(hero->tempOwner)->resources.canAfford(resources))
+	if(!IObjectInterface::cb->getPlayerState(hero->tempOwner)->resources.canAfford(resources))
 		return false;
 
 	if(minLevel > hero->level)
@@ -326,11 +326,11 @@ bool CRewardableObject::wasVisited(PlayerColor player) const
 		case VISIT_BONUS:
 			return false;
 		case VISIT_ONCE:
-			return vstd::contains(cb->getPlayer(player)->visitedObjects, ObjectInstanceID(id));
+			return vstd::contains(cb->getPlayerState(player)->visitedObjects, ObjectInstanceID(id));
 		case VISIT_HERO:
 			return false;
 		case VISIT_PLAYER:
-			return vstd::contains(cb->getPlayer(player)->visitedObjects, ObjectInstanceID(id));
+			return vstd::contains(cb->getPlayerState(player)->visitedObjects, ObjectInstanceID(id));
 		default:
 			return false;
 	}

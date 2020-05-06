@@ -12,6 +12,14 @@
 
 #include "Services.h"
 
+#include <vcmi/Artifact.h>
+#include <vcmi/Creature.h>
+#include <vcmi/Faction.h>
+#include <vcmi/HeroClass.h>
+#include <vcmi/HeroType.h>
+#include <vcmi/Skill.h>
+#include <vcmi/spells/Spell.h>
+
 #include "Registry.h"
 
 #include "../LuaStack.h"

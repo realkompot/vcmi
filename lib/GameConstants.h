@@ -31,6 +31,9 @@ class CSkill;
 class CGameInfoCallback;
 class CNonConstInfoCallback;
 
+struct IdTag
+{};
+
 namespace GameConstants
 {
 	DLL_LINKAGE extern const std::string VCMI_VERSION;
@@ -167,7 +170,7 @@ explicit CLASS_NAME(si32 id)								\
 {}
 
 template < typename Derived, typename NumericType>
-class BaseForID
+class BaseForID : public IdTag
 {
 protected:
 	NumericType num;

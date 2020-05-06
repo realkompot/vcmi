@@ -11,7 +11,11 @@
 
 #include "GameCb.h"
 
+#include <vcmi/Player.h>
+
 #include "../LuaCallWrapper.h"
+
+#include "../../../lib/mapObjects/CGHeroInstance.h"
 
 namespace scripting
 {
@@ -20,14 +24,16 @@ namespace api
 
 VCMI_REGISTER_CORE_SCRIPT_API(GameCbProxy, "Game");
 
-const std::vector<GameCbProxy::RegType> GameCbProxy::REGISTER =
-{
-
-};
+const std::vector<GameCbProxy::RegType> GameCbProxy::REGISTER = {};
 
 const std::vector<GameCbProxy::CustomRegType> GameCbProxy::REGISTER_CUSTOM =
 {
 	{"getDate", LuaMethodWrapper<GameCb, int32_t(GameCb:: *)(Date::EDateType)const, &GameCb::getDate>::invoke, false},
+	{"isAllowed", LuaMethodWrapper<GameCb, bool(GameCb:: *)(int32_t, int32_t)const, &GameCb::isAllowed>::invoke, false},
+	{"getCurrentPlayer", LuaMethodWrapper<GameCb, PlayerColor(GameCb:: *)()const, &GameCb::getLocalPlayer>::invoke, false},
+	{"getPlayer", LuaMethodWrapper<GameCb, const Player * (GameCb:: *)(PlayerColor)const, &GameCb::getPlayer>::invoke, false},
+
+	{"getHeroWithSubid", LuaMethodWrapper<GameCb, const CGHeroInstance *(GameCb:: *)(int)const, &GameCb::getHeroWithSubid>::invoke, false},
 };
 
 }

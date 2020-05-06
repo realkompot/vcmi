@@ -38,6 +38,10 @@ const std::vector<InfoWindowProxy::RegType> InfoWindowProxy::REGISTER =
 		&InfoWindowProxy::addText
 	},
 	{
+		"setPlayer",
+		&InfoWindowProxy::setPlayer
+	},
+	{
 		"toNetpackLight",
 		&PackForClientProxy<InfoWindowProxy>::toNetpackLight
 	},
@@ -105,6 +109,17 @@ int InfoWindowProxy::addText(lua_State * L, std::shared_ptr<InfoWindow> object)
 
 	lua_settop(L, 0);
 	return 0;
+}
+
+int InfoWindowProxy::setPlayer(lua_State * L, std::shared_ptr<InfoWindow> object)
+{
+	LuaStack S(L);
+	PlayerColor value;
+
+	if(S.tryGet(1, value))
+		object->player = value;
+
+	return S.retVoid();
 }
 
 

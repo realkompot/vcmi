@@ -12,6 +12,8 @@
 #include "int3.h"
 #include "ResourceSet.h" // for Res::ERes
 #include "battle/CCallbackBase.h"
+class Player;
+class Team;
 
 struct InfoWindow;
 struct PlayerSettings;
@@ -48,11 +50,11 @@ public:
 //	//various
 	virtual int getDate(Date::EDateType mode=Date::DAY) const = 0; //mode=0 - total days in game, mode=1 - day of week, mode=2 - current week, mode=3 - current month
 //	const StartInfo * getStartInfo(bool beforeRandomization = false)const;
-//	bool isAllowed(int32_t type, int32_t id); //type: 0 - spell; 1- artifact; 2 - secondary skill
+	virtual bool isAllowed(int32_t type, int32_t id) const = 0; //type: 0 - spell; 1- artifact; 2 - secondary skill
 
 	//player
-//	const PlayerState * getPlayer(PlayerColor color, bool verbose = true) const;
-//	int getResource(PlayerColor Player, Res::ERes which) const;
+	virtual const Player * getPlayer(PlayerColor color) const = 0;
+//	virtual int getResource(PlayerColor Player, Res::ERes which) const = 0;
 //	bool isVisible(int3 pos) const;
 //	PlayerRelations::PlayerRelations getPlayerRelations(PlayerColor color1, PlayerColor color2) const;
 //	void getThievesGuildInfo(SThievesGuildInfo & thi, const CGObjectInstance * obj); //get thieves' guild info obtainable while visiting given object
@@ -140,10 +142,11 @@ public:
 	//various
 	int getDate(Date::EDateType mode=Date::DAY)const override; //mode=0 - total days in game, mode=1 - day of week, mode=2 - current week, mode=3 - current month
 	virtual const StartInfo * getStartInfo(bool beforeRandomization = false)const;
-	virtual bool isAllowed(int32_t type, int32_t id); //type: 0 - spell; 1- artifact; 2 - secondary skill
+	bool isAllowed(int32_t type, int32_t id) const override; //type: 0 - spell; 1- artifact; 2 - secondary skill
 
 	//player
-	virtual const PlayerState * getPlayer(PlayerColor color, bool verbose = true) const;
+	const Player * getPlayer(PlayerColor color) const override;
+	virtual const PlayerState * getPlayerState(PlayerColor color, bool verbose = true) const;
 	virtual int getResource(PlayerColor Player, Res::ERes which) const;
 	virtual bool isVisible(int3 pos) const;
 	virtual PlayerRelations::PlayerRelations getPlayerRelations(PlayerColor color1, PlayerColor color2) const;

@@ -2,9 +2,9 @@ local ReceiverBase = require("core:erm.ReceiverBase")
 
 local VR = ReceiverBase:new()
 
-function VR:new(v)
+function VR:new(ERM, v)
 	assert(v ~= nil, "!!VR requires variable identifier")
-	return ReceiverBase.new(self, {v=v})
+	return ReceiverBase.new(self, {v=v, ERM=ERM})
 end
 
 local match = string.match

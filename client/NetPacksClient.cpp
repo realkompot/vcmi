@@ -290,7 +290,7 @@ void GiveBonus::applyCl(CClient *cl)
 		break;
 	case PLAYER:
 		{
-			const PlayerState *p = GS(cl)->getPlayer(PlayerColor(id));
+			const PlayerState *p = GS(cl)->getPlayerState(PlayerColor(id));
 			callInterfaceIfPresent(cl, PlayerColor(id), &IGameEventsReceiver::playerBonusChanged, *p->getBonusList().back(), true);
 		}
 		break;
@@ -334,7 +334,7 @@ void RemoveBonus::applyCl(CClient *cl)
 		break;
 	case PLAYER:
 		{
-			//const PlayerState *p = GS(cl)->getPlayer(id);
+			//const PlayerState *p = GS(cl)->getPlayerState(id);
 			callInterfaceIfPresent(cl, PlayerColor(id), &IGameEventsReceiver::playerBonusChanged, bonus, false);
 		}
 		break;
@@ -353,7 +353,7 @@ void RemoveObject::applyFirstCl(CClient *cl)
 	{
 		//below line contains little cheat for AI so it will be aware of deletion of enemy heroes that moved or got re-covered by FoW
 		//TODO: loose requirements as next AI related crashes appear, for example another player collects object that got re-covered by FoW, unsure if AI code workarounds this
-		if(GS(cl)->isVisible(o, i->first) || (!cl->getPlayer(i->first)->human && o->ID == Obj::HERO && o->tempOwner != i->first))
+		if(GS(cl)->isVisible(o, i->first) || (!cl->getPlayerState(i->first)->human && o->ID == Obj::HERO && o->tempOwner != i->first))
 			i->second->objectRemoved(o);
 	}
 }
@@ -370,7 +370,7 @@ void TryMoveHero::applyFirstCl(CClient *cl)
 	//check if playerint will have the knowledge about movement - if not, directly update maphandler
 	for(auto i=cl->playerint.begin(); i!=cl->playerint.end(); i++)
 	{
-		auto ps = GS(cl)->getPlayer(i->first);
+		auto ps = GS(cl)->getPlayerState(i->first);
 		if(ps && (GS(cl)->isVisible(start - int3(1, 0, 0), i->first) || GS(cl)->isVisible(end - int3(1, 0, 0), i->first)))
 		{
 			if(ps->human)
@@ -781,7 +781,7 @@ void PlayerMessageClient::applyCl(CClient *cl)
 	if(player.isSpectator())
 		str << "Spectator: " << text;
 	else
-		str << cl->getPlayer(player)->nodeName() <<": " << text;
+		str << cl->getPlayerState(player)->nodeName() <<": " << text;
 	if(LOCPLINT)
 		LOCPLINT->cingconsole->print(str.str());
 }

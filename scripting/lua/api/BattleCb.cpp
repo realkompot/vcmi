@@ -15,6 +15,7 @@
 #include "../LuaCallWrapper.h"
 
 #include "../../../lib/GameConstants.h"
+#include "../../../lib/battle/Unit.h"
 
 namespace scripting
 {

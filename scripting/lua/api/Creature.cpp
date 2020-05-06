@@ -15,6 +15,7 @@
 
 #include "../LuaStack.h"
 #include "../LuaCallWrapper.h"
+#include "../../../lib/HeroBonus.h"
 
 namespace scripting
 {
@@ -33,10 +34,11 @@ const std::vector<CreatureProxy::RegType> CreatureProxy::REGISTER =
 
 const std::vector<CreatureProxy::CustomRegType> CreatureProxy::REGISTER_CUSTOM =
 {
-	{"getIconIndex", LuaMethodWrapper<Entity, int32_t(Entity:: *)()const, &Entity::getIconIndex>::invoke, false},
-	{"getIndex", LuaMethodWrapper<Entity, int32_t(Entity:: *)()const, &Entity::getIndex>::invoke, false},
-	{"getJsonKey", LuaMethodWrapper<Entity, const std::string &(Entity:: *)()const, &Entity::getJsonKey>::invoke, false},
-	{"getName", LuaMethodWrapper<Entity, const std::string &(Entity:: *)()const, &Entity::getName>::invoke, false},
+	{"getIconIndex", LuaMethodWrapper<Creature, int32_t(Entity:: *)()const, &Entity::getIconIndex>::invoke, false},
+	{"getIndex", LuaMethodWrapper<Creature, int32_t(Entity:: *)()const, &Entity::getIndex>::invoke, false},
+	{"getJsonKey", LuaMethodWrapper<Creature, const std::string &(Entity:: *)()const, &Entity::getJsonKey>::invoke, false},
+	{"getName", LuaMethodWrapper<Creature, const std::string &(Entity:: *)()const, &Entity::getName>::invoke, false},
+	{"accessBonuses", LuaMethodWrapper<Creature, const IBonusBearer *(EntityWithBonuses<CreatureID>:: *)()const, &EntityWithBonuses<CreatureID>::accessBonuses>::invoke, false},
 
 	{"getMaxHealth", LuaMethodWrapper<Creature, uint32_t(Creature:: *)()const, &Creature::getMaxHealth>::invoke, false},
 	{"getPluralName", LuaMethodWrapper<Creature, const std::string &(Creature:: *)()const, &Creature::getPluralName>::invoke, false},
@@ -59,6 +61,7 @@ const std::vector<CreatureProxy::CustomRegType> CreatureProxy::REGISTER_CUSTOM =
 	{"getBaseSpellPoints", LuaMethodWrapper<Creature, int32_t(Creature:: *)()const, &Creature::getBaseSpellPoints>::invoke, false},
 	{"getBaseSpeed", LuaMethodWrapper<Creature, int32_t(Creature:: *)()const, &Creature::getBaseSpeed>::invoke, false},
 	{"getBaseShots", LuaMethodWrapper<Creature, int32_t(Creature:: *)()const, &Creature::getBaseShots>::invoke, false},
+
 };
 
 }

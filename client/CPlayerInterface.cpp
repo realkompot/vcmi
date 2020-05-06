@@ -2362,7 +2362,7 @@ void CPlayerInterface::acceptTurn()
 		components.push_back(Component(Component::FLAG, playerColor.getNum(), 0, 0));
 		MetaString text;
 
-		const auto & optDaysWithoutCastle = cb->getPlayer(playerColor)->daysWithoutCastle;
+		const auto & optDaysWithoutCastle = cb->getPlayerState(playerColor)->daysWithoutCastle;
 
 		if(optDaysWithoutCastle)
 		{

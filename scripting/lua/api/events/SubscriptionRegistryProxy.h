@@ -11,6 +11,7 @@
 #pragma once
 
 #include <vcmi/events/Event.h>
+#include <vcmi/events/EventBus.h>
 #include <vcmi/events/SubscriptionRegistry.h>
 
 #include "../../LuaWrapper.h"

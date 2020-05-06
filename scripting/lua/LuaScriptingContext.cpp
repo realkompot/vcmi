@@ -12,6 +12,8 @@
 #include "LuaScriptingContext.h"
 
 #include <vstd/StringUtils.h>
+#include <vcmi/events/EventBus.h>
+#include <vcmi/ServerCallback.h>
 
 #include "LuaStack.h"
 
@@ -20,6 +22,9 @@
 #include "../../lib/JsonNode.h"
 #include "../../lib/NetPacks.h"
 #include "../../lib/filesystem/Filesystem.h"
+#include "../../lib/battle/IBattleInfoCallback.h"
+#include "../../lib/CGameInfoCallback.h"
+
 
 namespace scripting
 {
@@ -142,12 +147,12 @@ void LuaContext::run(ServerCallback * server, const JsonNode & initialState)
 
 	run(initialState);
 
-	{
-		LuaStack S(L);
-		S.pushNil();
-		lua_setglobal(L, "SERVER");
-		S.clear();
-	}
+//	{
+//		LuaStack S(L);
+//		S.pushNil();
+//		lua_setglobal(L, "SERVER");
+//		S.clear();
+//	}
 }
 
 void LuaContext::run(const JsonNode & initialState)
@@ -171,7 +176,7 @@ void LuaContext::run(const JsonNode & initialState)
 
 	if(ret)
 	{
-		logger->error("Script '%s' failed to run, error: %s", script->getName(), toStringRaw(-1));
+		logger->error("Script '%s' failed to run, error: '%s'", script->getName(), toStringRaw(-1));
 		popAll();
 	}
 }

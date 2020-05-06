@@ -40,7 +40,7 @@ public:
 	void setDefaultExpectaions()
 	{
 		EXPECT_CALL(infoMock, getLocalPlayer()).WillRepeatedly(Return(PlayerColor(3)));
-		EXPECT_CALL(serverMock, apply(Matcher<CPackForClient *>(_))).Times(AtLeast(1)).WillRepeatedly(Invoke(this, &ExamplesTest::onCommit));
+		EXPECT_CALL(serverMock, apply(Matcher<CPackForClient *>(_))).WillRepeatedly(Invoke(this, &ExamplesTest::onCommit));
 	}
 
 	void onCommit(CPackForClient * pack)
@@ -48,9 +48,15 @@ public:
 		InfoWindow * iw = dynamic_ptr_cast<InfoWindow>(pack);
 
 		if(iw)
+		{
 			actualMessages.push_back(iw->text.toString());
+			EXPECT_EQ(iw->player, PlayerColor(3));
+		}
 		else
+		{
 			GTEST_FAIL() << "Invalid NetPack";
+		}
+
 	}
 
 	void saveScript(const std::string & name)
@@ -105,10 +111,11 @@ TEST_F(ExamplesTest, ALL)
 
 		loadScriptFromFile(scriptName);
 
-//		SCOPED_TRACE("\n"+subject->code);
 		saveScript(baseName.string()+".lua");
 
 		const JsonNode actualState = runServer();
+
+		SCOPED_TRACE("\n"+actualState.toJson(true));
 
 		JsonComparer c(false);
 		c.compare(baseName.string(), actualState["ERM"], expectedState["ERM"]);

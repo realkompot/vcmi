@@ -28,20 +28,6 @@ VCMI_REGISTER_CORE_SCRIPT_API(SpellProxy, "Spell");
 
 const std::vector<SpellProxy::RegType> SpellProxy::REGISTER =
 {
-	{"getIconIndex", LuaCallWrapper<const Entity>::createFunctor(&Entity::getIconIndex)},
-	{"getIndex", LuaCallWrapper<const Entity>::createFunctor(&Entity::getIndex)},
-	{"getJsonKey", LuaCallWrapper<const Entity>::createFunctor(&Entity::getJsonKey)},
-	{"getName", LuaCallWrapper<const Entity>::createFunctor(&Entity::getName)},
-	{"isAdventure", LuaCallWrapper<const Spell>::createFunctor(&Spell::isAdventure)},
-	{"isCombat", LuaCallWrapper<const Spell>::createFunctor(&Spell::isCombat)},
-	{"isCreatureAbility", LuaCallWrapper<const Spell>::createFunctor(&Spell::isCreatureAbility)},
-	{"isPositive", LuaCallWrapper<const Spell>::createFunctor(&Spell::isPositive)},
-	{"isNegative", LuaCallWrapper<const Spell>::createFunctor(&Spell::isNegative)},
-	{"isNeutral", LuaCallWrapper<const Spell>::createFunctor(&Spell::isNeutral)},
-	{"isDamage", LuaCallWrapper<const Spell>::createFunctor(&Spell::isDamage)},
-	{"isOffensive", LuaCallWrapper<const Spell>::createFunctor(&Spell::isOffensive)},
-	{"isSpecial", LuaCallWrapper<const Spell>::createFunctor(&Spell::isSpecial)},
-
 	{"getCost", LuaCallWrapper<const Spell>::createFunctor(&Spell::getCost)},
 	{"getBasePower", LuaCallWrapper<const Spell>::createFunctor(&Spell::getBasePower)},
 	{"getLevelPower", LuaCallWrapper<const Spell>::createFunctor(&Spell::getLevelPower)},
@@ -50,6 +36,20 @@ const std::vector<SpellProxy::RegType> SpellProxy::REGISTER =
 
 const std::vector<SpellProxy::CustomRegType> SpellProxy::REGISTER_CUSTOM =
 {
+	{"getIconIndex", LuaMethodWrapper<Spell, int32_t(Entity:: *)()const, &Entity::getIconIndex>::invoke, false},
+	{"getIndex", LuaMethodWrapper<Spell, int32_t(Entity:: *)()const, &Entity::getIndex>::invoke, false},
+	{"getJsonKey", LuaMethodWrapper<Spell, const std::string &(Entity:: *)()const, &Entity::getJsonKey>::invoke, false},
+	{"getName", LuaMethodWrapper<Spell, const std::string &(Entity:: *)()const, &Entity::getName>::invoke, false},
+
+	{"isAdventure", LuaMethodWrapper<Spell, bool(Spell:: *)()const, &Spell::isAdventure>::invoke, false},
+	{"isCombat", LuaMethodWrapper<Spell, bool(Spell:: *)()const, &Spell::isCombat>::invoke, false},
+	{"isCreatureAbility", LuaMethodWrapper<Spell, bool(Spell:: *)()const, &Spell::isCreatureAbility>::invoke, false},
+	{"isPositive", LuaMethodWrapper<Spell, bool(Spell:: *)()const, &Spell::isPositive>::invoke, false},
+	{"isNegative", LuaMethodWrapper<Spell, bool(Spell:: *)()const, &Spell::isNegative>::invoke, false},
+	{"isNeutral", LuaMethodWrapper<Spell, bool(Spell:: *)()const, &Spell::isNeutral>::invoke, false},
+	{"isDamage", LuaMethodWrapper<Spell, bool(Spell:: *)()const, &Spell::isDamage>::invoke, false},
+	{"isOffensive", LuaMethodWrapper<Spell, bool(Spell:: *)()const, &Spell::isOffensive>::invoke, false},
+	{"isSpecial", LuaMethodWrapper<Spell, bool(Spell:: *)()const, &Spell::isSpecial>::invoke, false},
 
 };
 

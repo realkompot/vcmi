@@ -1443,7 +1443,7 @@ void CGameState::initHeroes()
 		}
 
 		hero->initHero(getRandomGenerator());
-		getPlayer(hero->getOwner())->heroes.push_back(hero);
+		getPlayerState(hero->getOwner())->heroes.push_back(hero);
 		map->allHeroes[hero->type->ID.getNum()] = hero;
 	}
 
@@ -1683,7 +1683,7 @@ void CGameState::initTowns()
 		{
 			for (int g=0; g<map->towns.size(); ++g)
 			{
-				PlayerState * owner = getPlayer(map->towns[g]->getOwner());
+				PlayerState * owner = getPlayerState(map->towns[g]->getOwner());
 				if (owner)
 				{
 					PlayerInfo & pi = map->players[owner->color.getNum()];
@@ -1816,7 +1816,7 @@ void CGameState::initTowns()
 		}
 		vti->possibleSpells.clear();
 		if(vti->getOwner() != PlayerColor::NEUTRAL)
-			getPlayer(vti->getOwner())->towns.push_back(vti);
+			getPlayerState(vti->getOwner())->towns.push_back(vti);
 
 	}
 }
@@ -2247,7 +2247,7 @@ EVictoryLossCheckResult CGameState::checkForVictoryAndLoss(PlayerColor player) c
 		return this->checkForVictory(player, condition);
 	};
 
-	const PlayerState *p = CGameInfoCallback::getPlayer(player);
+	const PlayerState *p = CGameInfoCallback::getPlayerState(player);
 
 	//cheater or tester, but has entered the code...
 	if (p->enteredWinningCheatCode)
@@ -2277,7 +2277,7 @@ EVictoryLossCheckResult CGameState::checkForVictoryAndLoss(PlayerColor player) c
 
 bool CGameState::checkForVictory(PlayerColor player, const EventCondition & condition) const
 {
-	const PlayerState *p = CGameInfoCallback::getPlayer(player);
+	const PlayerState *p = CGameInfoCallback::getPlayerState(player);
 	switch (condition.condition)
 	{
 		case EventCondition::STANDARD_WIN:
@@ -2453,7 +2453,7 @@ PlayerColor CGameState::checkForStandardWin() const
 bool CGameState::checkForStandardLoss( PlayerColor player ) const
 {
 	//std loss condition is: player lost all towns and heroes
-	const PlayerState &p = *CGameInfoCallback::getPlayer(player);
+	const PlayerState &p = *CGameInfoCallback::getPlayerState(player);
 	return !p.heroes.size() && !p.towns.size();
 }
 
@@ -2759,7 +2759,7 @@ void CGameState::buildGlobalTeamPlayerTree()
 
 		for(PlayerColor teamMember : k->second.players)
 		{
-			PlayerState *p = getPlayer(teamMember);
+			PlayerState *p = getPlayerState(teamMember);
 			assert(p);
 			p->attachTo(t);
 		}
@@ -2938,38 +2938,6 @@ CGHeroInstance * CGameState::getUsedHero(HeroTypeID hid) const
 
 	return nullptr;
 }
-
-PlayerState::PlayerState()
- : color(-1), human(false), enteredWinningCheatCode(false),
-   enteredLosingCheatCode(false), status(EPlayerStatus::INGAME)
-{
-	setNodeType(PLAYER);
-}
-
-PlayerState::PlayerState(PlayerState && other):
-	CBonusSystemNode(std::move(other)),
-	color(other.color),
-	human(other.human),
-	team(other.team),
-	resources(other.resources),
-	enteredWinningCheatCode(other.enteredWinningCheatCode),
-	enteredLosingCheatCode(other.enteredLosingCheatCode),
-	status(other.status),
-	daysWithoutCastle(other.daysWithoutCastle)
-{
-	std::swap(visitedObjects, other.visitedObjects);
-	std::swap(heroes, other.heroes);
-	std::swap(towns, other.towns);
-	std::swap(availableHeroes, other.availableHeroes);
-	std::swap(dwellings, other.dwellings);
-	std::swap(quests, other.quests);
-}
-
-std::string PlayerState::nodeName() const
-{
-	return "Player " + (color.getNum() < VLC->generaltexth->capColors.size() ? VLC->generaltexth->capColors[color.getNum()] : boost::lexical_cast<std::string>(color));
-}
-
 
 bool RumorState::update(int id, int extra)
 {

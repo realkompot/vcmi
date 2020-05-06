@@ -45,10 +45,7 @@ CERMPreprocessor::CERMPreprocessor(const std::string & source)
 	else if(header == "VERM")
 		version = Version::VERM;
 	else
-	{
 		logGlobal->error("File %s has wrong header", fname);
-		return;
-	}
 }
 
 class ParseErrorException : public std::exception
@@ -249,7 +246,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 BOOST_FUSION_ADAPT_STRUCT(
 	ERM::TNormalBodyOption,
 	(char, optionCode)
-	(ERM::TNormalBodyOptionList, params)
+	(boost::optional<ERM::TNormalBodyOptionList>, params)
 	)
 
 BOOST_FUSION_ADAPT_STRUCT(
@@ -375,9 +372,9 @@ namespace ERM
 			semiCompare %= +qi::char_("<=>") >> iexp;
 			curStr %= iexp >> string;
 			varConcatString %= varExp >> qi::lit("+") >> string;
-			bodyOptionItem %= varConcatString | curStr | string | semiCompare | ERMmacroDef | varp | iexp | qi::eps;
+			bodyOptionItem %= varConcatString | curStr | string | semiCompare | ERMmacroDef | varp | iexp ;
 			exactBodyOptionList %= (bodyOptionItem % qi::lit("/"));
-			normalBodyOption = qi::char_("A-Z+") > exactBodyOptionList;
+			normalBodyOption = qi::char_("A-Z") > -(exactBodyOptionList);
 			bodyOption %= VRLogic | VRarithmetic | normalBodyOption;
 			body %= qi::lit(":") >> *(bodyOption) > qi::lit(";");
 
@@ -514,21 +511,6 @@ ERM::TLine ERMParser::parseLine(const std::string & line)
 		throw ParseErrorException();
 	}
 	return AST;
-}
-
-int ERMParser::countHatsBeforeSemicolon(const std::string & line) const
-{
-	//CHECK: omit macros? or anything else?
-	int numOfHats = 0; //num of '^' before ';'
-	//check for unmatched ^
-	for (char c : line)
-	{
-		if(c == ';')
-			break;
-		if(c == '^')
-			++numOfHats;
-	}
-	return numOfHats;
 }
 
 void ERMParser::repairEncoding(std::string & str) const

@@ -236,10 +236,5 @@ int LuaStack::retVoid()
 	return 0;
 }
 
-int LuaStack::retPushed()
-{
-	return lua_gettop(L);
-}
-
 
 }

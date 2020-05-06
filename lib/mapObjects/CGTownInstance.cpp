@@ -547,7 +547,7 @@ GrowthInfo CGTownInstance::getGrowthInfo(int level) const
 			ret.entries.push_back(GrowthInfo::Entry(subID, BuildingID::HORDE_2, creature->hordeGrowth));
 
 	int dwellingBonus = 0;
-	if(const PlayerState *p = cb->getPlayer(tempOwner, false))
+	if(const PlayerState *p = cb->getPlayerState(tempOwner, false))
 	{
 		dwellingBonus = getDwellingBonus(creatures[level].second, p->dwellings);
 	}
@@ -929,7 +929,7 @@ void CGTownInstance::removeCapitols (PlayerColor owner) const
 {
 	if (hasCapitol()) // search if there's an older capitol
 	{
-		PlayerState* state = cb->gameState()->getPlayer (owner); //get all towns owned by player
+		PlayerState* state = cb->gameState()->getPlayerState(owner); //get all towns owned by player
 		for (auto i = state->towns.cbegin(); i < state->towns.cend(); ++i)
 		{
 			if (*i != this && (*i)->hasCapitol())
@@ -970,7 +970,7 @@ int CGTownInstance::getMarketEfficiency() const
 	if (!hasBuilt(BuildingID::MARKETPLACE))
 		return 0;
 
-	const PlayerState *p = cb->getPlayer(tempOwner);
+	const PlayerState *p = cb->getPlayerState(tempOwner);
 	assert(p);
 
 	int marketCount = 0;
@@ -1174,7 +1174,7 @@ void CGTownInstance::setVisitingHero(CGHeroInstance *h)
 
 	if(h)
 	{
-		PlayerState *p = cb->gameState()->getPlayer(h->tempOwner);
+		PlayerState *p = cb->gameState()->getPlayerState(h->tempOwner);
 		assert(p);
 		h->detachFrom(p);
 		h->attachTo(&townAndVis);
@@ -1184,7 +1184,7 @@ void CGTownInstance::setVisitingHero(CGHeroInstance *h)
 	}
 	else
 	{
-		PlayerState *p = cb->gameState()->getPlayer(visitingHero->tempOwner);
+		PlayerState *p = cb->gameState()->getPlayerState(visitingHero->tempOwner);
 		visitingHero->visitedTown = nullptr;
 		visitingHero->detachFrom(&townAndVis);
 		visitingHero->attachTo(p);
@@ -1197,7 +1197,7 @@ void CGTownInstance::setGarrisonedHero(CGHeroInstance *h)
 	assert(!!garrisonHero == !h);
 	if(h)
 	{
-		PlayerState *p = cb->gameState()->getPlayer(h->tempOwner);
+		PlayerState *p = cb->gameState()->getPlayerState(h->tempOwner);
 		assert(p);
 		h->detachFrom(p);
 		h->attachTo(this);
@@ -1207,7 +1207,7 @@ void CGTownInstance::setGarrisonedHero(CGHeroInstance *h)
 	}
 	else
 	{
-		PlayerState *p = cb->gameState()->getPlayer(garrisonHero->tempOwner);
+		PlayerState *p = cb->gameState()->getPlayerState(garrisonHero->tempOwner);
 		garrisonHero->visitedTown = nullptr;
 		garrisonHero->inTownGarrison = false;
 		garrisonHero->detachFrom(this);
