@@ -883,6 +883,7 @@ bool CPathfinder::isDestinationGuardian() const
 void CPathfinderHelper::initializePatrol()
 {
 	auto state = PATROL_NONE;
+
 	if(hero->patrol.patrolling && !getPlayer(hero->tempOwner)->human)
 	{
 		if(hero->patrol.patrolRadius)
@@ -1071,6 +1072,7 @@ CPathfinderHelper::CPathfinderHelper(CGameState * gs, const CGHeroInstance * Her
 {
 	turnsInfo.reserve(16);
 	updateTurnInfo();
+	initializePatrol();
 }
 
 CPathfinderHelper::~CPathfinderHelper()
