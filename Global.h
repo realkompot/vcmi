@@ -78,8 +78,10 @@ static_assert(sizeof(bool) == 1, "Bool needs to be 1 byte in size.");
 #  else
 //#  warning "Unknown Apple target."?
 #  endif
+#elif defined(__EMSCRIPTEN__)
+#  define VCMI_EMSCRIPTEN
 #else
-#  error "VCMI supports only Windows, OSX, Linux and Android targets"
+#  error "VCMI supports only Windows, OSX, Linux and Android, Emscripten targets"
 #endif
 
 #ifdef VCMI_IOS

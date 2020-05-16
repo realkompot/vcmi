@@ -13,6 +13,11 @@ set(emptyAI_HEADERS
 
 assign_source_group(${emptyAI_SRCS} ${emptyAI_HEADERS})
 
+if(EMSCRIPTEN)
+	add_library(EmptyAI STATIC ${emptyAI_SRCS} ${emptyAI_HEADERS})
+	return()
+endif()
+
 add_library(EmptyAI SHARED ${emptyAI_SRCS} ${emptyAI_HEADERS})
 target_include_directories(EmptyAI PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(EmptyAI PRIVATE vcmi)

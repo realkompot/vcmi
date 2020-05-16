@@ -652,5 +652,11 @@ boost::optional<BattleAction> CBattleAI::considerFleeingOrSurrendering()
 	return boost::none;
 }
 
+#ifdef VCMI_EMSCRIPTEN
 
+std::shared_ptr<CBattleGameInterface> createCBattleGameInterface()
+{
+	return std::make_shared<CBattleAI>();
+}
 
+#endif

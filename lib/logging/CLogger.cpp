@@ -97,6 +97,11 @@ CLogger * CLogger::getLogger(const CLoggerDomain & domain)
 		{
 			logger->setLevel(ELogLevel::TRACE);
 		}
+
+		#ifdef VCMI_EMSCRIPTEN
+			logger->setLevel(ELogLevel::NOT_SET);
+		#endif
+
 		CLogManager::get().addLogger(logger);
 		if (logGlobal != nullptr)
 		{
@@ -338,8 +343,14 @@ EConsoleTextColor::EConsoleTextColor CColorMapping::getColorFor(const CLoggerDom
 
 	throw std::runtime_error("failed to find color for requested domain/level pair");
 }
-
-CLogConsoleTarget::CLogConsoleTarget(CConsoleHandler * console) : console(console), threshold(ELogLevel::INFO), coloredOutputEnabled(true)
+CLogConsoleTarget::CLogConsoleTarget(CConsoleHandler * console) :
+	console(console),
+#ifdef VCMI_EMSCRIPTEN
+	threshold(ELogLevel::NOT_SET),
+#else
+	threshold(ELogLevel::INFO),
+#endif
+	coloredOutputEnabled(true)
 {
 	formatter.setPattern("%m");
 }

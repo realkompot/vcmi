@@ -10,6 +10,11 @@
 // CMT.cpp : Defines the entry point for the console application.
 //
 #include "StdInc.h"
+
+#ifdef VCMI_EMSCRIPTEN
+	#include <emscripten.h>
+#endif
+
 #include <SDL_mixer.h>
 
 #include <boost/program_options.hpp>
@@ -171,6 +176,11 @@ int main(int argc, char * argv[])
 	// Correct working dir executable folder (not bundle folder) so we can use executable relative paths
 	boost::filesystem::current_path(boost::filesystem::system_complete(argv[0]).parent_path());
 #endif
+
+#ifdef VCMI_EMSCRIPTEN
+	boost::filesystem::current_path("/vcmi_files");
+#endif
+
     std::cout << "Starting... " << std::endl;
 	po::options_description opts("Allowed options");
 	opts.add_options()
@@ -240,12 +250,12 @@ int main(int argc, char * argv[])
 	preinitDLL(::console);
 	settings.init();
 	Settings session = settings.write["session"];
-	auto setSettingBool = [](std::string key, std::string arg) {
+	auto setSettingBool = [](std::string key, std::string arg, bool defaultValue = false) {
 		Settings s = settings.write(vstd::split(key, "/"));
 		if(::vm.count(arg))
 			s->Bool() = true;
 		else if(s->isNull())
-			s->Bool() = false;
+			s->Bool() = defaultValue;
 	};
 	auto setSettingInteger = [](std::string key, std::string arg, si64 defaultValue) {
 		Settings s = settings.write(vstd::split(key, "/"));
@@ -280,7 +290,12 @@ int main(int argc, char * argv[])
 			session["spectate-battle-speed"].Float() = vm["spectate-battle-speed"].as<int>();
 	}
 	// Server settings
-	setSettingBool("session/donotstartserver", "donotstartserver");
+	#ifdef VCMI_EMSCRIPTEN
+		setSettingBool("session/donotstartserver", "donotstartserver", true);
+	#else
+		setSettingBool("session/donotstartserver", "donotstartserver");
+	#endif
+
 
 	// Shared memory options
 	setSettingBool("session/disable-shm", "disable-shm");
@@ -1362,6 +1377,18 @@ static void handleEvent(SDL_Event & ev)
 
 }
 
+static void mainLoopBody()
+{
+	SDL_Event ev;
+
+	while(1 == SDL_PollEvent(&ev))
+	{
+		handleEvent(ev);
+	}
+
+	CSH->applyPacksOnLobbyScreen();
+	GH.renderFrame();
+}
 
 static void mainLoop()
 {
@@ -1371,19 +1398,14 @@ static void mainLoop()
 	inGuiThread.reset(new bool(true));
 	GH.mainFPSmng->init();
 
+#ifdef VCMI_EMSCRIPTEN
+	emscripten_set_main_loop(mainLoopBody, -1, 1);
+#else
 	while(1) //main SDL events loop
 	{
-		SDL_Event ev;
-
-		while(1 == SDL_PollEvent(&ev))
-		{
-			handleEvent(ev);
-		}
-
-		CSH->applyPacksOnLobbyScreen();
-		GH.renderFrame();
-
+		mainLoopBody(nullptr);
 	}
+#endif
 }
 
 void handleQuit(bool ask)

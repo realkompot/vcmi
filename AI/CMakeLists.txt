@@ -14,12 +14,20 @@ else()
 	set(FL_FOUND FALSE)
 endif()
 
+# Always include FuzzyLite when compiling to WebAssembly
+if(EMSCRIPTEN)
+	set(FL_BACKTRACE OFF CACHE BOOL "" FORCE)
+	set(FL_FOUND FALSE)
+endif()
+
 if(NOT FL_FOUND)
-    set(FL_BUILD_BINARY OFF CACHE BOOL "")
-    set(FL_BUILD_SHARED OFF CACHE BOOL "")
+	set(FL_BUILD_BINARY OFF CACHE BOOL "")
+	set(FL_BUILD_SHARED OFF CACHE BOOL "")
 	set(FL_BUILD_TESTS OFF CACHE BOOL "")
 	add_subdirectory(FuzzyLite/fuzzylite EXCLUDE_FROM_ALL)
 endif()
+
+
 
 #######################################
 #        Add subdirectories           #

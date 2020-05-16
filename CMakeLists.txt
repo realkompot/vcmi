@@ -33,6 +33,7 @@ project(VCMI)
 #        User-provided options             #
 ############################################
 
+
 if(NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING
 		"Choose the type of build, options are: Debug Release RelWithDebInfo. Default is RelWithDebInfo."
@@ -107,6 +108,13 @@ else()
 	endmacro(cotire)
 endif(ENABLE_PCH)
 
+
+if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
+    set(EMSCRIPTEN TRUE)
+else()
+    set(EMSCRIPTEN FALSE)
+endif()
+
 ############################################
 #        Documentation section             #
 ############################################
@@ -116,6 +124,62 @@ include(UseDoxygen OPTIONAL)
 ############################################
 #        Compile and linking options       #
 ############################################
+
+
+if (EMSCRIPTEN)
+	# How to build:
+	# - Install emscripten sdk: https://emscripten.org.
+	# - Compile "program_options", "thread", "filesystem" boost libs using emscripten.
+	#   Follow this: https://stackoverflow.com/a/47751199 (b2 toolset=emscripten link=static program_options thread filesystem).
+	# - Copy compiled libraries to <source_root>/emscripten/lib. See <source_root>/client/CMakeLists.txt how they are linked.
+	# - Copy boost headers to <source_root>/emscripten/include.
+	# - Copy data files (Data, Maps etc) to <source_root>/emscripten/vcmi_files
+	# - Build project as usual, instead of cmake use emcmake from emscripten sdk: "emcmake cmake ../vcmi".
+	#   This tool sets some env variables and runs its first arg which is cmake.
+
+	# How to run (how I did it):
+	# - Build and run vcmiserver native executable with port 3031.
+	# - In order to connect to the server you'll need a WebSocket -> tcp proxy to relay connections.
+	#   I used this node package: https://www.npmjs.com/package/@maximegris/node-websockify.
+	#   Install it and run: nodejs -e "var websockify = require('node-websockify'); websockify({  source: '127.0.0.1:3030', target: '127.0.0.1:3031'});"
+	# - Go to "client" output dir, and start an http server from there, I used https://www.npmjs.com/package/http-server.
+	# - Open Chrome and navigate to http://<localhost-with-whatever-port-you-used>/vcmiclient.html.
+	#   Http server is needed because the html file attempts to load the .wasm file located in the same directory and browsers restrict access to file system.
+
+	set(VCMI_EMSCRIPTEN_ROOT "${CMAKE_SOURCE_DIR}/emscripten")
+	set(VCMI_EMSCRIPTEN_LIB "${VCMI_EMSCRIPTEN_ROOT}/lib")
+	set(VCMI_EMSCRIPTEN_INCLUDE "${VCMI_EMSCRIPTEN_ROOT}/include")
+	set(VCMI_EMSCRIPTEN_FILES_TO_PRELOAD "${VCMI_EMSCRIPTEN_ROOT}/vcmi_files")
+
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s DISABLE_EXCEPTION_CATCHING=0")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --cache ${VCMI_EMSCRIPTEN_ROOT}")
+
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}\
+		-s USE_SDL=2\
+		-s USE_SDL_IMAGE=2\
+		-s USE_SDL_MIXER=2\
+		-s USE_SDL_TTF=2\
+		-s USE_ZLIB=1\
+		-s SDL2_IMAGE_FORMATS='[\"bmp\",\"png\"]'\
+		-s ALLOW_MEMORY_GROWTH=1\
+		-s USE_PTHREADS=1")
+
+	include_directories(${CMAKE_SOURCE_DIR})
+	include_directories(${CMAKE_SOURCE_DIR}/include)
+	include_directories(${VCMI_EMSCRIPTEN_ROOT}/include)
+	# In vcmi sdl headers are included like this: #include <SDL_mixer.h>
+	# When compiled with "-s USE_SDL=2", source code is supposed to include them like this: <SDL2/SDL_mixer.h>
+	# So explicitly adding <emscripten_cache_dir>/wasm/include/SDL2 to includes.
+	# Dirty, but let's leave it like it is for now (didn't want to alter #includes in every file).
+	include_directories(${VCMI_EMSCRIPTEN_ROOT}/wasm/include/SDL2)
+
+	add_subdirectory(lib)
+	add_subdirectory(client)
+	add_subdirectory(AI)
+
+	return()
+endif()
 
 if(APPLE)
 	set(CMAKE_MACOSX_RPATH 0)

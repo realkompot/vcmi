@@ -349,8 +349,16 @@ set(lib_HEADERS
 		VCMI_Lib.h
 )
 
-assign_source_group(${lib_SRCS} ${lib_HEADERS})
+if (EMSCRIPTEN)
+	add_library(vcmi STATIC ${lib_SRCS} ${lib_HEADERS})
+	target_include_directories(vcmi PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+	set_target_properties(vcmi PROPERTIES ${PCH_PROPERTIES})
+	cotire(vcmi)
 
+	return()
+endif()
+
+assign_source_group(${lib_SRCS} ${lib_HEADERS})
 add_library(vcmi SHARED ${lib_SRCS} ${lib_HEADERS})
 set_target_properties(vcmi PROPERTIES COMPILE_DEFINITIONS "VCMI_DLL=1")
 target_link_libraries(vcmi PUBLIC

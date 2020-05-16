@@ -342,7 +342,7 @@ std::string VCMIDirsWIN32::genHelpString() const
 }
 
 std::string VCMIDirsWIN32::libraryName(const std::string& basename) const { return basename + ".dll"; }
-#elif defined(VCMI_UNIX)
+#elif defined(VCMI_UNIX) || defined(VCMI_EMSCRIPTEN)
 class IVCMIDirsUNIX : public IVCMIDirs
 {
 	public:
@@ -636,6 +636,67 @@ void VCMIDirsAndroid::init()
 #endif // VCMI_APPLE, VCMI_XDG
 #endif // VCMI_WINDOWS, VCMI_UNIX
 
+#ifdef VCMI_EMSCRIPTEN
+
+class IVCMIDirsEmscripten final : public IVCMIDirsUNIX
+{
+	public:
+		boost::filesystem::path userDataPath() const override;
+		boost::filesystem::path userCachePath() const override;
+		boost::filesystem::path userConfigPath() const override;
+
+		std::vector<boost::filesystem::path> dataPaths() const override;
+
+		boost::filesystem::path libraryPath() const override;
+		boost::filesystem::path binaryPath() const override;
+
+		std::string libraryName(const std::string& basename) const override;
+
+		void init() override;
+};
+
+boost::filesystem::path IVCMIDirsEmscripten::userDataPath() const
+{
+	return "./user";
+}
+
+boost::filesystem::path IVCMIDirsEmscripten::userCachePath() const
+{
+	return userDataPath();
+}
+
+boost::filesystem::path IVCMIDirsEmscripten::userConfigPath() const
+{
+	return userDataPath() / "config";
+}
+
+std::vector<boost::filesystem::path> IVCMIDirsEmscripten::dataPaths() const
+{
+	return std::vector<bfs::path>(1, bfs::path("."));
+}
+
+bfs::path IVCMIDirsEmscripten::libraryPath() const
+{
+	return ".";
+}
+
+bfs::path IVCMIDirsEmscripten::binaryPath() const
+{
+	return ".";
+}
+
+std::string IVCMIDirsEmscripten::libraryName(const std::string& basename) const
+{
+	return basename + ".js";
+}
+
+void IVCMIDirsEmscripten::init()
+{
+	IVCMIDirs::init();
+}
+
+#endif
+
 // Getters for interfaces are separated for clarity.
 namespace VCMIDirs
 {
@@ -649,15 +710,19 @@ namespace VCMIDirs
 			static VCMIDirsXDG singleton;
 		#elif defined(VCMI_APPLE)
 			static VCMIDirsOSX singleton;
+		#elif defined(VCMI_EMSCRIPTEN)
+			static IVCMIDirsEmscripten singleton;
         #endif
 
 		static bool initialized = false;
 		if (!initialized)
 		{
-			#ifndef VCMI_ANDROID
+			#if !defined(VCMI_ANDROID) && !defined(VCMI_EMSCRIPTEN)
 			std::locale::global(boost::locale::generator().generate("en_US.UTF-8"));
 			#endif
+			#if !defined(VCMI_EMSCRIPTEN)
 			boost::filesystem::path::imbue(std::locale());
+			#endif
 
 			singleton.init();
 			initialized = true;

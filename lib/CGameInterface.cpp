@@ -22,17 +22,18 @@
 #include "serializer/BinaryDeserializer.h"
 #include "serializer/BinarySerializer.h"
 
-#ifdef VCMI_ANDROID
+#if defined(VCMI_ANDROID)
 
 #include "AI/VCAI/VCAI.h"
 #include "AI/BattleAI/BattleAI.h"
 
 #endif
 
+
 template<typename rett>
 std::shared_ptr<rett> createAny(const boost::filesystem::path & libpath, const std::string & methodName)
 {
-#ifdef VCMI_ANDROID
+#if defined(VCMI_ANDROID) || defined (VCMI_EMSCRIPTEN)
 	// android currently doesn't support loading libs dynamically, so the access to the known libraries
 	// is possible only via specializations of this template
 	throw std::runtime_error("Could not resolve ai library " + libpath.generic_string());
@@ -101,6 +102,26 @@ template<>
 std::shared_ptr<CBattleGameInterface> createAny(const boost::filesystem::path & libpath, const std::string & methodName)
 {
 	return std::make_shared<CBattleAI>();
+}
+
+#endif
+
+#ifdef VCMI_EMSCRIPTEN
+
+// vcai and battleai are static-linked into vcmiclient, so no need for dlopen.
+extern std::shared_ptr<CGlobalAI> createGlobalAI();
+extern std::shared_ptr<CBattleGameInterface> createCBattleGameInterface();
+
+template<>
+std::shared_ptr<CGlobalAI> createAny(const boost::filesystem::path & libpath, const std::string & methodName)
+{
+	return createGlobalAI();
+}
+
+template<>
+std::shared_ptr<CBattleGameInterface> createAny(const boost::filesystem::path & libpath, const std::string & methodName)
+{
+	return createCBattleGameInterface();
 }
 
 #endif

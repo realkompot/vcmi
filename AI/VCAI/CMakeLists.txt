@@ -107,6 +107,19 @@ if(ANDROID) # android compiles ai libs into main lib directly, so we skip this l
 	return()
 endif()
 
+
+if(EMSCRIPTEN)
+	add_library(VCAI STATIC ${VCAI_SRCS} ${VCAI_HEADERS})
+
+	target_include_directories(VCAI PUBLIC ${CMAKE_HOME_DIRECTORY}/AI/FuzzyLite/fuzzylite)
+	target_link_libraries(VCAI PRIVATE fl-static vcmi)
+
+	set_target_properties(VCAI PROPERTIES ${PCH_PROPERTIES})
+	cotire(VCAI)
+
+	return()
+endif()
+
 add_library(VCAI SHARED ${VCAI_SRCS} ${VCAI_HEADERS})
 
 if(FL_FOUND)

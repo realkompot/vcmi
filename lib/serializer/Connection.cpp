@@ -32,9 +32,11 @@ using namespace boost::asio::ip;
 
 void CConnection::init()
 {
+#ifndef VCMI_EMSCRIPTEN
 	socket->set_option(boost::asio::ip::tcp::no_delay(true));
 	socket->set_option(boost::asio::socket_base::send_buffer_size(4194304));
 	socket->set_option(boost::asio::socket_base::receive_buffer_size(4194304));
+#endif
 
 	enableSmartPointerSerialization();
 	disableStackSendingByID();
@@ -63,6 +65,24 @@ CConnection::CConnection(std::string host, ui16 port, std::string Name, std::str
 	int i;
 	boost::system::error_code error = asio::error::host_not_found;
 	socket = std::make_shared<tcp::socket>(*io_service);
+
+// tcp::resolver isn't going to work in browser, so resorting to ip-address string based endpoint.
+#ifdef VCMI_EMSCRIPTEN
+	boost::asio::ip::tcp::endpoint tcp_endpoint(boost::asio::ip::address::from_string(host), port);
+
+	logNetwork->info("Trying connection to %s(%d)", tcp_endpoint, i++);
+
+	socket->connect(tcp_endpoint, error);
+	if(!error)
+	{
+		init();
+		return;
+	}
+	else
+	{
+		logNetwork->error("Problem with connecting: %s", error.message());
+	}
+#else
 	tcp::resolver resolver(*io_service);
 	tcp::resolver::iterator end, pom, endpoint_iterator = resolver.resolve(tcp::resolver::query(host, std::to_string(port)),error);
 	if(error)
@@ -100,7 +120,7 @@ CConnection::CConnection(std::string host, ui16 port, std::string Name, std::str
 		}
 		endpoint_iterator++;
 	}
-
+#endif
 	//we shouldn't be here - error handling
 connerror1:
 	logNetwork->error("Something went wrong... checking for error info");

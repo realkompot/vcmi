@@ -142,6 +142,45 @@ set(client_HEADERS
 		SDLRWwrapper.h
 )
 
+if(EMSCRIPTEN)
+	add_executable(vcmiclient ${client_SRCS} ${client_HEADERS})
+	add_dependencies(vcmiclient BattleAI StupidAI VCAI)
+
+	target_compile_definitions(vcmiclient PRIVATE "DISABLE_VIDEO")
+	target_compile_definitions(vcmiclient PRIVATE "VCMI_NO_THREADED_LOAD")
+	target_include_directories(vcmiclient PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
+	# Link libraries and options
+	target_link_libraries(vcmiclient PRIVATE
+		vcmi
+		VCAI
+		BattleAI
+		StupidAI
+		"${VCMI_EMSCRIPTEN_LIB}/libboost_program_options.bc"
+		"${VCMI_EMSCRIPTEN_LIB}/libboost_thread.bc"
+		"${VCMI_EMSCRIPTEN_LIB}/libboost_filesystem.bc")
+
+	set_property(TARGET vcmiclient APPEND_STRING PROPERTY LINK_FLAGS "\
+		-Wl,--shared-memory,--no-check-features\
+		--preload-file \"${VCMI_EMSCRIPTEN_FILES_TO_PRELOAD}\"@/vcmi_files\
+		-s ERROR_ON_UNDEFINED_SYMBOLS=0\
+		-s ALLOW_MEMORY_GROWTH=1\
+		-s USE_PTHREADS=1\
+		-s PTHREAD_POOL_SIZE=4")
+
+	set_target_properties(vcmiclient PROPERTIES OUTPUT_NAME "vcmiclient" SUFFIX ".html")
+
+	# Cotire
+	set_target_properties(vcmiclient PROPERTIES ${PCH_PROPERTIES})
+	cotire(vcmiclient)
+
+	# Source maps
+	set_property(TARGET vcmiclient APPEND_STRING PROPERTY LINK_FLAGS "\
+		-g4 --source-map-base http://localhost:8080/heroes/build_em/client/")
+
+	return()
+endif()
+
 assign_source_group(${client_SRCS} ${client_HEADERS} VCMI_client.rc)
 
 if(ANDROID) # android needs client/server to be libraries, not executables, so we can't reuse the build part of this script

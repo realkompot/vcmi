@@ -2717,6 +2717,14 @@ bool AIStatus::channelProbing()
 	return ongoingChannelProbing;
 }
 
+#ifdef VCMI_EMSCRIPTEN
+
+std::shared_ptr<CGlobalAI> createGlobalAI()
+{
+	return std::make_shared<VCAI>();
+}
+
+#endif
 
 
 bool isWeeklyRevisitable(const CGObjectInstance * obj)

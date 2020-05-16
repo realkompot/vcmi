@@ -37,7 +37,7 @@ public:
     template<typename T> void print(const T &data, bool addNewLine = false, EConsoleTextColor::EConsoleTextColor color = EConsoleTextColor::DEFAULT, bool printToStdErr = false)
 	{
         TLockGuard _(smx);
-#ifndef VCMI_WINDOWS
+#if !defined(VCMI_WINDOWS) && !defined(VCMI_EMSCRIPTEN)
 		// with love from ffmpeg - library is trying to print some warnings from separate thread
 		// this results in broken console on Linux. Lock stdout to print all our data at once
 		flockfile(stdout);
@@ -69,7 +69,7 @@ public:
         }
 
         if(color != EConsoleTextColor::DEFAULT) setColor(EConsoleTextColor::DEFAULT);
-#ifndef VCMI_WINDOWS
+#if !defined(VCMI_WINDOWS) && !defined(VCMI_EMSCRIPTEN)
 		funlockfile(stdout);
 #endif
 	}

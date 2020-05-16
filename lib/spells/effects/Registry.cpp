@@ -11,10 +11,35 @@
 
 #include "Registry.h"
 
+#ifdef VCMI_EMSCRIPTEN
+	#include "Obstacle.h"
+	#include "Catapult.h"
+	#include "Dispel.h"
+	#include "RemoveObstacle.h"
+	#include "Heal.h"
+	#include "Sacrifice.h"
+	#include "Teleport.h"
+	#include "Clone.h"
+	#include "Summon.h"
+#endif
+
 namespace spells
 {
 namespace effects
 {
+
+// These functions are not called, they are here to workaround emscripten's dead code elimination.
+#ifdef VCMI_EMSCRIPTEN
+	Obstacle * unusedFuncObstacle() { return new Obstacle(); }
+	Catapult * unusedFuncCatapult() { return new Catapult(); }
+	Dispel * unusedFuncDispel() { return new Dispel(); }
+	RemoveObstacle * unusedFuncRemoveObstacle() { return new RemoveObstacle(); }
+	Heal * unusedFuncHeal() { return new Heal(); }
+	Sacrifice * unusedFuncSacrifice() { return new Sacrifice(); }
+	Teleport * unusedFuncTeleport() { return new Teleport(); }
+	Clone * unusedFuncClone() { return new Clone(); }
+	Summon * unusedFuncSummon() { return new Summon(); }
+#endif
 
 namespace detail
 {

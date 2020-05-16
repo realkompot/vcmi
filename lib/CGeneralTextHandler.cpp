@@ -112,7 +112,12 @@ std::string Unicode::toUnicode(const std::string &text)
 
 std::string Unicode::toUnicode(const std::string &text, const std::string &encoding)
 {
+// Compiling boost's locale required compiling some extra dependency libs so I didn't bother.
+#ifdef VCMI_EMSCRIPTEN
+	return text;
+#else
 	return boost::locale::conv::to_utf<char>(text, encoding);
+#endif
 }
 
 std::string Unicode::fromUnicode(const std::string & text)
@@ -122,7 +127,11 @@ std::string Unicode::fromUnicode(const std::string & text)
 
 std::string Unicode::fromUnicode(const std::string &text, const std::string &encoding)
 {
+#ifdef VCMI_EMSCRIPTEN
+	return text;
+#else
 	return boost::locale::conv::from_utf<char>(text, encoding);
+#endif
 }
 
 void Unicode::trimRight(std::string & text, const size_t amount)

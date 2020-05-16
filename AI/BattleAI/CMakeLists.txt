@@ -31,6 +31,11 @@ if(ANDROID) # android compiles ai libs into main lib directly, so we skip this l
 	return()
 endif()
 
+if(EMSCRIPTEN)
+	add_library(BattleAI STATIC ${battleAI_SRCS} ${battleAI_HEADERS})
+	return()
+endif()
+
 add_library(BattleAI SHARED ${battleAI_SRCS} ${battleAI_HEADERS})
 target_include_directories(BattleAI PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(BattleAI PRIVATE vcmi)
